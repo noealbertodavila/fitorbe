@@ -1,0 +1,294 @@
+Rediseña completamente la experiencia de usuario de NAHOFIT.LIFE enfocándose en tres cosas: estabilidad total de navegación, diseño más visual y login desde cualquier dispositivo.
+
+═══════════════════════════════════════
+PARTE 1 — NAVEGACIÓN ESTABLE (SPA PURA)
+═══════════════════════════════════════
+
+REGLA ABSOLUTA: NUNCA usar window.location.href para navegar entre secciones del dashboard. SIEMPRE show/hide de divs.
+
+Estructura HTML única por rol:
+
+<!-- Una sola página, todas las secciones ocultas por defecto -->
+<div id="app" style="display:none;">
+  <nav id="sidebar">...</nav>
+  <main id="main">
+    <div data-seccion="dashboard" class="seccion active"></div>
+    <div data-seccion="rutina" class="seccion" style="display:none;"></div>
+    <div data-seccion="nutricion" class="seccion" style="display:none;"></div>
+    <div data-seccion="calendario" class="seccion" style="display:none;"></div>
+    <div data-seccion="progreso" class="seccion" style="display:none;"></div>
+    <div data-seccion="emocional" class="seccion" style="display:none;"></div>
+    <div data-seccion="mensajes" class="seccion" style="display:none;"></div>
+    <div data-seccion="plan" class="seccion" style="display:none;"></div>
+    <div data-seccion="pagos" class="seccion" style="display:none;"></div>
+  </main>
+</div>
+
+Función de navegación definitiva:
+function irA(seccion) {
+  document.querySelectorAll('.seccion').forEach(s => s.style.display = 'none');
+  const target = document.querySelector(`[data-seccion="${seccion}"]`);
+  if (target) {
+    target.style.display = 'block';
+    target.style.animation = 'fadeIn 0.2s ease';
+  }
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('activo'));
+  document.querySelector(`[data-ir="${seccion}"]`)?.classList.add('activo');
+  cargarSeccion(seccion);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+Cada sección maneja su propio estado:
+async function cargarSeccion(nombre) {
+  const contenedor = document.querySelector(`[data-seccion="${nombre}"]`);
+  if (!contenedor) return;
+  const token = localStorage.getItem('nahofitToken');
+  const usuario = JSON.parse(localStorage.getItem('nahofitUsuario') || '{}');
+  if (!token || !usuario.id) { window.location.href = '/'; return; }
+  
+  contenedor.innerHTML = '<div class="cargando"><div class="spinner"></div><span>Cargando...</span></div>';
+  
+  try {
+    switch(nombre) {
+      case 'dashboard': await renderDashboard(contenedor, usuario, token); break;
+      case 'rutina': await renderRutina(contenedor, usuario, token); break;
+      case 'nutricion': await renderNutricion(contenedor, usuario, token); break;
+      case 'calendario': await renderCalendario(contenedor, usuario, token); break;
+      case 'progreso': await renderProgreso(contenedor, usuario, token); break;
+      case 'emocional': await renderEmocional(contenedor, usuario, token); break;
+      case 'mensajes': await renderMensajes(contenedor, usuario, token); break;
+      case 'plan': await renderPlan(contenedor, usuario, token); break;
+      case 'pagos': await renderPagos(contenedor, usuario, token); break;
+    }
+  } catch(e) {
+    contenedor.innerHTML = `
+      <div class="error-seccion">
+        <div class="error-icono">⚠️</div>
+        <div class="error-titulo">Error al cargar</div>
+        <button onclick="irA('${nombre}')" class="btn-reintentar">Reintentar</button>
+      </div>`;
+  }
+}
+
+Spinner CSS:
+.cargando { display:flex; align-items:center; justify-content:center; gap:12px; padding:80px; color:var(--color-text-secondary); }
+.spinner { width:20px; height:20px; border:2px solid #1A2E20; border-top-color:#10B981; border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+═══════════════════════════════════════
+PARTE 2 — DISEÑO MÁS VISUAL
+═══════════════════════════════════════
+
+DASHBOARD DEL CLIENTE — más visual:
+
+1. TARJETAS DE RESUMEN con iconos grandes:
+<div class="stats-grid">
+  <!-- Racha actual -->
+  <div class="stat-card">
+    <div class="stat-icono" style="background:#10B98120;">🔥</div>
+    <div class="stat-valor">7</div>
+    <div class="stat-label">Días de racha</div>
+    <div class="stat-sub">¡Sigue así!</div>
+  </div>
+  <!-- Rutina de hoy -->
+  <div class="stat-card clickable" onclick="irA('rutina')">
+    <div class="stat-icono" style="background:#3B82F620;">💪</div>
+    <div class="stat-valor">6</div>
+    <div class="stat-label">Ejercicios hoy</div>
+    <div class="stat-sub">Ver rutina →</div>
+  </div>
+  <!-- Nutrición -->
+  <div class="stat-card clickable" onclick="irA('nutricion')">
+    <div class="stat-icono" style="background:#F59E0B20;">🥗</div>
+    <div class="stat-valor">2,180</div>
+    <div class="stat-label">Calorías hoy</div>
+    <div class="stat-sub">Ver plan →</div>
+  </div>
+  <!-- Progreso -->
+  <div class="stat-card clickable" onclick="irA('progreso')">
+    <div class="stat-icono" style="background:#8B5CF620;">📊</div>
+    <div class="stat-valor">65kg</div>
+    <div class="stat-label">Último peso</div>
+    <div class="stat-sub">Ver progreso →</div>
+  </div>
+</div>
+
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:12px; margin-bottom:20px; }
+.stat-card { background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:16px; text-align:center; }
+.stat-card.clickable { cursor:pointer; transition:transform 0.15s, border-color 0.15s; }
+.stat-card.clickable:hover { transform:translateY(-2px); border-color:#10B981; }
+.stat-icono { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; margin:0 auto 10px; }
+.stat-valor { font-size:22px; font-weight:500; color:var(--color-text-primary); margin-bottom:2px; }
+.stat-label { font-size:11px; color:var(--color-text-secondary); margin-bottom:2px; }
+.stat-sub { font-size:10px; color:#10B981; }
+
+2. SIDEBAR MÁS VISUAL con iconos SVG:
+- Cada item del menú tiene ícono + texto
+- Item activo: fondo verde suave + borde izquierdo verde 3px
+- Hover: fondo más claro
+- Badge rojo para mensajes no leídos
+- Avatar del usuario en la parte inferior con nombre y rol
+- Botón de cerrar sesión con ícono
+
+3. RUTINAS más visuales:
+- Cada ejercicio en card con: número del ejercicio en círculo verde, nombre grande, tags de grupo muscular, chips de series/reps/descanso con iconos
+- Barra de progreso animada arriba
+- Checkbox grande y fácil de tocar (mínimo 44px para móvil)
+- Al completar un ejercicio: animación de check + el card se opaca suavemente
+
+4. NUTRICIÓN más visual:
+- Barra de macros del día: proteínas/carbos/grasas con colores distintos
+- Cada comida con ícono de hora (🌅🌤☀️🌆🌙)
+- Lista de ingredientes con gramaje en chips verdes
+
+5. PROGRESO más visual:
+- Gráfica de peso prominente arriba
+- Grid de fotos 3x2 con sombra suave
+- Comparación con slider deslizable
+
+═══════════════════════════════════════
+PARTE 3 — LOGIN ACCESIBLE DESDE CUALQUIER DISPOSITIVO
+═══════════════════════════════════════
+
+PÁGINA DE LOGIN — rediseño completo y responsivo:
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>NAHOFIT.LIFE — Ingresar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { background:#0A0F0D; font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+    
+    .logo-wrap { text-align:center; margin-bottom:32px; }
+    .logo { font-family:'Syne',sans-serif; font-size:36px; font-weight:700; letter-spacing:-1px; }
+    .logo-n { color:#ECFDF5; }
+    .logo-g { color:#10B981; }
+    .tagline { font-size:12px; color:#4B7A5E; letter-spacing:2px; text-transform:uppercase; margin-top:4px; }
+    
+    .card { background:#0F1A14; border:0.5px solid #1A2E20; border-radius:16px; padding:32px 28px; width:100%; max-width:400px; }
+    
+    .field { margin-bottom:16px; }
+    .field label { display:block; font-size:12px; color:#4B7A5E; margin-bottom:6px; letter-spacing:0.3px; }
+    .field input { 
+      width:100%; background:#0A0F0D; border:0.5px solid #1A2E20; border-radius:10px; 
+      padding:14px 16px; color:#ECFDF5; font-size:16px; outline:none; 
+      -webkit-appearance:none; transition:border-color 0.2s;
+    }
+    .field input:focus { border-color:#10B981; }
+    .field input::placeholder { color:#2D5240; }
+    
+    .btn-login { 
+      width:100%; background:#10B981; color:#000; border:none; border-radius:10px; 
+      padding:16px; font-size:15px; font-weight:600; cursor:pointer; margin-top:8px;
+      -webkit-appearance:none; transition:background 0.2s, transform 0.1s;
+      letter-spacing:0.5px; text-transform:uppercase;
+    }
+    .btn-login:hover { background:#059669; }
+    .btn-login:active { transform:scale(0.98); }
+    .btn-login:disabled { opacity:0.6; }
+    
+    .error { background:#EF444415; border:0.5px solid #EF444440; color:#FCA5A5; border-radius:8px; padding:10px 14px; font-size:13px; margin-bottom:16px; display:none; }
+    .footer { text-align:center; margin-top:24px; font-size:11px; color:#2D5240; }
+    
+    /* Móvil */
+    @media (max-width: 480px) {
+      body { padding:16px; justify-content:flex-start; padding-top:60px; }
+      .logo { font-size:32px; }
+      .card { padding:24px 20px; }
+      .field input { font-size:16px; /* Previene zoom en iOS */ }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-wrap">
+    <div class="logo"><span class="logo-n">NAHOFIT</span><span class="logo-g">.LIFE</span></div>
+    <div class="tagline">Premium Coaching</div>
+  </div>
+  
+  <div class="card">
+    <div class="error" id="error-msg"></div>
+    <div class="field">
+      <label>Correo electrónico</label>
+      <input type="email" id="email" placeholder="tu@email.com" autocomplete="email" inputmode="email">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="pass" placeholder="••••••••" autocomplete="current-password" onkeypress="if(event.key==='Enter')login()">
+    </div>
+    <button class="btn-login" id="btn" onclick="login()">Ingresar</button>
+  </div>
+  
+  <div class="footer">Elaborado por Nahomy — NAHOFIT.LIFE</div>
+
+  <script>
+    const token = localStorage.getItem('nahofitToken');
+    const rol = localStorage.getItem('nahofitRol');
+    if (token && rol) {
+      if (rol === 'administrador') window.location.href = '/admin';
+      else if (rol === 'coach') window.location.href = '/coach';
+      else window.location.href = '/cliente';
+    }
+
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const pass = document.getElementById('pass').value;
+      const err = document.getElementById('error-msg');
+      const btn = document.getElementById('btn');
+      
+      err.style.display = 'none';
+      if (!email || !pass) {
+        err.textContent = 'Ingresa tu correo y contraseña.';
+        err.style.display = 'block';
+        return;
+      }
+      
+      btn.textContent = 'Ingresando...';
+      btn.disabled = true;
+      
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pass })
+        });
+        const data = await res.json();
+        
+        if (!res.ok || data.error) {
+          err.textContent = data.error || 'Correo o contraseña incorrectos.';
+          err.style.display = 'block';
+          btn.textContent = 'Ingresar';
+          btn.disabled = false;
+          return;
+        }
+        
+        localStorage.setItem('nahofitToken', data.token);
+        localStorage.setItem('nahofitRol', data.usuario.rol);
+        localStorage.setItem('nahofitUsuario', JSON.stringify(data.usuario));
+        
+        if (data.usuario.rol === 'administrador') window.location.href = '/admin';
+        else if (data.usuario.rol === 'coach') window.location.href = '/coach';
+        else window.location.href = '/cliente';
+        
+      } catch(e) {
+        err.textContent = 'Error de conexión. Intenta de nuevo.';
+        err.style.display = 'block';
+        btn.textContent = 'Ingresar';
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
+
+Reemplaza el login.html actual con este código completo.
+Aplica la navegación SPA en coach.html, cliente.html y admin.html.
+Aplica las mejoras visuales en el dashboard del cliente.
+Republica la app después.

@@ -1,0 +1,44 @@
+import { Router, type IRouter } from "express";
+import healthRouter from "./health";
+import authRouter from "./auth";
+import usuariosRouter from "./usuarios";
+import clientesRouter from "./clientes";
+import dashboardRouter from "./dashboard";
+import rutinasRouter from "./rutinas";
+import bibliotecaRouter from "./biblioteca";
+import nutricionRouter from "./nutricion";
+import progresoRouter from "./progreso";
+import checkinsRouter from "./checkins";
+import emocionalRouter from "./emocional";
+import diarioRouter from "./diario";
+import mensajesRouter from "./mensajes";
+import pagosRouter from "./pagos";
+import reportesRouter from "./reportes";
+import aiRouter from "./ai";
+import planesRouter from "./planes";
+import calendarioRouter from "./calendario";
+import frasesRouter from "./frases";
+
+const router: IRouter = Router();
+
+router.use(healthRouter);
+router.use(authRouter);
+router.use(usuariosRouter);
+router.use(clientesRouter);
+router.use(dashboardRouter);
+router.use(rutinasRouter);
+router.use(bibliotecaRouter);
+router.use(nutricionRouter);
+router.use(progresoRouter);
+router.use(checkinsRouter);
+router.use(emocionalRouter);
+router.use(diarioRouter);
+router.use(mensajesRouter);
+router.use(pagosRouter);
+router.use(reportesRouter);
+router.use(aiRouter);
+router.use(planesRouter);
+router.use(calendarioRouter);
+router.use(frasesRouter);
+
+export default router;

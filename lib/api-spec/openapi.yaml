@@ -1,0 +1,2189 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: NAHOFIT.LIFE API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: usuarios
+    description: User management
+  - name: clientes
+    description: Client management
+  - name: rutinas
+    description: Workout routines
+  - name: biblioteca
+    description: Exercise library
+  - name: nutricion
+    description: Nutrition plans
+  - name: progreso
+    description: Progress tracking
+  - name: checkin
+    description: Daily check-ins
+  - name: emocional
+    description: Emotional wellness
+  - name: diario
+    description: Mental diary
+  - name: mensajes
+    description: Messaging
+  - name: pagos
+    description: Payments
+  - name: reportes
+    description: Reports
+  - name: ai
+    description: AI features
+  - name: anthropic
+    description: Anthropic AI chat operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /usuarios:
+    get:
+      operationId: listUsuarios
+      tags: [usuarios]
+      summary: List all users (admin)
+      parameters:
+        - name: rol
+          in: query
+          schema:
+            type: string
+        - name: activo
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Usuario"
+    post:
+      operationId: createUsuario
+      tags: [usuarios]
+      summary: Create user (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUsuarioBody"
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+
+  /usuarios/{id}:
+    put:
+      operationId: updateUsuario
+      tags: [usuarios]
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUsuarioBody"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+    delete:
+      operationId: deleteUsuario
+      tags: [usuarios]
+      summary: Delete user (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /clientes:
+    get:
+      operationId: listClientes
+      tags: [clientes]
+      summary: List clients
+      parameters:
+        - name: activo
+          in: query
+          schema:
+            type: boolean
+        - name: nivel
+          in: query
+          schema:
+            type: string
+        - name: objetivo
+          in: query
+          schema:
+            type: string
+        - name: modalidad
+          in: query
+          schema:
+            type: string
+        - name: buscar
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClienteDetalle"
+
+  /clientes/{id}:
+    get:
+      operationId: getCliente
+      tags: [clientes]
+      summary: Get client details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClienteDetalle"
+    put:
+      operationId: updateCliente
+      tags: [clientes]
+      summary: Update client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUsuarioBody"
+      responses:
+        "200":
+          description: Updated client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClienteDetalle"
+
+  /dashboard/coach:
+    get:
+      operationId: getDashboardCoach
+      tags: [reportes]
+      summary: Coach dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardCoach"
+
+  /dashboard/admin:
+    get:
+      operationId: getDashboardAdmin
+      tags: [reportes]
+      summary: Admin dashboard summary
+      responses:
+        "200":
+          description: Admin dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardAdmin"
+
+  /dashboard/cliente/{id}:
+    get:
+      operationId: getDashboardCliente
+      tags: [reportes]
+      summary: Client dashboard summary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardCliente"
+
+  /rutinas/{clienteId}/{semanaInicio}:
+    get:
+      operationId: getRutina
+      tags: [rutinas]
+      summary: Get weekly routine for a client
+      parameters:
+        - name: clienteId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: semanaInicio
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Weekly routine
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Rutina"
+
+  /rutinas:
+    post:
+      operationId: createRutina
+      tags: [rutinas]
+      summary: Create/update routine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRutinaBody"
+      responses:
+        "201":
+          description: Created routine
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rutina"
+
+  /rutinas/generar-ai:
+    post:
+      operationId: generarRutinaAI
+      tags: [rutinas]
+      summary: Generate routine with AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerarRutinaAIBody"
+      responses:
+        "200":
+          description: Generated routine
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RutinaGenerada"
+
+  /biblioteca-ejercicios:
+    get:
+      operationId: listBibliotecaEjercicios
+      tags: [biblioteca]
+      summary: List exercise library
+      parameters:
+        - name: grupoMuscular
+          in: query
+          schema:
+            type: string
+        - name: buscar
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Exercise library
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ejercicio"
+    post:
+      operationId: createEjercicio
+      tags: [biblioteca]
+      summary: Add exercise to library
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEjercicioBody"
+      responses:
+        "201":
+          description: Created exercise
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ejercicio"
+
+  /planes-comida/{clienteId}/{semanaInicio}:
+    get:
+      operationId: getPlanComida
+      tags: [nutricion]
+      summary: Get weekly meal plan for a client
+      parameters:
+        - name: clienteId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: semanaInicio
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Weekly meal plan
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlanComida"
+
+  /planes-comida:
+    post:
+      operationId: createPlanComida
+      tags: [nutricion]
+      summary: Create/update meal plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePlanComidaBody"
+      responses:
+        "201":
+          description: Created meal plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlanComida"
+
+  /planes-comida/generar-ai:
+    post:
+      operationId: generarPlanComidaAI
+      tags: [nutricion]
+      summary: Generate meal plan with AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerarPlanComidaAIBody"
+      responses:
+        "200":
+          description: Generated meal plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlanComidaGenerado"
+
+  /progreso/{clienteId}:
+    get:
+      operationId: getProgreso
+      tags: [progreso]
+      summary: Get client progress records
+      parameters:
+        - name: clienteId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limite
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Progress records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RegistroProgreso"
+
+  /progreso:
+    post:
+      operationId: createProgreso
+      tags: [progreso]
+      summary: Record progress
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProgresoBody"
+      responses:
+        "201":
+          description: Progress recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistroProgreso"
+
+  /checkins/{clienteId}/{fecha}:
+    get:
+      operationId: getCheckin
+      tags: [checkin]
+      summary: Get daily check-in
+      parameters:
+        - name: clienteId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: fecha
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Daily check-in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckinDiario"
+
+  /checkins:
+    post:
+      operationId: createCheckin
+      tags: [checkin]
+      summary: Record daily check-in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCheckinBody"
+      responses:
+        "201":
+          description: Check-in recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckinDiario"
+
+  /checkins/semana/{clienteId}:
+    get:
+      operationId: getCheckinsSemanales
+      tags: [checkin]
+      summary: Get weekly check-ins for calendar view
+      parameters:
+        - name: clienteId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: semanaInicio
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Weekly check-ins
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CheckinDiario"
+
+  /emocional/{clienteId}:
+    get:
+      operationId: getCheckinsEmocionales
+      tags: [emocional]
+      summary: Get emotional check-ins for a client
+      parameters:
+        - name: clienteId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limite
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Emotional check-ins
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CheckinEmocional"
+
+  /emocional:
+    post:
+      operationId: createCheckinEmocional
+      tags: [emocional]
+      summary: Record emotional check-in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCheckinEmocionalBody"
+      responses:
+        "201":
+          description: Emotional check-in recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckinEmocional"
+
+  /emocional/alertas:
+    get:
+      operationId: getAlertasEmocionales
+      tags: [emocional]
+      summary: Get clients with low emotional state alerts
+      responses:
+        "200":
+          description: Emotional alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertaEmocional"
+
+  /diario/{clienteId}:
+    get:
+      operationId: getDiario
+      tags: [diario]
+      summary: Get mental diary entries
+      parameters:
+        - name: clienteId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limite
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Diary entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EntradaDiario"
+
+  /diario:
+    post:
+      operationId: createEntradaDiario
+      tags: [diario]
+      summary: Create diary entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEntradaDiarioBody"
+      responses:
+        "201":
+          description: Diary entry created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntradaDiario"
+
+  /mensajes/{userId}:
+    get:
+      operationId: getMensajes
+      tags: [mensajes]
+      summary: Get messages for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: conUsuarioId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Mensaje"
+
+  /mensajes:
+    post:
+      operationId: createMensaje
+      tags: [mensajes]
+      summary: Send a message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMensajeBody"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mensaje"
+
+  /mensajes/{id}/leido:
+    put:
+      operationId: marcarMensajeLeido
+      tags: [mensajes]
+      summary: Mark message as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Message marked as read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mensaje"
+
+  /mensajes/conversaciones:
+    get:
+      operationId: listConversaciones
+      tags: [mensajes]
+      summary: List conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversacion"
+
+  /pagos/{clienteId}:
+    get:
+      operationId: getPagos
+      tags: [pagos]
+      summary: Get payments for a client (0 = all)
+      parameters:
+        - name: clienteId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payment records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pago"
+
+  /pagos:
+    get:
+      operationId: getAllPagos
+      tags: [pagos]
+      summary: Get all payments
+      responses:
+        "200":
+          description: All payment records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pago"
+    post:
+      operationId: createPago
+      tags: [pagos]
+      summary: Record payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePagoBody"
+      responses:
+        "201":
+          description: Payment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pago"
+
+  /pagos/stats:
+    get:
+      operationId: getPagosStats
+      tags: [pagos]
+      summary: Get payment statistics
+      responses:
+        "200":
+          description: Payment statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagosStats"
+
+  /pagos/alertas:
+    get:
+      operationId: getAlertasPagos
+      tags: [pagos]
+      summary: Get clients with overdue payments
+      responses:
+        "200":
+          description: Payment alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertaPago"
+
+  /pagos/{id}/estado:
+    patch:
+      operationId: updatePagoEstado
+      tags: [pagos]
+      summary: Update payment status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                estado:
+                  type: string
+                  enum: [pagado, pendiente, vencido]
+                notas:
+                  type: string
+                proxPago:
+                  type: string
+      responses:
+        "200":
+          description: Updated payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pago"
+
+  /reportes/adherencia:
+    get:
+      operationId: getReporteAdherencia
+      tags: [reportes]
+      summary: Get global adherence report
+      responses:
+        "200":
+          description: Adherence report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReporteAdherencia"
+
+  /reportes/ingresos:
+    get:
+      operationId: getReporteIngresos
+      tags: [reportes]
+      summary: Get income report
+      responses:
+        "200":
+          description: Income report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReporteIngresos"
+
+  /ai/frase-motivacional/{clienteId}:
+    get:
+      operationId: getFraseMotivacional
+      tags: [ai]
+      summary: Get personalized motivational phrase
+      parameters:
+        - name: clienteId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Motivational phrase
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FraseMotivacional"
+
+  /ai/chat:
+    post:
+      operationId: aiChat
+      tags: [ai]
+      summary: AI coach chat (SSE stream)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AIChatBody"
+      responses:
+        "200":
+          description: SSE stream of AI response
+          content:
+            text/event-stream: {}
+
+  /anthropic/conversations:
+    get:
+      operationId: listAnthropicConversations
+      tags: [anthropic]
+      summary: List all conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnthropicConversation"
+    post:
+      operationId: createAnthropicConversation
+      tags: [anthropic]
+      summary: Create a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAnthropicConversationBody"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicConversation"
+
+  /anthropic/conversations/{id}:
+    get:
+      operationId: getAnthropicConversation
+      tags: [anthropic]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicConversationWithMessages"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicError"
+    delete:
+      operationId: deleteAnthropicConversation
+      tags: [anthropic]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicError"
+
+  /anthropic/conversations/{id}/messages:
+    get:
+      operationId: listAnthropicMessages
+      tags: [anthropic]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnthropicMessage"
+    post:
+      operationId: sendAnthropicMessage
+      tags: [anthropic]
+      summary: Send a message and receive an AI response (SSE stream)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendAnthropicMessageBody"
+      responses:
+        "200":
+          description: SSE stream of assistant response chunks
+          content:
+            text/event-stream: {}
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        mensaje:
+          type: string
+      required:
+        - error
+
+    MessageResponse:
+      type: object
+      properties:
+        mensaje:
+          type: string
+      required:
+        - mensaje
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        usuario:
+          $ref: "#/components/schemas/Usuario"
+      required:
+        - token
+        - usuario
+
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        email:
+          type: string
+        rol:
+          type: string
+          enum: [admin, coach, cliente]
+        telefono:
+          type: string
+          nullable: true
+        fechaNacimiento:
+          type: string
+          nullable: true
+        objetivo:
+          type: string
+          nullable: true
+        lesiones:
+          type: string
+          nullable: true
+        nivelFitness:
+          type: string
+          nullable: true
+        modalidad:
+          type: string
+          nullable: true
+        coachId:
+          type: integer
+          nullable: true
+        planTipo:
+          type: string
+          nullable: true
+        activo:
+          type: boolean
+        creadoEn:
+          type: string
+          format: date-time
+      required:
+        - id
+        - nombre
+        - email
+        - rol
+        - activo
+        - creadoEn
+
+    ClienteDetalle:
+      allOf:
+        - $ref: "#/components/schemas/Usuario"
+        - type: object
+          properties:
+            coachNombre:
+              type: string
+              nullable: true
+            ultimoPeso:
+              type: number
+              nullable: true
+            adherenciaSemana:
+              type: number
+              nullable: true
+
+    CreateUsuarioBody:
+      type: object
+      properties:
+        nombre:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        rol:
+          type: string
+          enum: [admin, coach, cliente]
+        telefono:
+          type: string
+        fechaNacimiento:
+          type: string
+        objetivo:
+          type: string
+        lesiones:
+          type: string
+        nivelFitness:
+          type: string
+        modalidad:
+          type: string
+        coachId:
+          type: integer
+        planTipo:
+          type: string
+      required:
+        - nombre
+        - email
+        - password
+        - rol
+
+    UpdateUsuarioBody:
+      type: object
+      properties:
+        nombre:
+          type: string
+        email:
+          type: string
+        telefono:
+          type: string
+        fechaNacimiento:
+          type: string
+        objetivo:
+          type: string
+        lesiones:
+          type: string
+        nivelFitness:
+          type: string
+        modalidad:
+          type: string
+        coachId:
+          type: integer
+        planTipo:
+          type: string
+        activo:
+          type: boolean
+
+    DashboardCoach:
+      type: object
+      properties:
+        totalClientesActivos:
+          type: integer
+        adherenciaPromedio:
+          type: number
+        mensajesSinLeer:
+          type: integer
+        clientesSinCheckinHoy:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              nombre:
+                type: string
+            required:
+              - id
+              - nombre
+        clientesConAlertaEmocional:
+          type: integer
+        clientesConPagoVencido:
+          type: integer
+      required:
+        - totalClientesActivos
+        - adherenciaPromedio
+        - mensajesSinLeer
+        - clientesSinCheckinHoy
+        - clientesConAlertaEmocional
+        - clientesConPagoVencido
+
+    DashboardAdmin:
+      type: object
+      properties:
+        totalClientes:
+          type: integer
+        totalCoaches:
+          type: integer
+        clientesActivosMes:
+          type: integer
+        ingresosMes:
+          type: number
+        adherenciaGlobal:
+          type: number
+      required:
+        - totalClientes
+        - totalCoaches
+        - clientesActivosMes
+        - ingresosMes
+        - adherenciaGlobal
+
+    DashboardCliente:
+      type: object
+      properties:
+        saludo:
+          type: string
+        rachaCheckin:
+          type: integer
+        rutinaHoy:
+          type: object
+          nullable: true
+        planComidaHoy:
+          type: object
+          nullable: true
+        ultimoPeso:
+          type: number
+          nullable: true
+        fraseMotivacional:
+          type: string
+          nullable: true
+      required:
+        - saludo
+        - rachaCheckin
+
+    Rutina:
+      type: object
+      properties:
+        id:
+          type: integer
+        clienteId:
+          type: integer
+        coachId:
+          type: integer
+        semanaInicio:
+          type: string
+        diaSemana:
+          type: integer
+        ejercicios:
+          type: array
+          items:
+            $ref: "#/components/schemas/EjercicioRutina"
+        aprobada:
+          type: boolean
+        notas:
+          type: string
+          nullable: true
+      required:
+        - id
+        - clienteId
+        - coachId
+        - semanaInicio
+        - diaSemana
+        - ejercicios
+        - aprobada
+
+    EjercicioRutina:
+      type: object
+      properties:
+        nombre:
+          type: string
+        series:
+          type: integer
+        repeticiones:
+          type: string
+        descanso:
+          type: string
+        instrucciones:
+          type: string
+        videoUrl:
+          type: string
+          nullable: true
+        grupoMuscular:
+          type: string
+          nullable: true
+        completado:
+          type: boolean
+      required:
+        - nombre
+        - series
+        - repeticiones
+        - descanso
+        - instrucciones
+
+    CreateRutinaBody:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+        semanaInicio:
+          type: string
+        diaSemana:
+          type: integer
+        ejercicios:
+          type: array
+          items:
+            $ref: "#/components/schemas/EjercicioRutina"
+        aprobada:
+          type: boolean
+        notas:
+          type: string
+      required:
+        - clienteId
+        - semanaInicio
+        - diaSemana
+        - ejercicios
+
+    GenerarRutinaAIBody:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+      required:
+        - clienteId
+
+    RutinaGenerada:
+      type: object
+      properties:
+        dias:
+          type: array
+          items:
+            type: object
+            properties:
+              diaSemana:
+                type: integer
+              ejercicios:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EjercicioRutina"
+            required:
+              - diaSemana
+              - ejercicios
+      required:
+        - dias
+
+    Ejercicio:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        grupoMuscular:
+          type: string
+        instrucciones:
+          type: string
+        fotoUrl:
+          type: string
+          nullable: true
+        videoUrl:
+          type: string
+          nullable: true
+        creadoPor:
+          type: integer
+          nullable: true
+      required:
+        - id
+        - nombre
+        - grupoMuscular
+        - instrucciones
+
+    CreateEjercicioBody:
+      type: object
+      properties:
+        nombre:
+          type: string
+        grupoMuscular:
+          type: string
+        instrucciones:
+          type: string
+        fotoUrl:
+          type: string
+        videoUrl:
+          type: string
+      required:
+        - nombre
+        - grupoMuscular
+        - instrucciones
+
+    PlanComida:
+      type: object
+      properties:
+        id:
+          type: integer
+        clienteId:
+          type: integer
+        coachId:
+          type: integer
+        semanaInicio:
+          type: string
+        diaSemana:
+          type: integer
+        comidas:
+          type: array
+          items:
+            $ref: "#/components/schemas/ComidaDia"
+        caloriasTotal:
+          type: integer
+        aprobada:
+          type: boolean
+        notas:
+          type: string
+          nullable: true
+      required:
+        - id
+        - clienteId
+        - coachId
+        - semanaInicio
+        - diaSemana
+        - comidas
+        - caloriasTotal
+        - aprobada
+
+    ComidaDia:
+      type: object
+      properties:
+        nombre:
+          type: string
+        descripcion:
+          type: string
+        calorias:
+          type: integer
+        proteinas:
+          type: number
+        carbohidratos:
+          type: number
+        grasas:
+          type: number
+        completada:
+          type: boolean
+      required:
+        - nombre
+        - descripcion
+        - calorias
+        - proteinas
+        - carbohidratos
+        - grasas
+
+    CreatePlanComidaBody:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+        semanaInicio:
+          type: string
+        diaSemana:
+          type: integer
+        comidas:
+          type: array
+          items:
+            $ref: "#/components/schemas/ComidaDia"
+        caloriasTotal:
+          type: integer
+        aprobada:
+          type: boolean
+        notas:
+          type: string
+      required:
+        - clienteId
+        - semanaInicio
+        - diaSemana
+        - comidas
+        - caloriasTotal
+
+    GenerarPlanComidaAIBody:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+      required:
+        - clienteId
+
+    PlanComidaGenerado:
+      type: object
+      properties:
+        dias:
+          type: array
+          items:
+            type: object
+            properties:
+              diaSemana:
+                type: integer
+              comidas:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ComidaDia"
+              caloriasTotal:
+                type: integer
+            required:
+              - diaSemana
+              - comidas
+              - caloriasTotal
+      required:
+        - dias
+
+    RegistroProgreso:
+      type: object
+      properties:
+        id:
+          type: integer
+        clienteId:
+          type: integer
+        fecha:
+          type: string
+        pesoKg:
+          type: number
+          nullable: true
+        grasaCorporal:
+          type: number
+          nullable: true
+        cinturaCm:
+          type: number
+          nullable: true
+        caderaCm:
+          type: number
+          nullable: true
+        pechoCm:
+          type: number
+          nullable: true
+        brazoCm:
+          type: number
+          nullable: true
+        piernaCm:
+          type: number
+          nullable: true
+        masaMuscular:
+          type: number
+          nullable: true
+        aguaCorporal:
+          type: number
+          nullable: true
+        metabolismoBasal:
+          type: integer
+          nullable: true
+        fotoUrl:
+          type: string
+          nullable: true
+        notas:
+          type: string
+          nullable: true
+      required:
+        - id
+        - clienteId
+        - fecha
+
+    CreateProgresoBody:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+        fecha:
+          type: string
+        pesoKg:
+          type: number
+        grasaCorporal:
+          type: number
+        cinturaCm:
+          type: number
+        caderaCm:
+          type: number
+        pechoCm:
+          type: number
+        brazoCm:
+          type: number
+        piernaCm:
+          type: number
+        masaMuscular:
+          type: number
+        aguaCorporal:
+          type: number
+        metabolismoBasal:
+          type: integer
+        notas:
+          type: string
+      required:
+        - clienteId
+        - fecha
+
+    CheckinDiario:
+      type: object
+      properties:
+        id:
+          type: integer
+        clienteId:
+          type: integer
+        fecha:
+          type: string
+        ejerciciosCompletados:
+          type: array
+          items:
+            type: string
+        comidasCompletadas:
+          type: array
+          items:
+            type: string
+        porcentajeAdherencia:
+          type: number
+      required:
+        - id
+        - clienteId
+        - fecha
+        - ejerciciosCompletados
+        - comidasCompletadas
+        - porcentajeAdherencia
+
+    CreateCheckinBody:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+        fecha:
+          type: string
+        ejerciciosCompletados:
+          type: array
+          items:
+            type: string
+        comidasCompletadas:
+          type: array
+          items:
+            type: string
+        porcentajeAdherencia:
+          type: number
+      required:
+        - clienteId
+        - fecha
+        - ejerciciosCompletados
+        - comidasCompletadas
+        - porcentajeAdherencia
+
+    CheckinEmocional:
+      type: object
+      properties:
+        id:
+          type: integer
+        clienteId:
+          type: integer
+        fecha:
+          type: string
+        estadoAnimo:
+          type: integer
+        nivelEnergia:
+          type: integer
+        horasSueno:
+          type: number
+        notas:
+          type: string
+          nullable: true
+      required:
+        - id
+        - clienteId
+        - fecha
+        - estadoAnimo
+        - nivelEnergia
+        - horasSueno
+
+    CreateCheckinEmocionalBody:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+        fecha:
+          type: string
+        estadoAnimo:
+          type: integer
+        nivelEnergia:
+          type: integer
+        horasSueno:
+          type: number
+        notas:
+          type: string
+      required:
+        - clienteId
+        - fecha
+        - estadoAnimo
+        - nivelEnergia
+        - horasSueno
+
+    AlertaEmocional:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+        clienteNombre:
+          type: string
+        diasBajos:
+          type: integer
+        ultimoEstado:
+          type: integer
+      required:
+        - clienteId
+        - clienteNombre
+        - diasBajos
+        - ultimoEstado
+
+    EntradaDiario:
+      type: object
+      properties:
+        id:
+          type: integer
+        clienteId:
+          type: integer
+        fecha:
+          type: string
+        contenido:
+          type: string
+        gratitud:
+          type: string
+          nullable: true
+      required:
+        - id
+        - clienteId
+        - fecha
+        - contenido
+
+    CreateEntradaDiarioBody:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+        fecha:
+          type: string
+        contenido:
+          type: string
+        gratitud:
+          type: string
+      required:
+        - clienteId
+        - fecha
+        - contenido
+
+    Mensaje:
+      type: object
+      properties:
+        id:
+          type: integer
+        remitenteId:
+          type: integer
+        receptorId:
+          type: integer
+        contenido:
+          type: string
+        leido:
+          type: boolean
+        creadoEn:
+          type: string
+          format: date-time
+        remitenteNombre:
+          type: string
+          nullable: true
+        receptorNombre:
+          type: string
+          nullable: true
+      required:
+        - id
+        - remitenteId
+        - receptorId
+        - contenido
+        - leido
+        - creadoEn
+
+    CreateMensajeBody:
+      type: object
+      properties:
+        receptorId:
+          type: integer
+        contenido:
+          type: string
+      required:
+        - receptorId
+        - contenido
+
+    Conversacion:
+      type: object
+      properties:
+        usuarioId:
+          type: integer
+        usuarioNombre:
+          type: string
+        ultimoMensaje:
+          type: string
+          nullable: true
+        ultimaFecha:
+          type: string
+          nullable: true
+        noLeidos:
+          type: integer
+      required:
+        - usuarioId
+        - usuarioNombre
+        - noLeidos
+
+    Pago:
+      type: object
+      properties:
+        id:
+          type: integer
+        clienteId:
+          type: integer
+        fecha:
+          type: string
+        monto:
+          type: number
+        metodo:
+          type: string
+        metodoDatos:
+          type: object
+          nullable: true
+          additionalProperties: true
+        concepto:
+          type: string
+        estado:
+          type: string
+          enum: [pagado, pendiente, vencido]
+        notas:
+          type: string
+          nullable: true
+        proxPago:
+          type: string
+          nullable: true
+        clienteNombre:
+          type: string
+          nullable: true
+        creadoEn:
+          type: string
+      required:
+        - id
+        - clienteId
+        - fecha
+        - monto
+        - metodo
+        - concepto
+        - estado
+
+    CreatePagoBody:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+        fecha:
+          type: string
+        monto:
+          type: number
+        metodo:
+          type: string
+          enum: [efectivo, zelle, transferencia, stripe]
+        metodoDatos:
+          type: object
+          nullable: true
+          additionalProperties: true
+        concepto:
+          type: string
+        estado:
+          type: string
+          enum: [pagado, pendiente, vencido]
+        notas:
+          type: string
+        proxPago:
+          type: string
+          nullable: true
+      required:
+        - clienteId
+        - fecha
+        - monto
+        - metodo
+        - concepto
+        - estado
+
+    PagosStats:
+      type: object
+      properties:
+        totalMes:
+          type: number
+        totalAnio:
+          type: number
+        pendientes:
+          type: integer
+        vencidos:
+          type: integer
+        mensual:
+          type: object
+          additionalProperties:
+            type: number
+      required:
+        - totalMes
+        - totalAnio
+        - pendientes
+        - vencidos
+        - mensual
+
+    AlertaPago:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+        clienteNombre:
+          type: string
+        monto:
+          type: number
+        fechaVencimiento:
+          type: string
+        diasVencido:
+          type: integer
+      required:
+        - clienteId
+        - clienteNombre
+        - monto
+        - fechaVencimiento
+        - diasVencido
+
+    ReporteAdherencia:
+      type: object
+      properties:
+        adherenciaGlobal:
+          type: number
+        porCliente:
+          type: array
+          items:
+            type: object
+            properties:
+              clienteId:
+                type: integer
+              clienteNombre:
+                type: string
+              adherencia:
+                type: number
+            required:
+              - clienteId
+              - clienteNombre
+              - adherencia
+        porSemana:
+          type: array
+          items:
+            type: object
+            properties:
+              semana:
+                type: string
+              adherencia:
+                type: number
+            required:
+              - semana
+              - adherencia
+      required:
+        - adherenciaGlobal
+        - porCliente
+        - porSemana
+
+    ReporteIngresos:
+      type: object
+      properties:
+        totalMes:
+          type: number
+        totalAnio:
+          type: number
+        porMetodo:
+          type: array
+          items:
+            type: object
+            properties:
+              metodo:
+                type: string
+              total:
+                type: number
+            required:
+              - metodo
+              - total
+        porMes:
+          type: array
+          items:
+            type: object
+            properties:
+              mes:
+                type: string
+              total:
+                type: number
+            required:
+              - mes
+              - total
+      required:
+        - totalMes
+        - totalAnio
+        - porMetodo
+        - porMes
+
+    FraseMotivacional:
+      type: object
+      properties:
+        frase:
+          type: string
+      required:
+        - frase
+
+    AIChatBody:
+      type: object
+      properties:
+        clienteId:
+          type: integer
+        mensaje:
+          type: string
+        historial:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+              content:
+                type: string
+            required:
+              - role
+              - content
+      required:
+        - clienteId
+        - mensaje
+
+    AnthropicConversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - createdAt
+
+    AnthropicMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversationId
+        - role
+        - content
+        - createdAt
+
+    CreateAnthropicConversationBody:
+      type: object
+      properties:
+        title:
+          type: string
+      required:
+        - title
+
+    SendAnthropicMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
+
+    AnthropicConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnthropicMessage"
+      required:
+        - id
+        - title
+        - createdAt
+        - messages
+
+    AnthropicError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

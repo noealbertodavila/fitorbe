@@ -1,0 +1,105 @@
+Corrige el error en la generación del plan de nutrición:
+"HTTP 500: Expected ',' or ']' after array element in JSON at position 21028"
+
+CAUSA RAÍZ:
+El AI genera una respuesta muy larga que excede el límite de tokens o el JSON se corrompe porque el plan de nutrición es demasiado extenso.
+
+CORRECCIONES:
+
+1. Aumentar max_tokens en la llamada al AI para nutrición:
+const response = await anthropic.messages.create({
+  model: 'claude-sonnet-4-20250514',
+  max_tokens: 4096, // Aumentar de 1000 a 4096
+  messages: [{ role: 'user', content: prompt }]
+});
+
+2. Agregar manejo de errores de JSON robusto:
+async function generarPlanNutricion(req, res) {
+  try {
+    const respuestaAI = response.content[0].text;
+    
+    // Limpiar la respuesta antes de parsear
+    let jsonLimpio = respuestaAI
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+    
+    // Intentar parsear
+    let planNutricion;
+    try {
+      planNutricion = JSON.parse(jsonLimpio);
+    } catch(parseError) {
+      console.error('Error parseando JSON de nutrición:', parseError.message);
+      console.error('Posición del error:', parseError.message.match(/position (\d+)/)?.[1]);
+      console.error('Respuesta del AI (primeros 500 chars):', jsonLimpio.substring(0, 500));
+      
+      return res.status(500).json({ 
+        error: 'Error al procesar el plan generado. Intenta de nuevo.',
+        detalle: parseError.message
+      });
+    }
+    
+    res.json(planNutricion);
+    
+  } catch(e) {
+    console.error('Error generando nutrición:', e);
+    res.status(500).json({ error: 'Error al generar el plan: ' + e.message });
+  }
+}
+
+3. Simplificar el prompt de nutrición para que el JSON sea más corto:
+El plan de nutrición debe ser MÁS CONCISO. Cambiar el prompt así:
+
+`Genera un plan de nutrición para 7 días en formato JSON estrictamente válido.
+IMPORTANTE: Responde SOLO con el JSON, sin texto adicional, sin backticks, sin comentarios.
+
+Formato requerido (mantén exactamente esta estructura, sin campos adicionales):
+{
+  "dias": [
+    {
+      "dia": "Lunes",
+      "calorias_total": 2000,
+      "proteinas_total": 150,
+      "carbos_total": 200,
+      "grasas_total": 65,
+      "comidas": [
+        {
+          "nombre": "Desayuno",
+          "hora": "7:00am",
+          "descripcion": "Descripción breve",
+          "ingredientes": [
+            {"nombre": "Avena", "gramos": 80},
+            {"nombre": "Leche", "gramos": 200}
+          ],
+          "calorias": 380,
+          "proteinas": 15,
+          "carbos": 60,
+          "grasas": 8
+        }
+      ]
+    }
+  ]
+}
+
+Datos del cliente:
+- Nombre: ${cliente.nombre}
+- Objetivo: ${cliente.objetivo}
+- Calorías diarias meta: ${calorias_meta}
+- Tipo alimentación: ${cliente.tipo_alimentacion || 'omnívoro'}
+- Alergias: ${cliente.alergias || 'ninguna'}
+- Comidas por día: ${cliente.num_comidas || 5}
+
+Genera exactamente 7 días con exactamente ${cliente.num_comidas || 5} comidas por día.
+Mantén las descripciones CORTAS (máximo 10 palabras).
+Máximo 4 ingredientes por comida.`
+
+4. En el frontend, al mostrar el error al usuario:
+if (error.includes('JSON') || error.includes('500')) {
+  mostrarToast('El plan es muy extenso. Generando versión simplificada...', 'warning');
+  // Reintentar automáticamente con prompt más corto
+  generarPlanSimplificado(clienteId, semana);
+}
+
+5. Verificar que el endpoint de nutrición usa la misma corrección que el de rutinas que SÍ funciona.
+
+Republica la app después.

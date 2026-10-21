@@ -1,0 +1,117 @@
+Problema urgente: cuando el cliente "noe" (noe@gmail.com) inicia sesión, la pantalla queda completamente en negro. Con otros clientes funciona bien.
+
+DIAGNÓSTICO Y CORRECCIÓN:
+
+1. Abre la consola del navegador (F12 → Console) y busca el error exacto — probablemente es un error de JavaScript al intentar renderizar datos que no existen
+
+2. El problema es que el dashboard del cliente tiene código que intenta acceder a propiedades de objetos que son null o undefined cuando el cliente no tiene datos asignados. Ejemplo:
+   - rutina.ejercicios.map(...) → falla si rutina es null
+   - nutricion.comidas[0].nombre → falla si nutricion es null
+   - progreso.registros.length → falla si progreso es null
+
+3. Agrega protección en CADA línea que accede a datos del cliente:
+
+// MAL — causa pantalla negra:
+const ejercicios = rutina.dias[0].ejercicios;
+
+// BIEN — protegido:
+const ejercicios = rutina?.dias?.[0]?.ejercicios || [];
+
+4. En el archivo cliente.js (o como se llame), envuelve TODO el código de renderizado en try/catch:
+
+async function iniciarDashboard() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) { window.location.href = '/login.html'; return; }
+    
+    const perfil = await fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.json()).catch(() => null);
+    
+    if (!perfil || perfil.error) {
+      localStorage.removeItem('token');
+      window.location.href = '/login.html';
+      return;
+    }
+    
+    // Cargar todos los datos con manejo de errores individual
+    await Promise.allSettled([
+      cargarRutina(perfil.id),
+      cargarNutricion(perfil.id),
+      cargarProgreso(perfil.id),
+      cargarMensajes(perfil.id),
+      cargarEmocional(perfil.id),
+      cargarPagos(perfil.id)
+    ]);
+    
+    // Mostrar dashboard aunque algunos datos fallen
+    mostrarDashboard(perfil);
+    
+  } catch(error) {
+    console.error('Error iniciando dashboard:', error);
+    // Mostrar mensaje de error en pantalla en lugar de negro
+    document.body.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0A0F0D;color:#10B981;font-family:sans-serif;text-align:center;padding:20px;">
+        <div>
+          <h2>NAHOFIT.LIFE</h2>
+          <p style="color:#4B7A5E;">Hubo un error al cargar tu panel.</p>
+          <button onclick="window.location.reload()" style="background:#10B981;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;margin-top:16px;">Intentar de nuevo</button>
+          <br><br>
+          <a href="/login.html" style="color:#4B7A5E;font-size:12px;">Volver al login</a>
+        </div>
+      </div>`;
+  }
+}
+
+5. Cada función de carga debe manejar errores individualmente:
+
+async function cargarRutina(clienteId) {
+  try {
+    const semana = obtenerLunesActual();
+    const token = localStorage.getItem('token');
+    const res = await fetch(`/api/rutina/${clienteId}/${semana}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = res.ok ? await res.json() : null;
+    renderizarRutina(data);
+  } catch(e) {
+    renderizarRutina(null);
+  }
+}
+
+function renderizarRutina(data) {
+  const contenedor = document.getElementById('seccion-rutina');
+  if (!contenedor) return;
+  
+  if (!data || !data.dias || data.dias.length === 0) {
+    contenedor.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;">
+        <div style="font-size:48px;margin-bottom:16px;">💪</div>
+        <h3 style="color:#ECFDF5;margin-bottom:8px;">Sin rutina esta semana</h3>
+        <p style="color:#4B7A5E;margin-bottom:24px;">Tu coach aún no ha asignado tu plan de entrenamiento.</p>
+        <button onclick="enviarMensajeCoach()" style="background:#10B981;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;">
+          Enviar mensaje al coach
+        </button>
+      </div>`;
+    return;
+  }
+  
+  // Renderizar rutina con datos...
+}
+
+6. Aplica el mismo patrón para: cargarNutricion, cargarProgreso, cargarMensajes, cargarEmocional, cargarPagos
+
+7. También verifica que la función obtenerLunesActual() existe y funciona correctamente:
+function obtenerLunesActual() {
+  const hoy = new Date();
+  const dia = hoy.getDay();
+  const diff = hoy.getDate() - dia + (dia === 0 ? -6 : 1);
+  const lunes = new Date(hoy.setDate(diff));
+  return lunes.toISOString().split('T')[0];
+}
+
+8. Prueba específicamente con noe@gmail.com — el dashboard debe cargar completamente aunque no tenga rutina, nutrición ni progreso asignado. Nunca debe quedar en negro.
+
+9. Verifica en la consola del navegador (F12) que no hay errores de JavaScript al cargar el dashboard de noe
+
+Republica la app después de los cambios.

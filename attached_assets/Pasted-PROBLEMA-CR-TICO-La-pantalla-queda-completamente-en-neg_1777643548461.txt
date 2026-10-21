@@ -1,0 +1,155 @@
+PROBLEMA CRÍTICO: La pantalla queda completamente en negro para TODOS los usuarios al iniciar sesión. Es el problema más urgente de toda la app.
+
+DIAGNÓSTICO COMPLETO:
+
+1. Primero revisa los logs del servidor — ejecuta y muestra cualquier error
+
+2. El problema está en que después del login, la redirección al dashboard falla. Revisa este flujo exacto:
+
+LOGIN → guarda token en localStorage → redirige a /coach, /cliente o /admin → esa página queda en negro
+
+3. Verifica que estas rutas existen y sirven el HTML correcto en server.js:
+app.get('/coach', (req, res) => res.sendFile(path.join(__dirname, 'public', 'coach.html')));
+app.get('/cliente', (req, res) => res.sendFile(path.join(__dirname, 'public', 'cliente.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
+
+4. Verifica que estos archivos HTML existen físicamente:
+- public/login.html
+- public/coach.html  
+- public/cliente.html
+- public/admin.html
+Ejecuta: ls -la public/
+
+5. Verifica que cada HTML tiene la estructura correcta y no está vacío:
+- Tiene DOCTYPE html
+- Tiene <head> con los scripts necesarios
+- Tiene <body> con contenido visible
+- Los scripts JS se cargan correctamente
+
+6. El problema más probable: los últimos cambios de colores (Verde Esmeralda) rompieron los archivos HTML/JS. Revisa si hubo algún error de sintaxis introducido.
+
+7. SOLUCIÓN RÁPIDA — Si los archivos están rotos, reconstruye el login.html completo:
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NAHOFIT.LIFE — Iniciar Sesión</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0A0F0D; color: #ECFDF5; font-family: 'DM Sans', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .login-box { background: #0F1A14; border: 0.5px solid #1A2E20; border-radius: 16px; padding: 40px; width: 100%; max-width: 400px; }
+    .logo { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: #10B981; text-align: center; margin-bottom: 8px; }
+    .logo span { color: #ECFDF5; }
+    .subtitle { text-align: center; color: #4B7A5E; font-size: 13px; margin-bottom: 32px; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 12px; color: #4B7A5E; margin-bottom: 6px; }
+    .field input { width: 100%; background: #0A0F0D; border: 0.5px solid #1A2E20; border-radius: 8px; padding: 12px 14px; color: #ECFDF5; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .field input:focus { border-color: #10B981; }
+    .btn { width: 100%; background: #10B981; color: #000; border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: background 0.2s; }
+    .btn:hover { background: #059669; }
+    .error { background: #EF444420; border: 0.5px solid #EF4444; color: #FCA5A5; border-radius: 8px; padding: 10px 14px; font-size: 12px; margin-bottom: 16px; display: none; }
+    .loading { opacity: 0.7; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <div class="logo">NAHOFIT<span>.LIFE</span></div>
+    <div class="subtitle">Panel de coaching profesional</div>
+    <div class="error" id="error-msg"></div>
+    <div class="field">
+      <label>Correo electrónico</label>
+      <input type="email" id="email" placeholder="tu@email.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn" id="btn-login" onclick="iniciarSesion()">Iniciar Sesión</button>
+  </div>
+
+  <script>
+    // Verificar si ya hay sesión activa
+    const tokenExistente = localStorage.getItem('nahofitToken');
+    const rolExistente = localStorage.getItem('nahofitRol');
+    if (tokenExistente && rolExistente) {
+      if (rolExistente === 'administrador') window.location.href = '/admin';
+      else if (rolExistente === 'coach') window.location.href = '/coach';
+      else window.location.href = '/cliente';
+    }
+
+    // Login con Enter
+    document.getElementById('password').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') iniciarSesion();
+    });
+
+    async function iniciarSesion() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const errorMsg = document.getElementById('error-msg');
+      const btn = document.getElementById('btn-login');
+
+      errorMsg.style.display = 'none';
+
+      if (!email || !password) {
+        errorMsg.textContent = 'Por favor ingresa tu email y contraseña.';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      btn.textContent = 'Iniciando sesión...';
+      btn.classList.add('loading');
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          errorMsg.textContent = data.error || 'Email o contraseña incorrectos.';
+          errorMsg.style.display = 'block';
+          btn.textContent = 'Iniciar Sesión';
+          btn.classList.remove('loading');
+          return;
+        }
+
+        // Guardar sesión
+        localStorage.setItem('nahofitToken', data.token);
+        localStorage.setItem('nahofitRol', data.usuario.rol);
+        localStorage.setItem('nahofitUsuario', JSON.stringify(data.usuario));
+
+        // Redirigir según rol
+        if (data.usuario.rol === 'administrador') window.location.href = '/admin';
+        else if (data.usuario.rol === 'coach') window.location.href = '/coach';
+        else window.location.href = '/cliente';
+
+      } catch(e) {
+        errorMsg.textContent = 'Error de conexión. Verifica tu internet e intenta de nuevo.';
+        errorMsg.style.display = 'block';
+        btn.textContent = 'Iniciar Sesión';
+        btn.classList.remove('loading');
+      }
+    }
+  </script>
+</body>
+</html>
+
+8. Después de reconstruir login.html, verifica que el token se guarda con la clave correcta (nahofitToken) y que coach.html, cliente.html y admin.html leen el token con esa misma clave.
+
+9. Si coach.html, cliente.html o admin.html también están en negro, muéstrame el contenido de cada uno para reconstruirlos también.
+
+10. Prueba el login con:
+- admin@nahofit.life / admin123
+- coach@nahofit.life / nahofit123
+- cliente@nahofit.life / cliente123
+
+Muestra los errores exactos antes de hacer cambios y confirma qué archivos existen en /public/
+
+Republica la app después.

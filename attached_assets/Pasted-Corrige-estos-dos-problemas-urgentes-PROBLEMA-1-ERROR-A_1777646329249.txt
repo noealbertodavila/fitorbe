@@ -1,0 +1,60 @@
+Corrige estos dos problemas urgentes:
+
+PROBLEMA 1 — ERROR AL CARGAR SECCIONES:
+"Ocurrió un error al cargar esta sección" aparece frecuentemente.
+
+1. Este error aparece cuando el fetch al API falla o devuelve error
+2. Agrega manejo de errores más robusto — si una sección falla, mostrar el contenido que SÍ cargó y un mensaje claro en la sección que falló
+3. Verifica que el servidor está corriendo correctamente y no se cae entre requests
+4. Agrega reconexión automática — si falla, reintentar después de 3 segundos automáticamente sin que el usuario tenga que hacer clic en "Reintentar"
+5. El botón "Reintentar" debe recargar SOLO la sección que falló, no toda la página
+
+PROBLEMA 2 — MENSAJES: AL HACER CLIC EN UN CLIENTE LA CONVERSACIÓN NO APARECE:
+
+En la sección Mensajes del coach:
+- La lista de conversaciones muestra: María García, Carlos Mendoza, Laura Rodríguez, Noe ✅
+- Pero al hacer clic en cualquier cliente, el panel derecho queda vacío mostrando solo "Selecciona una conversación"
+- El evento onClick en cada conversación no está cargando los mensajes correctamente
+
+CORRECCIÓN:
+1. Al hacer clic en un cliente de la lista, ejecutar:
+async function abrirConversacion(clienteId, clienteNombre) {
+  const token = localStorage.getItem('nahofitToken');
+  try {
+    const res = await fetch(`/api/mensajes/${clienteId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const mensajes = await res.json();
+    renderizarConversacion(clienteId, clienteNombre, mensajes);
+  } catch(e) {
+    mostrarErrorEnPanel('No se pudieron cargar los mensajes');
+  }
+}
+
+2. El panel derecho debe mostrar:
+- Header con nombre y foto del cliente
+- Lista de mensajes con burbujas (coach=derecha verde, cliente=izquierda gris)
+- Cada mensaje con hora y fecha
+- Campo de texto para escribir respuesta
+- Botón "Enviar"
+- Si no hay mensajes: "Inicia la conversación con [nombre]"
+
+3. Al enviar mensaje:
+async function enviarMensaje(receptorId, contenido) {
+  const token = localStorage.getItem('nahofitToken');
+  await fetch('/api/mensajes', {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}` 
+    },
+    body: JSON.stringify({ receptor_id: receptorId, contenido })
+  });
+  // Recargar mensajes de esa conversación
+  abrirConversacion(receptorId, nombreCliente);
+}
+
+4. Marcar mensajes como leídos automáticamente al abrir la conversación
+5. El badge de mensajes no leídos debe desaparecer al abrir la conversación
+6. Auto-scroll al último mensaje al abrir la conversación
+7. Actualizar mensajes cada 15 segundos automáticamente si la conversación está abi

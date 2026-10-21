@@ -1,0 +1,176 @@
+Dos correcciones urgentes y críticas:
+
+═══════════════════════════════════════
+PROBLEMA 1 — MENSAJES MUESTRAN CONVERSACIÓN INCORRECTA
+═══════════════════════════════════════
+
+Al hacer clic en "Noe" en la lista de mensajes, el panel derecho muestra la conversación de María García en lugar de la de Noe.
+
+CAUSA: El panel derecho no está filtrando los mensajes por el cliente seleccionado — está mostrando siempre la última conversación cargada.
+
+CORRECCIÓN:
+1. Cada item de la lista de conversaciones debe guardar el clienteId correcto:
+<div class="conversacion-item" data-cliente-id="[ID_DE_NOE]" data-cliente-nombre="Noe" onclick="abrirConversacion(this)">
+
+2. La función abrirConversacion debe usar el ID correcto:
+async function abrirConversacion(elemento) {
+  const clienteId = elemento.dataset.clienteId;
+  const clienteNombre = elemento.dataset.clienteNombre;
+  
+  // Limpiar panel derecho ANTES de cargar
+  document.getElementById('panel-mensajes').innerHTML = '<div style="text-align:center;padding:40px;color:#4B7A5E;">Cargando mensajes...</div>';
+  
+  // Marcar como activo
+  document.querySelectorAll('.conversacion-item').forEach(i => i.classList.remove('active'));
+  elemento.classList.add('active');
+  
+  const token = localStorage.getItem('nahofitToken');
+  try {
+    const res = await fetch(`/api/mensajes/conversacion/${clienteId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const mensajes = await res.json();
+    renderizarMensajes(clienteId, clienteNombre, mensajes);
+  } catch(e) {
+    document.getElementById('panel-mensajes').innerHTML = '<div style="text-align:center;padding:40px;color:#EF4444;">Error al cargar mensajes</div>';
+  }
+}
+
+3. Crear ruta API específica para conversación entre dos usuarios:
+GET /api/mensajes/conversacion/:otroUsuarioId
+- Devuelve SOLO los mensajes entre el usuario logueado y el otroUsuarioId
+- Ordenados por fecha ascendente (más antiguo primero)
+- Query: WHERE (remitente_id = miId AND receptor_id = otroId) OR (remitente_id = otroId AND receptor_id = miId)
+
+4. El panel derecho debe mostrar SOLO los mensajes de esa conversación específica con burbujas:
+- Mensajes del coach: burbuja verde a la DERECHA
+- Mensajes del cliente: burbuja gris oscuro a la IZQUIERDA
+- Cada mensaje con hora
+- Auto-scroll al último mensaje
+
+═══════════════════════════════════════
+PROBLEMA 2 — PANTALLA NEGRA AL NAVEGAR (PROBLEMA RAÍZ)
+═══════════════════════════════════════
+
+Este es el problema más crítico de toda la app. Al hacer clic en cualquier sección del menú la pantalla queda negra y hay que presionar F5.
+
+CAUSA RAÍZ: La app está usando navegación por URL (window.location.href) en lugar de mostrar/ocultar secciones. Cada vez que cambia la URL, el navegador intenta cargar una nueva página pero el servidor devuelve el mismo HTML y el JavaScript no se reinicializa correctamente.
+
+SOLUCIÓN DEFINITIVA — Single Page Application (SPA) pura:
+
+REGLA: NUNCA usar window.location.href para navegar entre secciones. SIEMPRE usar show/hide de divs.
+
+1. Estructura HTML correcta — UN solo archivo con todas las secciones:
+<body>
+  <div id="app">
+    <nav id="sidebar">...</nav>
+    <main id="contenido-principal">
+      <div id="seccion-dashboard" class="seccion"></div>
+      <div id="seccion-rutina" class="seccion" style="display:none"></div>
+      <div id="seccion-nutricion" class="seccion" style="display:none"></div>
+      <div id="seccion-progreso" class="seccion" style="display:none"></div>
+      <div id="seccion-emocional" class="seccion" style="display:none"></div>
+      <div id="seccion-mensajes" class="seccion" style="display:none"></div>
+      <div id="seccion-plan" class="seccion" style="display:none"></div>
+      <div id="seccion-pagos" class="seccion" style="display:none"></div>
+    </main>
+  </div>
+</body>
+
+2. Función de navegación:
+function navegarA(nombreSeccion) {
+  // Ocultar todas las secciones
+  document.querySelectorAll('.seccion').forEach(s => {
+    s.style.display = 'none';
+  });
+  
+  // Mostrar la sección seleccionada
+  const seccion = document.getElementById(`seccion-${nombreSeccion}`);
+  if (seccion) {
+    seccion.style.display = 'block';
+  }
+  
+  // Actualizar menú activo
+  document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+  const menuItem = document.querySelector(`[data-seccion="${nombreSeccion}"]`);
+  if (menuItem) menuItem.classList.add('active');
+  
+  // Cargar datos de esa sección
+  cargarDatosSeccion(nombreSeccion);
+}
+
+3. Cada menú item usa data-seccion y onclick:
+<div class="menu-item" data-seccion="rutina" onclick="navegarA('rutina')">
+  Mi Rutina
+</div>
+
+4. cargarDatosSeccion carga datos frescos cada vez:
+async function cargarDatosSeccion(nombre) {
+  const token = localStorage.getItem('nahofitToken');
+  const usuario = JSON.parse(localStorage.getItem('nahofitUsuario') || '{}');
+  
+  switch(nombre) {
+    case 'dashboard':
+      await cargarDashboard(usuario.id, token);
+      break;
+    case 'rutina':
+      await cargarRutinaSemana(usuario.id, token);
+      break;
+    case 'nutricion':
+      await cargarNutricionSemana(usuario.id, token);
+      break;
+    case 'progreso':
+      await cargarProgreso(usuario.id, token);
+      break;
+    case 'emocional':
+      await cargarEmocional(usuario.id, token);
+      break;
+    case 'mensajes':
+      await cargarListaMensajes(usuario.id, token);
+      break;
+    case 'plan':
+      await cargarMiPlan(usuario.id, token);
+      break;
+    case 'pagos':
+      await cargarMisPagos(usuario.id, token);
+      break;
+  }
+}
+
+5. Cada función de carga:
+- Muestra spinner al inicio
+- Hace fetch con token
+- Si éxito: renderiza contenido
+- Si vacío: muestra mensaje amigable
+- Si error: muestra error amigable
+- NUNCA deja la sección en blanco o negro
+
+6. NUNCA usar estas navegaciones que causan pantalla negra:
+- window.location.href = '/cliente'
+- window.location.href = '/coach'  
+- history.pushState(...)
+- location.reload()
+
+7. Aplicar esta misma solución en:
+- Dashboard del CLIENTE (cliente.html o equivalente)
+- Dashboard del COACH (coach.html o equivalente)
+- Dashboard del ADMIN (admin.html o equivalente)
+
+8. Al cargar la app por primera vez:
+document.addEventListener('DOMContentLoaded', async function() {
+  const token = localStorage.getItem('nahofitToken');
+  if (!token) {
+    window.location.href = '/';
+    return;
+  }
+  
+  // Cargar datos iniciales del usuario
+  await inicializarApp();
+  
+  // Mostrar dashboard por defecto
+  navegarA('dashboard');
+});
+
+Aplica esta corrección en TODOS los dashboards.
+Prueba navegando entre TODAS las secciones sin que ninguna quede en negro.
+Republica la app.

@@ -1,0 +1,256 @@
+Crea una landing page pública y visual para NAHOFIT.LIFE inspirada en el estilo moderno de Everfit.io pero con la identidad de NAHOFIT.LIFE.
+
+ARCHIVO: Crear public/index.html (reemplaza el actual)
+La ruta raíz GET / debe servir este archivo.
+La ruta GET /login debe seguir sirviendo login.html
+La ruta GET /app redirige al login si no hay token
+
+IDIOMA:
+- Botón en el navbar: ES | EN
+- Por defecto: español
+- Al cambiar: toda la página cambia sin recargar
+- Guardar preferencia en localStorage
+
+COLORES Y MARCA:
+- Fondo principal: #0A0F0D (oscuro profundo)
+- Secciones alternas: #0F1A14 (verde muy oscuro)
+- Acento: #10B981 (verde esmeralda)
+- Texto principal: #ECFDF5
+- Texto secundario: #4B7A5E
+- Logo: NAHOFIT en blanco + .LIFE en verde
+
+ESTRUCTURA DE LA PÁGINA:
+
+══════════════════════
+SECCIÓN 1 — NAVBAR FIJO
+══════════════════════
+- Logo NAHOFIT.LIFE a la izquierda
+- Links de navegación: Características · Planes · Sobre Nahomy · Contacto
+- Botón idioma: [ES | EN]
+- Botón "Iniciar Sesión" outline verde
+- Botón "Comenzar Ahora" sólido verde
+- Fondo transparente que se vuelve oscuro al hacer scroll
+- Responsive con menú hamburguesa en móvil
+
+══════════════════════
+SECCIÓN 2 — HERO (pantalla completa)
+══════════════════════
+Fondo: oscuro con patrón sutil de líneas o puntos muy tenues
+Layout: texto izquierda + mockup de la app derecha
+
+TEXTO:
+Etiqueta pequeña: "✦ COACHING DE ÉLITE CON IA"
+Título grande (72px): 
+"Tu transformación
+comienza con el
+coach correcto."
+.LIFE en verde
+
+Subtítulo:
+"Rutinas personalizadas, nutrición inteligente y acompañamiento emocional. Todo en un solo lugar, diseñado por Nahomy para resultados reales."
+
+Botones:
+[Comenzar mi transformación →] — verde sólido grande
+[Ver cómo funciona ↓] — outline
+
+Estadísticas debajo de los botones:
+"500+ Clientes transformados · 98% Satisfacción · 4.9★ Calificación"
+
+MOCKUP derecho:
+Un phone frame oscuro que muestra el dashboard del cliente con:
+- Saludo "Buenos días, María 👋"
+- Tarjetas de racha, rutina, nutrición
+- Barra de progreso verde
+
+══════════════════════
+SECCIÓN 3 — CARACTERÍSTICAS (fondo alterno claro oscuro)
+══════════════════════
+Título: "Todo lo que necesitas para transformar tu cuerpo y mente"
+Subtítulo: "Una plataforma completa que ninguna otra app de coaching tiene"
+
+6 tarjetas en grid 3x2:
+
+🤖 Rutinas con IA
+"El AI genera tu plan de entrenamiento personalizado según tus lesiones, días disponibles y equipamiento. Tu coach lo revisa y aprueba."
+
+🥗 Nutrición inteligente
+"Planes de comida con ingredientes y gramos exactos. El AI calcula tus macros y calorías según tu objetivo específico."
+
+🧠 Bienestar emocional
+"Check-in emocional diario, diario de mentalidad y frases motivacionales generadas por IA. Único en el mercado."
+
+📸 Seguimiento fotográfico
+"6 posiciones de foto mensuales. Compara tu antes y después con slider deslizable y ve tu evolución real."
+
+💬 Chat con tu coach
+"Mensajería directa con Nahomy. Respuesta rápida, acompañamiento real, sin robots de respuesta automática."
+
+📊 Reportes PDF
+"Reporte mensual completo con fotos, medidas, gráficas y adherencia. Imprimible y compartible."
+
+══════════════════════
+SECCIÓN 4 — CÓMO FUNCIONA (3 pasos)
+══════════════════════
+Título: "Así de simple es empezar"
+
+Paso 1: 🎯 "Cuéntanos tus objetivos"
+"Completa tu perfil con tus metas, nivel de fitness, lesiones y preferencias. El sistema lo usa para personalizar todo."
+
+Paso 2: 🤖 "Tu coach diseña tu plan"
+"Nahomy crea tu rutina y plan de nutrición asistida por IA. Personalizado 100% para ti."
+
+Paso 3: 🚀 "Transforma tu vida"
+"Entrena, come bien, registra tu progreso y chatea con tu coach cuando lo necesites."
+
+══════════════════════
+SECCIÓN 5 — SOBRE NAHOMY
+══════════════════════
+Layout: foto izquierda + texto derecha
+
+FOTO: placeholder elegante con iniciales "N" en círculo verde grande (o espacio para foto real)
+
+TEXTO:
+Etiqueta: "✦ FUNDADORA & HEAD COACH"
+Título: "Hola, soy Nahomy"
+Párrafo: "Soy coach de fitness y bienestar con años de experiencia transformando vidas. Creé NAHOFIT.LIFE porque quería darte acceso a coaching de élite sin importar dónde estés — con el poder de la IA para personalizar cada aspecto de tu transformación."
+
+Credenciales en chips verdes:
+[Certified Personal Trainer] [Nutrition Coach] [Wellness Advisor] [AI Coaching Pioneer]
+
+Frase motivacional en cursiva verde:
+"Tu cuerpo puede. Tu mente decide. Yo te guío."
+— Nahomy
+
+══════════════════════
+SECCIÓN 6 — PLANES Y PRECIOS
+══════════════════════
+Título: "Elige tu plan de transformación"
+Toggle: [Mensual] [3 meses -10%] [6 meses -15%]
+
+3 tarjetas de planes (cargar dinámicamente desde GET /api/planes):
+
+BÁSICO $59/mes:
+- Lista de características incluidas con ✓ verde
+- Lista de NO incluidas con × gris tachado
+- Botón: "Elegir Básico"
+
+PREMIUM $119/mes (destacado con borde verde):
+- Badge: "Más popular"
+- Lista completa
+- Botón: "Elegir Premium"
+
+VIP $249/mes:
+- Badge: "Todo incluido"
+- Lista completa
+- Botón: "Elegir VIP"
+
+Al hacer clic en cualquier plan → ir a /login
+
+══════════════════════
+SECCIÓN 7 — TESTIMONIOS
+══════════════════════
+Título: "Resultados reales de clientes reales"
+3 tarjetas de testimonios con:
+- Avatar con iniciales
+- Nombre y ciudad
+- Estrellas ★★★★★
+- Texto del testimonio
+- Plan contratado
+
+Testimonios de ejemplo:
+"Perdí 12kg en 3 meses siguiendo el plan de Nahomy. El chat con la IA me ayudó muchísimo cuando tenía dudas a las 11pm." — María G., Miami ⭐⭐⭐⭐⭐ Plan Premium
+
+"Nunca había tenido un plan tan personalizado. Nahomy sabe exactamente qué necesito según mis lesiones." — Carlos M., Utah ⭐⭐⭐⭐⭐ Plan VIP
+
+"El módulo emocional es lo que más me sorprendió. Ninguna otra app tiene algo así." — Laura R., México ⭐⭐⭐⭐⭐ Plan Premium
+
+══════════════════════
+SECCIÓN 8 — CTA FINAL
+══════════════════════
+Fondo: verde #10B981
+Texto oscuro
+Título grande: "¿Lista para tu transformación?"
+Subtítulo: "Únete a cientos de personas que ya están cambiando sus vidas con NAHOFIT.LIFE"
+Botón grande oscuro: "Comenzar ahora →"
+Texto pequeño: "Sin contratos. Cancela cuando quieras."
+
+══════════════════════
+SECCIÓN 9 — FOOTER
+══════════════════════
+Logo NAHOFIT.LIFE
+Links: Términos · Privacidad · Contacto · Instagram
+"© 2026 NAHOFIT.LIFE — Elaborado con ❤️ por Nahomy"
+Email de contacto: coach@nahofit.life
+
+ANIMACIONES:
+- Elementos aparecen con fade-in al hacer scroll (Intersection Observer)
+- Navbar cambia al hacer scroll
+- Hover en tarjetas: elevación suave translateY(-4px)
+- Botones: escala al hacer clic
+- Contador animado en estadísticas del hero
+
+BOTONES DE ACCESO:
+- "Iniciar Sesión" en navbar → window.location.href = '/login'
+- "Comenzar Ahora" → window.location.href = '/login'
+- Si el usuario ya tiene token válido → mostrar "Ir a mi panel" en lugar de los botones de login
+
+SISTEMA BILINGÜE:
+const textos = {
+  es: {
+    nav_features: 'Características',
+    nav_plans: 'Planes',
+    nav_about: 'Sobre Nahomy',
+    nav_contact: 'Contacto',
+    nav_login: 'Iniciar Sesión',
+    nav_cta: 'Comenzar Ahora',
+    hero_tag: '✦ COACHING DE ÉLITE CON IA',
+    hero_title: 'Tu transformación\ncomienza con el\ncoach correcto.',
+    hero_sub: 'Rutinas personalizadas, nutrición inteligente y acompañamiento emocional. Todo en un solo lugar.',
+    hero_btn1: 'Comenzar mi transformación →',
+    hero_btn2: 'Ver cómo funciona ↓',
+    // ... resto de textos
+  },
+  en: {
+    nav_features: 'Features',
+    nav_plans: 'Plans',
+    nav_about: 'About Nahomy',
+    nav_contact: 'Contact',
+    nav_login: 'Sign In',
+    nav_cta: 'Get Started',
+    hero_tag: '✦ ELITE AI-POWERED COACHING',
+    hero_title: 'Your transformation\nstarts with the\nright coach.',
+    hero_sub: 'Personalized workouts, smart nutrition and emotional support. All in one place.',
+    hero_btn1: 'Start my transformation →',
+    hero_btn2: 'See how it works ↓',
+    // ... resto de textos
+  }
+};
+
+let idiomaActual = localStorage.getItem('nahofit_idioma') || 'es';
+
+function cambiarIdioma(lang) {
+  idiomaActual = lang;
+  localStorage.setItem('nahofit_idioma', lang);
+  document.querySelectorAll('[data-texto]').forEach(el => {
+    const key = el.dataset.texto;
+    if (textos[lang][key]) el.textContent = textos[lang][key];
+  });
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('activo', b.dataset.lang === lang);
+  });
+}
+
+RESPONSIVE:
+- Mobile first
+- Navbar collapsa en hamburguesa
+- Hero: texto arriba + mockup abajo en móvil
+- Grid de características: 1 columna en móvil, 2 en tablet, 3 en desktop
+- Planes: scroll horizontal en móvil
+
+SEO básico:
+<title>NAHOFIT.LIFE — Coaching de Fitness y Bienestar con IA</title>
+<meta name="description" content="Coaching personalizado de fitness, nutrición y bienestar emocional con inteligencia artificial. Fundado por Nahomy.">
+
+Crea este archivo completo como public/index.html.
+Asegúrate que GET / sirve este archivo.
+Republica la app después.

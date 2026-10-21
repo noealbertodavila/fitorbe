@@ -1,0 +1,72 @@
+La página /cliente queda completamente en negro. El div id="root" existe pero está vacío — el JavaScript no está ejecutándose o está fallando antes de renderizar nada.
+
+DIAGNÓSTICO:
+La URL es /cliente y el div#root está vacío. Esto significa que el framework frontend (React/Vue) no está montando correctamente, o el archivo JS principal tiene un error.
+
+CORRECCIÓN URGENTE:
+
+1. Abre la pestaña "Console" en DevTools (F12 → Console) y copia TODOS los errores rojos que aparecen — son la causa raíz del problema
+
+2. Abre la pestaña "Network" en DevTools y verifica:
+   - ¿El archivo JS principal (index.js o main.js o cliente.js) está cargando? (status 200)
+   - ¿Hay archivos con status 404 (no encontrado)?
+   - ¿El archivo CSS está cargando?
+
+3. El problema más probable es uno de estos — verifica y corrige:
+
+CASO A — Error en JavaScript al iniciar:
+- Busca en el JS principal dónde se llama a iniciarDashboard() o similar
+- Agrega este código AL INICIO del archivo JS del cliente, antes de cualquier otra cosa:
+window.onerror = function(msg, src, line, col, error) {
+  document.getElementById('root').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0A0F0D;color:#10B981;font-family:sans-serif;text-align:center;padding:20px;">
+      <div>
+        <h2 style="color:#10B981;">NAHOFIT.LIFE</h2>
+        <p style="color:#4B7A5E;">Error: ${msg}</p>
+        <p style="color:#4B7A5E;font-size:12px;">Línea: ${line}</p>
+        <button onclick="window.location.href='/login.html'" style="background:#10B981;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;margin-top:16px;">Volver al login</button>
+      </div>
+    </div>`;
+};
+
+CASO B — Token inválido o expirado:
+- Al cargar /cliente verificar inmediatamente si hay token válido:
+const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+if (!token) {
+  window.location.href = '/login.html';
+}
+
+CASO C — La ruta /cliente no está sirviendo el HTML correcto:
+- En server.js verificar que existe esta ruta:
+app.get('/cliente', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'cliente.html'));
+});
+- O si usa index.html con router, verificar que la ruta /cliente está manejada
+
+CASO D — El archivo cliente.html tiene error de sintaxis:
+- Verificar que cliente.html tiene estructura válida:
+  * DOCTYPE html
+  * div id="root" o el contenedor principal
+  * Script tags al final del body
+  * No tiene imports rotos
+
+4. También verifica que cuando Noe (noe@gmail.com) inicia sesión:
+   - El token JWT se guarda correctamente en localStorage
+   - El rol del usuario es "cliente" y redirige a /cliente
+   - El token tiene el id correcto del usuario Noe
+
+5. Solución temporal mientras se corrige — agregar en cliente.html dentro del div#root:
+<div id="root">
+  <div id="loading" style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0A0F0D;">
+    <div style="text-align:center;color:#10B981;">
+      <div style="font-size:24px;margin-bottom:16px;">NAHOFIT.LIFE</div>
+      <div style="color:#4B7A5E;">Cargando tu panel...</div>
+    </div>
+  </div>
+</div>
+
+Este div de carga se reemplaza cuando el JS termina de cargar. Si el JS falla, el usuario ve "Cargando..." en lugar de negro.
+
+6. Muestra el contenido exacto del archivo que maneja la ruta /cliente y el error de consola antes de hacer cambios.
+
+Republica después de corregir.

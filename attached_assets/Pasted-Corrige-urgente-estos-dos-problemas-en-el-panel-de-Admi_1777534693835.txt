@@ -1,0 +1,65 @@
+Corrige urgente estos dos problemas en el panel de Administrador:
+
+═══════════════════════════════════════
+PROBLEMA 1 — PLANES NO APARECEN EN ADMINISTRADOR
+═══════════════════════════════════════
+
+La sección "Planes y Precios" en el panel del administrador no muestra los planes ni permite editarlos.
+
+Corrige esto:
+
+1. Verifica que la ruta GET /api/planes devuelve todos los planes de la base de datos
+2. Verifica que el frontend del administrador hace el fetch correcto a /api/planes con el token JWT
+3. Mostrar TODOS los planes en tarjetas editables incluyendo los nuevos que se creen
+4. Cada tarjeta de plan debe tener:
+   - Nombre del plan (editable)
+   - Badge (editable)
+   - Descripción (editable)
+   - Precio mensual (editable)
+   - Precio 3 meses con descuento (calculado automático)
+   - Precio 6 meses con descuento (calculado automático)
+   - Porcentaje de descuento (editable)
+   - Lista de características incluidas (agregar/editar/eliminar)
+   - Lista de características NO incluidas (agregar/editar/eliminar)
+   - Toggle activo/inactivo
+   - Botón "Guardar cambios"
+   - Botón "Vista previa"
+5. Agregar botón "Crear nuevo plan" que abre formulario en blanco
+6. Los cambios se guardan via PUT /api/planes/:id
+7. Los planes nuevos se crean via POST /api/planes
+8. Después de guardar mostrar toast "Plan actualizado correctamente"
+9. Si hay error mostrar mensaje claro en pantalla
+
+═══════════════════════════════════════
+PROBLEMA 2 — AL CREAR USUARIO SOLO APARECEN 3 PLANES ORIGINALES
+═══════════════════════════════════════
+
+Cuando el coach o admin crea un nuevo cliente, el dropdown de "Plan" solo muestra los 3 planes originales y no muestra los planes nuevos creados.
+
+Corrige esto:
+
+1. El dropdown de planes en el formulario de crear/editar cliente debe cargar dinámicamente desde GET /api/planes
+2. Mostrar TODOS los planes activos disponibles en ese dropdown — no solo los 3 hardcodeados
+3. Si se crea un plan nuevo en el administrador, debe aparecer inmediatamente en el dropdown al crear clientes
+4. El dropdown debe mostrar: nombre del plan + precio mensual (ej: "Premium — $119/mes")
+5. Solo mostrar planes con estado activo = true
+6. Cargar los planes cada vez que se abre el formulario de crear cliente (no usar caché)
+7. Si no hay planes disponibles mostrar mensaje: "No hay planes activos. El administrador debe crear un plan primero."
+
+═══════════════════════════════════════
+VERIFICACIÓN ADICIONAL
+═══════════════════════════════════════
+
+8. Verifica que la tabla "planes" en la base de datos tiene todos los planes incluyendo los nuevos
+9. Ejecuta SELECT * FROM planes; y muestra los resultados para confirmar
+10. Si la tabla está vacía o incompleta, insertar nuevamente los 3 planes base:
+    - Básico $59/mes
+    - Premium $119/mes (Más popular)
+    - VIP $249/mes (Todo incluido)
+11. Asegúrate que el campo "activo" de todos los planes esté en 1 (true)
+12. Prueba el flujo completo:
+    - Admin crea plan nuevo → aparece en lista de planes
+    - Admin va a crear cliente → ve el plan nuevo en dropdown
+    - Admin selecciona plan nuevo → cliente queda asignado correctamente
+
+Republica la app después de los cambios.

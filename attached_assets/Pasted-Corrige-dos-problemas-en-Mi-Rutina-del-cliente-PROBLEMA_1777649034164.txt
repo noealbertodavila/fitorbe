@@ -1,0 +1,111 @@
+Corrige dos problemas en Mi Rutina del cliente:
+
+PROBLEMA 1 — CHECKBOXES NO SE GUARDAN:
+El cliente marca todos los ejercicios como completados, sale de la sección y al regresar los checkboxes aparecen desmarcados y el progreso vuelve a 0%.
+
+CAUSA: Los checkboxes solo se guardan en memoria del navegador (variables JS) pero no se persisten en la base de datos ni en localStorage.
+
+SOLUCIÓN:
+
+1. Cada vez que el cliente marca o desmarca un ejercicio, guardar inmediatamente en la base de datos:
+
+async function marcarEjercicio(ejercicioIndex, completado, rutinaId) {
+  const token = localStorage.getItem('nahofitToken');
+  const usuario = JSON.parse(localStorage.getItem('nahofitUsuario'));
+  const hoy = new Date().toISOString().split('T')[0];
+  
+  try {
+    await fetch('/api/checkin/ejercicio', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        cliente_id: usuario.id,
+        fecha: hoy,
+        ejercicio_index: ejercicioIndex,
+        completado: completado,
+        rutina_id: rutinaId
+      })
+    });
+  } catch(e) {
+    console.error('Error guardando ejercicio:', e);
+  }
+}
+
+2. Al cargar la rutina, recuperar los ejercicios ya completados hoy:
+
+async function cargarEstadoEjercicios(clienteId, fecha) {
+  const token = localStorage.getItem('nahofitToken');
+  try {
+    const res = await fetch(`/api/checkin/ejercicios/${clienteId}/${fecha}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    return data.ejercicios_completados || [];
+  } catch(e) {
+    return [];
+  }
+}
+
+3. Al renderizar cada ejercicio, verificar si ya fue completado hoy:
+
+async function renderizarRutina(rutina) {
+  const hoy = new Date().toISOString().split('T')[0];
+  const usuario = JSON.parse(localStorage.getItem('nahofitUsuario'));
+  
+  // Cargar estado guardado
+  const completados = await cargarEstadoEjercicios(usuario.id, hoy);
+  
+  // Renderizar ejercicios con estado correcto
+  ejercicios.forEach((ejercicio, index) => {
+    const yaCompletado = completados.includes(index);
+    const checkbox = document.getElementById(`ejercicio-${index}`);
+    if (checkbox) {
+      checkbox.checked = yaCompletado;
+      if (yaCompletado) {
+        checkbox.closest('.ejercicio-card').classList.add('completado');
+      }
+    }
+  });
+  
+  // Actualizar barra de progreso
+  actualizarProgreso(completados.length, ejercicios.length);
+}
+
+4. Base de datos — tabla checkins_diarios ya existe, modificar para guardar array de índices completados:
+UPDATE checkins_diarios 
+SET ejercicios_completados = JSON(?)
+WHERE cliente_id = ? AND fecha = ?
+
+Si no existe el registro para hoy, crearlo:
+INSERT OR REPLACE INTO checkins_diarios (cliente_id, fecha, ejercicios_completados, porcentaje_adherencia)
+VALUES (?, ?, JSON(?), ?)
+
+5. RUTAS API NUEVAS:
+POST /api/checkin/ejercicio — guardar estado de un ejercicio
+GET /api/checkin/ejercicios/:clienteId/:fecha — obtener ejercicios completados del día
+
+6. La barra de progreso "PROGRESO DE HOY — X/6 EJERCICIOS" debe:
+- Actualizarse en tiempo real al marcar cada ejercicio
+- Persistir al salir y volver a la sección
+- Mostrar el porcentaje correcto
+
+7. El mensaje "ENTRENAMIENTO COMPLETADO" solo aparece cuando TODOS los ejercicios están marcados Y el estado está guardado en la base de datos.
+
+PROBLEMA 2 — ESTADO SE PIERDE AL CAMBIAR DE SECCIÓN:
+Al navegar a otra sección y volver a Mi Rutina, los datos se recargan desde el servidor — por eso deben estar guardados en BD.
+
+Adicional: guardar también en localStorage como caché temporal:
+localStorage.setItem(`ejercicios_${hoy}`, JSON.stringify(completados));
+
+Al cargar, primero usar localStorage para respuesta inmediata, luego verificar con el servidor.
+
+Prueba el flujo completo:
+1. Marcar todos los ejercicios
+2. Ir a otra sección (Mensajes, Dashboard)
+3. Volver a Mi Rutina
+4. Verificar que todos siguen marcados y el progreso es correcto
+
+Republica la app después.

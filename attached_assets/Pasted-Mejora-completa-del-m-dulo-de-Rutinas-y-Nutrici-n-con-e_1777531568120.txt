@@ -1,0 +1,69 @@
+Mejora completa del módulo de Rutinas y Nutrición con estas funciones nuevas:
+
+1. ANTES DE GENERAR — mostrar modal de opciones que pregunta:
+
+PREGUNTA 1: ¿Cómo deseas crear el plan?
+- Generar con IA (automático según perfil del cliente)
+- Crear manualmente (el coach llena cada día)
+
+PREGUNTA 2: ¿Por cuánto tiempo?
+- 1 semana (7 días)
+- 15 días (2 semanas)
+- 1 mes (4 semanas)
+
+Solo después de responder ambas preguntas, procede a generar o abrir el formulario manual.
+
+2. EDICIÓN COMPLETA DE RUTINAS — el coach puede modificar:
+- Nombre del ejercicio (campo de texto editable)
+- Series (número editable)
+- Repeticiones (número editable)
+- Descanso en segundos (número editable)
+- Instrucciones detalladas (textarea editable — técnica, posición, respiración)
+- Link de video YouTube (campo editable)
+- Agregar ejercicio nuevo a cualquier día con botón "+"
+- Eliminar ejercicio de cualquier día con botón "×"
+- Reordenar ejercicios dentro del día con botones ↑ ↓
+- Botón "Guardar cambios" por cada día
+- Botón "Guardar todo" para guardar todos los días a la vez
+
+3. EDICIÓN COMPLETA DE NUTRICIÓN — el coach puede modificar:
+- Nombre de la comida (editable)
+- Descripción detallada (textarea editable — ingredientes, porciones, preparación)
+- Calorías (número editable)
+- Proteínas en gramos (editable)
+- Carbohidratos en gramos (editable)
+- Grasas en gramos (editable)
+- Hora recomendada de la comida (editable)
+- Notas adicionales (editable — ej. "evitar si hay intolerancia a lactosa")
+- Agregar comida nueva a cualquier día con botón "+"
+- Eliminar comida con botón "×"
+- Botón "Guardar cambios" por cada día
+- Totales del día calculados automáticamente: calorías totales, proteínas totales, carbos totales, grasas totales
+
+4. CREACIÓN MANUAL:
+- Formulario limpio día por día
+- El coach puede navegar entre días con botones "← Día anterior" y "Día siguiente →"
+- Cada día empieza vacío con botón "+" para agregar ejercicios o comidas
+- Guardar borrador automáticamente cada vez que se hace un cambio
+- Botón "Vista previa" muestra cómo lo verá el cliente antes de publicar
+- Botón "Publicar plan" lo activa para que el cliente lo vea
+
+5. GENERACIÓN CON IA:
+- Mostrar spinner con mensaje "Nahomy está generando tu plan personalizado..."
+- Después de generar, mostrar el plan completo en modo EDICIÓN (no solo lectura)
+- El coach puede modificar cualquier campo antes de guardar
+- Botón "Regenerar" para pedir una versión diferente al AI
+- Botón "Guardar y publicar" para activarlo para el cliente
+
+6. HISTORIAL DE PLANES:
+- Mostrar todos los planes anteriores del cliente ordenados por fecha
+- El coach puede ver cualquier plan anterior pero no editarlo
+- Indicar cuál es el plan activo actualmente
+
+7. VISTA DEL CLIENTE:
+- El cliente ve el plan organizado por días con navegación clara
+- Cada ejercicio tiene sus instrucciones completas visibles
+- Link de video abre en nueva pestaña
+- Checkbox para marcar cada ejercicio o comida como completado
+
+Aplica estos cambios tanto en Rutinas como en Nutrición. Asegúrate de que todo funcione sin errores y republica la app.

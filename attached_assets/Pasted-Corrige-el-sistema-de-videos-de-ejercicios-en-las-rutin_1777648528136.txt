@@ -1,0 +1,52 @@
+Corrige el sistema de videos de ejercicios en las rutinas:
+
+PROBLEMA:
+Los links de YouTube generados por AI son inválidos o apuntan a videos que no existen.
+
+SOLUCIÓN COMPLETA:
+
+1. NUNCA generar links de YouTube automáticamente con AI — el AI no conoce URLs válidas de YouTube.
+
+2. En su lugar usar este sistema:
+
+OPCIÓN A — Búsqueda automática en YouTube:
+En lugar de guardar un link fijo, guardar solo el NOMBRE del ejercicio y generar el link de búsqueda de YouTube dinámicamente:
+
+function getLinkYoutube(nombreEjercicio) {
+  const query = encodeURIComponent(nombreEjercicio + ' ejercicio técnica correcta español');
+  return `https://www.youtube.com/results?search_query=${query}`;
+}
+
+Así el botón "Ver video" siempre abre YouTube con la búsqueda del ejercicio — nunca un video roto.
+
+OPCIÓN B — El coach pega el link manualmente:
+En el formulario de rutinas, cada ejercicio tiene:
+- Campo "Link de video YouTube" vacío por defecto
+- Placeholder: "Pega aquí el link del video (opcional)"
+- Si está vacío: mostrar botón "🔍 Buscar en YouTube" que abre búsqueda
+- Si tiene link: mostrar botón "▶️ Ver video"
+
+IMPLEMENTACIÓN:
+
+3. En la vista del cliente, cada ejercicio muestra:
+- Si el coach pegó un link específico:
+  <a href="[link_del_coach]" target="_blank" rel="noopener">▶️ Ver video</a>
+  
+- Si NO hay link específico:
+  <a href="https://www.youtube.com/results?search_query=[nombre_ejercicio]+técnica+correcta" target="_blank" rel="noopener">🔍 Buscar video</a>
+
+4. En el prompt del AI para generar rutinas, cambiar instrucción de videos:
+ANTES: "incluye link de YouTube del ejercicio"
+AHORA: "NO incluyas links de YouTube — deja el campo video_url vacío o null"
+
+5. En la base de datos, para ejercicios ya guardados con links rotos:
+UPDATE rutinas SET ejercicios = JSON con video_url = null WHERE video_url LIKE '%youtube%'
+
+6. El botón debe abrirse en nueva pestaña (target="_blank") y nunca romper la navegación de la app.
+
+7. En la biblioteca de ejercicios del coach:
+- Campo editable para pegar link de YouTube manualmente
+- Preview del video embebido al pegar el link (usando iframe de YouTube)
+- Validar que el link sea de youtube.com o youtu.be
+
+Republica la app después.

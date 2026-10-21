@@ -1,0 +1,35 @@
+Ejecuta este comando directamente en la base de datos SQLite del proyecto ahora mismo:
+
+const db = require('./database.js');
+
+// Eliminar plan vacaciones
+db.prepare("DELETE FROM planes WHERE nombre = 'vacaciones'").run();
+
+// Insertar los 3 planes oficiales
+db.prepare(`INSERT OR REPLACE INTO planes (nombre, precio_mensual, precio_3meses, precio_6meses, descuento_pct, descripcion, badge, caracteristicas_incluidas, caracteristicas_no_incluidas, activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+'Básico', 59, 159, 300, 10, 
+'Ideal para quienes inician su transformación', 
+'Para empezar',
+JSON.stringify(["Rutina semanal personalizada","Videos de ejercicios YouTube","Ajuste mensual de rutina","Mensajes por la app","Chat AI Coach","Registro de peso y medidas"]),
+JSON.stringify(["Plan de nutrición","Seguimiento emocional","Sesiones 1 a 1 con Nahomy","Fotos de progreso","Reporte PDF mensual"]),
+1);
+
+db.prepare(`INSERT OR REPLACE INTO planes (nombre, precio_mensual, precio_3meses, precio_6meses, descuento_pct, descripcion, badge, caracteristicas_incluidas, caracteristicas_no_incluidas, activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+'Premium', 119, 321, 606, 10,
+'Entrenamiento + nutrición para resultados reales',
+'Más popular',
+JSON.stringify(["Rutina semanal personalizada","Videos + instrucciones escritas","Ajuste semanal de rutina","Plan de nutrición semanal","Seguimiento emocional diario","Mensajes prioritarios","Chat AI Coach avanzado","Registro completo de medidas","Fotos de progreso mensuales","Reporte PDF mensual"]),
+JSON.stringify(["Sesiones 1 a 1 con Nahomy"]),
+1);
+
+db.prepare(`INSERT OR REPLACE INTO planes (nombre, precio_mensual, precio_3meses, precio_6meses, descuento_pct, descripcion, badge, caracteristicas_incluidas, caracteristicas_no_incluidas, activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+'VIP', 249, 672, 1254, 10,
+'Experiencia completa 1 a 1 con Nahomy',
+'Todo incluido',
+JSON.stringify(["Rutina 100% personalizada","Videos propios de Nahomy","Ajuste en tiempo real","Plan de nutrición + suplementos","Asesoría emocional completa","Respuesta en menos de 2 horas","Chat AI Coach ilimitado","4 sesiones 1 a 1 por mes","Escaneo corporal mensual","Fotos antes y después","Reporte PDF completo + gráficas"]),
+JSON.stringify([]),
+1);
+
+console.log('Planes insertados:', db.prepare('SELECT id, nombre, precio_mensual FROM planes').all());
+
+Crea un archivo llamado seed-planes.js con ese código, ejecútalo con node seed-planes.js, confirma que los 3 planes se insertaron correctamente, luego elimina el archivo. Después republica la app.

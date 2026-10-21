@@ -1,0 +1,203 @@
+Mejora completa del flujo de creación de Rutinas y Nutrición, y del formulario de registro de clientes:
+
+═══════════════════════════════════════
+PARTE 1 — FORMULARIO DE REGISTRO DE CLIENTES
+═══════════════════════════════════════
+
+Cuando el coach crea o edita un cliente, el formulario debe recopilar estos datos completos que el AI usará para generar planes perfectos:
+
+DATOS PERSONALES:
+- Nombre completo
+- Email
+- Teléfono
+- Fecha de nacimiento (calcula edad automáticamente)
+- Sexo (Masculino / Femenino)
+- País y ciudad
+
+DATOS FÍSICOS ACTUALES:
+- Peso actual (kg)
+- Altura (cm) — calcula IMC automáticamente
+- Porcentaje de grasa corporal actual (%) — opcional
+- Complexión corporal (Ectomorfo / Mesomorfo / Endomorfo)
+
+OBJETIVOS Y METAS:
+- Objetivo principal (selección múltiple):
+  * Perder grasa corporal
+  * Ganar masa muscular
+  * Tonificar y definir
+  * Mejorar rendimiento atlético
+  * Bienestar general y salud
+  * Rehabilitación y recuperación
+- Peso meta (kg)
+- Fecha meta (para cuándo quiere lograr el objetivo)
+- Nivel de urgencia (Tranquilo / Moderado / Intensivo)
+
+NIVEL DE FITNESS:
+- Experiencia en entrenamiento:
+  * Principiante (menos de 6 meses)
+  * Intermedio (6 meses a 2 años)
+  * Avanzado (más de 2 años)
+- Días disponibles para entrenar por semana (1 a 7)
+- Duración máxima por sesión (30min / 45min / 60min / 90min)
+- Horario preferido (Mañana / Tarde / Noche / Flexible)
+- Lugar de entrenamiento (Gym / Casa / Al aire libre / Híbrido)
+- Equipamiento disponible (si entrena en casa):
+  * Sin equipamiento
+  * Mancuernas
+  * Bandas de resistencia
+  * Barra y pesas
+  * Máquinas en casa
+  * Equipamiento completo
+
+SALUD Y RESTRICCIONES:
+- Lesiones actuales o pasadas (texto libre)
+- Condiciones médicas relevantes (diabetes, hipertensión, etc.)
+- Medicamentos que toma actualmente
+- Zonas del cuerpo a evitar o trabajar con cuidado
+- ¿Tiene autorización médica para ejercitarse? (Sí / No / No aplica)
+
+NUTRICIÓN:
+- Alergias alimentarias (gluten, lactosa, mariscos, nueces, etc.)
+- Alimentos que no consume (por preferencia o religión)
+- Tipo de alimentación (Omnívoro / Vegetariano / Vegano / Keto / Paleo / Otro)
+- Número de comidas al día que puede hacer (3 / 4 / 5 / 6)
+- ¿Cocina en casa o come fuera? (Casa / Fuera / Mixto)
+- Presupuesto para alimentación (Básico / Moderado / Sin restricción)
+- ¿Toma suplementos actualmente? (cuáles)
+- Cantidad de agua que toma al día (litros)
+
+ESTILO DE VIDA:
+- Ocupación / trabajo (sedentario, activo, muy activo)
+- Horas de sueño promedio por noche
+- Nivel de estrés (Bajo / Moderado / Alto / Muy alto)
+- Modalidad con Nahomy (Presencial / Online / Híbrido)
+- Plan contratado (Básico / Premium / VIP)
+- Fecha de inicio con Nahomy
+
+NOTAS DEL COACH:
+- Observaciones iniciales de Nahomy
+- Estrategia de entrenamiento propuesta
+- Prioridades del primer mes
+
+═══════════════════════════════════════
+PARTE 2 — MODAL ANTES DE GENERAR PLAN
+═══════════════════════════════════════
+
+Tanto en Rutinas como en Nutrición, ANTES de cualquier acción mostrar un modal elegante con fondo oscuro que pregunta:
+
+PASO 1 — ¿Cómo deseas crear el plan?
+┌─────────────────────────────────┐
+│  🤖 Generar con IA              │
+│  El AI crea el plan completo    │
+│  basado en el perfil del cliente│
+├─────────────────────────────────┤
+│  ✏️  Crear manualmente          │
+│  El coach llena cada día        │
+│  con sus propios ejercicios     │
+└─────────────────────────────────┘
+
+PASO 2 — ¿Por cuánto tiempo?
+┌──────────┬──────────┬──────────┐
+│ 1 semana │ 15 días  │  1 mes   │
+│  7 días  │  2 sem   │ 4 semanas│
+└──────────┴──────────┴──────────┘
+
+PASO 3 — Confirmar datos del cliente (mostrar resumen):
+- Nombre: Carlos Mendoza
+- Objetivo: Ganancia muscular
+- Nivel: Intermedio
+- Días disponibles: 5 días/semana
+- Duración sesión: 60 min
+- Lugar: Gym con equipamiento completo
+- Restricciones: Rodilla derecha leve
+- Tipo alimentación: Omnívoro
+- Comidas al día: 5
+- Alergias: Ninguna
+[Botón: Confirmar y generar]
+
+═══════════════════════════════════════
+PARTE 3 — PROMPT INTELIGENTE AL AI
+═══════════════════════════════════════
+
+Cuando se genera con IA, enviar a Anthropic este prompt personalizado:
+
+PARA RUTINAS:
+"Eres Nahomy, coach de fitness profesional certificada. Crea un plan de entrenamiento de [7/15/30] días para [nombre del cliente].
+
+PERFIL DEL CLIENTE:
+- Sexo: [sexo]
+- Edad: [edad calculada]
+- Peso: [peso]kg | Altura: [altura]cm | IMC: [imc]
+- Complexión: [ectomorfo/mesomorfo/endomorfo]
+- Objetivo: [objetivo]
+- Peso meta: [peso_meta]kg para [fecha_meta]
+- Nivel: [principiante/intermedio/avanzado]
+- Experiencia: [tiempo de experiencia]
+- Días disponibles: [dias] días por semana
+- Duración por sesión: [duracion] minutos
+- Horario: [horario]
+- Lugar: [lugar]
+- Equipamiento: [equipamiento]
+- Lesiones/restricciones: [lesiones]
+- Condiciones médicas: [condiciones]
+- Zonas a evitar: [zonas]
+
+GENERA el plan completo en español. Para cada día de entrenamiento incluye:
+- Nombre del día y grupo muscular
+- Calentamiento (5-10 min)
+- Lista de ejercicios con: nombre exacto, series, repeticiones o tiempo, descanso en segundos, instrucciones detalladas de técnica y respiración, link de YouTube real del ejercicio
+- Enfriamiento y estiramientos (5-10 min)
+- Nota del día con consejos de Nahomy
+
+Considera los días de descanso activo. Distribuye los grupos musculares inteligentemente. Adapta la intensidad al nivel del cliente. Evita ejercicios que afecten las zonas con lesiones."
+
+PARA NUTRICIÓN:
+"Eres Nahomy, coach de nutrición y fitness. Crea un plan de alimentación de [7/15/30] días para [nombre del cliente].
+
+PERFIL DEL CLIENTE:
+- Sexo: [sexo] | Edad: [edad] | Peso: [peso]kg | Altura: [altura]cm
+- IMC: [imc] | Complexión: [complexion]
+- Objetivo: [objetivo] | Peso meta: [peso_meta]kg
+- Nivel de actividad: [nivel]
+- Tipo de alimentación: [tipo]
+- Alergias: [alergias]
+- Alimentos que no consume: [restricciones]
+- Número de comidas al día: [num_comidas]
+- ¿Cocina en casa o come fuera?: [cocina]
+- Presupuesto: [presupuesto]
+- Suplementos actuales: [suplementos]
+- Agua diaria: [agua]L
+- Ocupación: [ocupacion]
+- Nivel de estrés: [estres]
+- Horas de sueño: [sueno]
+
+CALCULA primero:
+- TMB (Tasa Metabólica Basal) con fórmula Harris-Benedict
+- TDEE (Gasto calórico total) según nivel de actividad
+- Calorías objetivo según meta (déficit para bajar, superávit para ganar)
+- Distribución de macros recomendada (proteínas/carbos/grasas en gramos)
+
+GENERA el plan completo en español. Para cada día incluye [num_comidas] comidas:
+- Desayuno, snack mañana, almuerzo, snack tarde, cena (según num_comidas)
+- Cada comida: nombre, descripción detallada con ingredientes y cantidades exactas en gramos, modo de preparación resumido, calorías, proteínas(g), carbohidratos(g), grasas(g), hora recomendada
+- Total del día: calorías, proteínas, carbos, grasas
+- Nota nutricional del día con consejos de Nahomy
+- Receta rápida destacada del día
+
+Varía las comidas cada día. Usa alimentos de fácil acceso. Respeta todas las restricciones alimenticias."
+
+═══════════════════════════════════════
+PARTE 4 — DESPUÉS DE GENERAR
+═══════════════════════════════════════
+
+1. Mostrar spinner con mensaje: "Nahomy está diseñando el plan perfecto para [nombre]..."
+2. Mostrar el plan generado en modo EDICIÓN COMPLETA
+3. El coach puede modificar absolutamente cualquier campo
+4. Botón "Regenerar día" por cada día individual
+5. Botón "Regenerar todo" para generar versión diferente completa
+6. Botón "Vista previa del cliente" para ver cómo lo verá el cliente
+7. Botón "Guardar borrador" para guardar sin publicar
+8. Botón "Guardar y publicar" para activarlo y que el cliente lo vea inmediatamente
+9. Una vez publicado, aparece badge "Activo" en el plan
+
+Aplica todos estos cambios, asegúrate que funcionen sin errores tanto en Rutinas como en Nutrición, y republica la app.

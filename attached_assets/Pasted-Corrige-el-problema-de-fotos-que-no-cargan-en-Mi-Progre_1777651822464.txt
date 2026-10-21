@@ -1,0 +1,104 @@
+Corrige el problema de fotos que no cargan en Mi Progreso:
+
+PROBLEMA:
+Cannot GET /api/uploads/progreso/9/2026-05/fotoFrente_1777651241458.jpg
+La ruta /api/uploads no existe — las fotos se sirven desde /api pero debería ser /uploads directamente.
+
+CORRECCIÓN EN server.js:
+
+1. Agregar ruta estática para servir las fotos de progreso:
+const path = require('path');
+const express = require('express');
+
+// Servir archivos estáticos de uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Verificar que la carpeta existe, si no crearla:
+const fs = require('fs');
+const carpetasNecesarias = [
+  './uploads',
+  './uploads/progreso',
+  './uploads/perfil'
+];
+carpetasNecesarias.forEach(carpeta => {
+  if (!fs.existsSync(carpeta)) {
+    fs.mkdirSync(carpeta, { recursive: true });
+    console.log('Carpeta creada:', carpeta);
+  }
+});
+
+2. Verificar que multer guarda las fotos en la ruta correcta:
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    const clienteId = req.body.cliente_id || req.usuario.id;
+    const fecha = new Date().toISOString().slice(0, 7); // 2026-05
+    const carpeta = path.join(__dirname, 'uploads', 'progreso', String(clienteId), fecha);
+    
+    // Crear carpeta si no existe
+    fs.mkdirSync(carpeta, { recursive: true });
+    cb(null, carpeta);
+  },
+  filename: function(req, file, cb) {
+    const nombre = file.fieldname + '_' + Date.now() + path.extname(file.originalname);
+    cb(null, nombre);
+  }
+});
+
+3. Al guardar la URL de la foto en la base de datos, usar ruta SIN /api:
+// MAL:
+foto_frente: '/api/uploads/progreso/9/2026-05/fotoFrente_123.jpg'
+
+// BIEN:
+foto_frente: '/uploads/progreso/9/2026-05/fotoFrente_123.jpg'
+
+4. Actualizar registros existentes con ruta incorrecta:
+UPDATE registros_progreso 
+SET 
+  foto_frente = REPLACE(foto_frente, '/api/uploads/', '/uploads/'),
+  foto_espalda = REPLACE(foto_espalda, '/api/uploads/', '/uploads/'),
+  foto_perfil_izq = REPLACE(foto_perfil_izq, '/api/uploads/', '/uploads/'),
+  foto_perfil_der = REPLACE(foto_perfil_der, '/api/uploads/', '/uploads/'),
+  foto_extra1 = REPLACE(foto_extra1, '/api/uploads/', '/uploads/'),
+  foto_extra2 = REPLACE(foto_extra2, '/api/uploads/', '/uploads/')
+WHERE foto_frente LIKE '/api/uploads/%'
+   OR foto_espalda LIKE '/api/uploads/%';
+
+5. En el frontend, al mostrar las fotos verificar que la URL es correcta:
+function mostrarFoto(url, contenedor, label) {
+  if (!url) {
+    contenedor.innerHTML = `
+      <div style="width:100%;aspect-ratio:3/4;background:#0F1A14;border:0.5px dashed #1A2E20;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#4B7A5E;flex-direction:column;gap:8px;">
+        <span style="font-size:24px;">📷</span>
+        <span style="font-size:11px;">${label}</span>
+      </div>`;
+    return;
+  }
+  
+  const img = document.createElement('img');
+  img.src = url;
+  img.style.cssText = 'width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;';
+  img.alt = label;
+  img.onerror = function() {
+    this.parentElement.innerHTML = `
+      <div style="width:100%;aspect-ratio:3/4;background:#0F1A14;border:0.5px dashed #EF4444;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#EF4444;flex-direction:column;gap:8px;">
+        <span style="font-size:24px;">⚠️</span>
+        <span style="font-size:11px;">Foto no disponible</span>
+      </div>`;
+  };
+  contenedor.innerHTML = '';
+  contenedor.appendChild(img);
+}
+
+6. Las 6 posiciones de fotos deben mostrarse en grid 3x2:
+┌─────────┬─────────┬─────────┐
+│ Frente  │ Espalda │ P. Izq  │
+├─────────┼─────────┼─────────┤
+│ P. Der  │ Extra 1 │ Extra 2 │
+└─────────┴─────────┴─────────┘
+Si una foto no existe: mostrar placeholder gris con ícono de cámara.
+
+7. Verificar que las fotos subidas están físicamente en el servidor:
+Ejecutar: ls -la uploads/progreso/9/2026-05/
+Si no existen las carpetas: crearlas y confirmar que multer las usa correctamente.
+
+Republica la app después.

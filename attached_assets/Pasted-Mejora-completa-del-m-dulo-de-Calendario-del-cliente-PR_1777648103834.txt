@@ -1,0 +1,119 @@
+Mejora completa del módulo de Calendario del cliente:
+
+PROBLEMA 1 — DÍAS SIN DATOS MUESTRAN "FALLADO":
+Los días 27, 28, 29, 30 muestran "FALLADO" en rojo porque Noe no tiene rutina asignada. Esto es incorrecto — no es lo mismo "sin datos" que "fallado".
+
+LÓGICA CORRECTA DE ESTADOS:
+- FALLADO (rojo ×): El cliente TENÍA rutina asignada y NO la completó
+- SIN DATOS (gris, ícono calendario): El cliente no tenía rutina asignada ese día
+- COMPLETADO (verde ✓): Completó su rutina
+- PARCIAL (amarillo ~): Completó entre 40-79%
+- HOY (borde verde): El día actual
+- FUTURO (gris claro): Días que aún no llegaron
+
+Si Noe no tiene rutina asignada esos días → mostrar gris neutro, NO rojo FALLADO.
+
+PROBLEMA 2 — CAMBIAR DE SEMANAL A MENSUAL:
+El calendario actual muestra solo 7 días. Cambiarlo a vista mensual completa:
+
+NUEVO DISEÑO DEL CALENDARIO:
+
+HEADER:
+← Abril 2026 →  (navegación entre meses)
+
+GRID MENSUAL (7 columnas):
+LUN  MAR  MIÉ  JUE  VIE  SÁB  DOM
+                1    2    3    4    5
+ 6    7    8    9   10   11   12
+13   14   15   16   17   18   19
+20   21   22   23   24   25   26
+27   28   29   30    1    2    3
+
+Cada día muestra:
+- Número del día
+- Puntos de colores debajo (máximo 3 puntos):
+  * Verde: tiene rutina
+  * Amarillo: tiene nutrición
+  * Azul: hizo check-in emocional
+- Estado visual:
+  * Verde suave = completado
+  * Sin color = sin datos o futuro
+  * Rojo suave = tenía plan y no completó (SOLO si había plan asignado)
+  * Borde verde pulsante = hoy
+
+PANEL DEL DÍA AL HACER CLIC:
+Al seleccionar cualquier día mostrar panel debajo con máximo 4 tarjetas compactas:
+
+TARJETA 1 — RUTINA:
+┌──────────────────────────────────┐
+│ 💪 Rutina del día                │
+│                                  │
+│ Si tiene rutina:                 │
+│ Cuerpo completo · 6 ejercicios   │
+│ • Sentadilla 4x8-10              │
+│ • Press banca 4x8-10             │
+│ • [Ver rutina completa →]        │
+│                                  │
+│ Si NO tiene rutina:              │
+│ 🧘 Día de descanso               │
+│ Aprovecha para estirar y recuperar│
+└──────────────────────────────────┘
+
+TARJETA 2 — NUTRICIÓN:
+┌──────────────────────────────────┐
+│ 🥗 Nutrición del día             │
+│                                  │
+│ Si tiene plan:                   │
+│ 2,180 kcal · P:150g C:220g G:70g │
+│ 🌅 Desayuno: Avena con frutas    │
+│ ☀️ Almuerzo: Pollo con arroz     │
+│ 🌙 Cena: Ensalada + huevos       │
+│ [Ver plan completo →]            │
+│                                  │
+│ Si NO tiene plan:                │
+│ Sin plan asignado este día       │
+└──────────────────────────────────┘
+
+TARJETA 3 — BIENESTAR:
+┌──────────────────────────────────┐
+│ 🧠 Bienestar emocional           │
+│                                  │
+│ Si hizo check-in:                │
+│ Estado: 😊 Bien                  │
+│ Energía: 7/10 · Sueño: 7h       │
+│                                  │
+│ Si es HOY y no hizo check-in:    │
+│ Aún no registraste hoy           │
+│ [Hacer check-in →]              │
+│                                  │
+│ Si es día pasado sin check-in:   │
+│ No se registró este día          │
+└──────────────────────────────────┘
+
+TARJETA 4 — FRASE DEL DÍA:
+SOLO mostrar si es el día de HOY:
+┌──────────────────────────────────┐
+│ ✨ Tu frase de hoy               │
+│                                  │
+│ "Cada esfuerzo cuenta,           │
+│  aunque nadie lo vea."           │
+│                    — Nahomy      │
+└──────────────────────────────────┘
+
+Para días pasados y futuros: NO mostrar esta tarjeta
+
+RESUMEN DE LA SEMANA (panel lateral derecho):
+Mantenerlo pero corregir los datos:
+- Adherencia promedio: solo calcular días que TENÍAN plan asignado
+- Días completados: días con plan completado al 100%
+- Check-ins realizados: de los 7 días de la semana visible
+- Si no hay datos: mostrar "—" no "0%"
+
+IMPLEMENTACIÓN:
+1. Cargar datos del mes completo en una sola llamada API
+2. Al hacer clic en día → fetch solo de ese día (rutina, nutrición, checkin)
+3. Mostrar panel con animación suave slideDown
+4. Si el día no tiene NINGÚN dato → mostrar mensaje neutral, nunca "FALLADO"
+5. Los botones [Ver rutina completa →] navegan a la sección correspondiente
+
+Republica la app después.

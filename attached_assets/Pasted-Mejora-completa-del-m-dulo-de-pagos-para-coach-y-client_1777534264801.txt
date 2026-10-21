@@ -1,0 +1,163 @@
+Mejora completa del módulo de pagos para coach y cliente:
+
+═══════════════════════════════════════
+PARTE 1 — MEJORAS EN MÓDULO DE PAGOS
+═══════════════════════════════════════
+
+1. FECHA DE PAGO Y FACTURACIÓN:
+- La fecha de inicio de facturación es la misma fecha de inscripción del cliente
+- Calcular automáticamente la próxima fecha de pago según el plan:
+  * Plan mensual: fecha inscripción + 30 días
+  * Plan 3 meses: fecha inscripción + 90 días
+  * Plan 6 meses: fecha inscripción + 180 días
+- Mostrar cuenta regresiva: "Próximo pago en X días"
+- Alerta automática cuando faltan 5 días para vencer
+- Alerta cuando el pago está vencido (rojo)
+
+2. MÉTODOS DE PAGO — verificación completa:
+Al registrar un pago el coach selecciona el método:
+- 💵 Efectivo — campo para anotar quién recibió y dónde
+- 📱 Zelle — campo para número/email de Zelle usado
+- 🏦 Transferencia bancaria — campo para banco, número de referencia
+- 💳 Tarjeta de crédito/débito — últimos 4 dígitos
+- 📲 PayPal — email de PayPal
+- 🔄 Otro — campo de texto libre
+
+Cada pago registrado muestra:
+- Ícono del método de pago
+- Referencia o confirmación del pago
+- Monto exacto pagado
+- Fecha y hora del registro
+- Quién registró el pago (coach o admin)
+- Estado: Confirmado / Pendiente de verificar / Rechazado
+
+3. RECIBO DE PAGO PROFESIONAL (imprimible y PDF):
+Al hacer clic en "Imprimir recibo" o "Descargar PDF" generar recibo con:
+
+HEADER:
+- Logo NAHOFIT.LIFE
+- "RECIBO DE PAGO" en grande
+- Número de recibo único: #NF-2026-0001 (auto-incremental)
+- Fecha de emisión
+
+DATOS DEL CLIENTE:
+- Nombre completo
+- Email
+- Teléfono
+- Plan contratado
+
+DATOS DEL PAGO:
+- Concepto: "Membresía [Plan] — [Mes/Período]"
+- Período cubierto: del [fecha] al [fecha]
+- Método de pago: [método con ícono]
+- Referencia: [número de referencia]
+- Subtotal
+- Descuento aplicado (si pagó 3 o 6 meses)
+- TOTAL pagado en grande
+
+FOOTER:
+- "Gracias por confiar en NAHOFIT.LIFE"
+- "Elaborado por Nahomy"
+- Términos: "Este recibo es comprobante de pago válido"
+- Firma digital o línea de firma
+
+4. HISTORIAL DE PAGOS DEL CLIENTE:
+En el panel del coach, perfil de cada cliente:
+- Tabla con todos los pagos: fecha, período, monto, método, estado, acciones
+- Botón "Ver recibo" en cada pago
+- Botón "Imprimir recibo" en cada pago  
+- Total pagado historico
+- Total pendiente
+- Próxima fecha de pago con cuenta regresiva
+- Badge de estado: Verde=Al día / Amarillo=Por vencer / Rojo=Vencido
+
+5. DASHBOARD DE PAGOS DEL COACH:
+- Resumen del mes: ingresos totales, pagos recibidos, pagos pendientes, pagos vencidos
+- Lista de todos los clientes con su estado de pago
+- Filtros: Todos / Al día / Por vencer / Vencidos
+- Botón "Registrar pago" desde la lista directamente
+- Gráfica de ingresos por mes (últimos 6 meses)
+- Proyección de ingresos del próximo mes
+- Total anual acumulado
+
+6. VISTA DEL CLIENTE — SECCIÓN MIS PAGOS:
+El cliente puede ver:
+- Su plan actual y precio
+- Fecha de próximo pago con cuenta regresiva
+- Historial completo de sus pagos
+- Estado de cada pago con ícono de método
+- Botón "Descargar mi recibo" para cada pago
+- Botón "Solicitar factura" (envía email al coach)
+- Mensaje si tiene pago vencido: "Tienes un pago pendiente, contáctanos"
+
+═══════════════════════════════════════
+PARTE 2 — PUNTOS ADICIONALES PARA HACER
+LA APP MÁS PROFESIONAL
+═══════════════════════════════════════
+
+7. CONTRATO DIGITAL:
+- Al inscribir un cliente, generar contrato PDF automático con:
+  * Términos del servicio de NAHOFIT.LIFE
+  * Plan contratado y precio
+  * Política de cancelación (aviso de 15 días)
+  * Política de reembolso (no reembolsable después de 7 días)
+  * Firma digital del cliente (campo de firma con mouse o táctil)
+  * Firma de Nahomy
+- El cliente recibe copia por email
+- Se guarda en su perfil
+
+8. FICHA MÉDICA / PAR-Q:
+- Cuestionario de aptitud física pre-ejercicio (PAR-Q estándar)
+- 7 preguntas médicas estándar internacionales
+- Si responde SÍ a alguna, mostrar alerta: "Se recomienda autorización médica"
+- Se guarda en el perfil del cliente
+- Fecha de la ficha médica
+- Renovación anual automática
+
+9. NOTIFICACIONES INTERNAS:
+- Sistema de alertas en el panel del coach:
+  * 🔴 Cliente con pago vencido
+  * 🟡 Pago por vencer en 5 días
+  * 🟠 Cliente sin check-in hace 3+ días
+  * 🔵 Nuevo mensaje del cliente
+  * 🟣 Cliente sin registro de progreso este mes
+  * 🟢 Cliente completó su primera semana
+- Badge con número de alertas en el navbar
+- Marcar como leída cada alerta
+
+10. NOTAS RÁPIDAS DEL COACH:
+- En el perfil de cada cliente, sección "Notas privadas del coach"
+- El cliente NO puede ver estas notas
+- El coach escribe observaciones profesionales:
+  * Actitud del cliente
+  * Puntos de mejora
+  * Estrategia futura
+  * Recordatorios importantes
+- Historial de notas con fecha
+
+11. EVALUACIÓN INICIAL FOTOGRÁFICA:
+- Al crear cliente, opción de subir fotos iniciales como "Punto de partida"
+- Estas fotos se marcan automáticamente como "Mes 0 — Inicio"
+- No se pueden eliminar — son el baseline de comparación
+
+12. ESTADÍSTICAS PERSONALES DEL CLIENTE:
+En el dashboard del cliente mostrar:
+- Total de días entrenados desde el inicio
+- Total de semanas completadas
+- Mejor racha de días consecutivos
+- Peso perdido/ganado desde el inicio
+- % de grasa reducida desde el inicio
+- Progreso hacia la meta en %: "Llevas el 35% de tu objetivo"
+
+13. MODO PRESENCIAL vs ONLINE:
+- En el perfil del cliente indicar si es presencial u online
+- Para clientes presenciales: campo de horario de sesión con Nahomy (día y hora fija)
+- Para clientes online: zona horaria del cliente
+- Calendario de sesiones 1 a 1 para clientes VIP
+
+14. EXPORTAR DATOS DEL CLIENTE:
+- Botón en el perfil del cliente: "Exportar historial completo"
+- Genera PDF con todo: datos personales, progreso, pagos, rutinas, nutrición
+- Útil si el cliente quiere llevar su historial a otro servicio
+
+Aplica TODOS estos cambios, asegúrate que funcionen correctamente tanto en coach como en cliente, y republica la app.

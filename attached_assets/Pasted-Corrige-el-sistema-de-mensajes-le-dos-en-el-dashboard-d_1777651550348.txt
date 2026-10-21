@@ -1,0 +1,63 @@
+Corrige el sistema de mensajes leídos en el dashboard del cliente:
+
+PROBLEMA:
+El badge de mensajes no leídos sigue mostrando "2" aunque el cliente ya leyó los mensajes. Debe desaparecer al abrir la conversación.
+
+CORRECCIÓN:
+
+1. Al abrir la sección Mensajes, marcar TODOS como leídos automáticamente:
+async function marcarMensajesLeidos() {
+  const token = localStorage.getItem('nahofitToken');
+  const usuario = JSON.parse(localStorage.getItem('nahofitUsuario'));
+  
+  try {
+    await fetch(`/api/mensajes/marcar-leidos`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ receptor_id: usuario.id })
+    });
+    
+    // Actualizar badge inmediatamente
+    const badge = document.getElementById('badge-mensajes');
+    if (badge) badge.style.display = 'none';
+    
+    // Actualizar título pestaña
+    document.title = 'NAHOFIT.LIFE';
+    
+    // Ocultar banner si existe
+    const banner = document.getElementById('banner-mensaje');
+    if (banner) banner.style.display = 'none';
+    
+  } catch(e) {
+    console.log('Error marcando leídos:', e);
+  }
+}
+
+2. Llamar marcarMensajesLeidos() en estos momentos:
+   - Al hacer clic en "Mensajes" en el menú
+   - Al abrir la sección de mensajes
+   - Al hacer clic en el banner de "Tienes X mensajes nuevos"
+
+3. Ruta API:
+PUT /api/mensajes/marcar-leidos
+Body: { receptor_id }
+SQL: UPDATE mensajes SET leido = 1 WHERE receptor_id = ? AND leido = 0
+
+4. El badge debe:
+   - Mostrar número cuando hay mensajes NO leídos
+   - Desaparecer completamente (display:none) cuando todos están leídos
+   - NO mostrar "0" — simplemente no aparecer
+
+5. La verificación cada 30 segundos también debe actualizar:
+   - Si cantidad = 0 → ocultar badge y banner
+   - Si cantidad > 0 → mostrar badge y banner
+
+6. Los checks (✓ y ✓✓) en los mensajes:
+   - ✓ gris = enviado pero no leído
+   - ✓✓ verde = leído por el receptor
+   Actualizar los checks en la conversación del coach cuando el cliente lee.
+
+Republica la app después.

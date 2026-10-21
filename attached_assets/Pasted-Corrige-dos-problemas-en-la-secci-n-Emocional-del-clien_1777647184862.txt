@@ -1,0 +1,109 @@
+Corrige dos problemas en la sección Emocional del cliente:
+
+PROBLEMA 1 — CAMPO ENERGÍA SIN LÍMITE:
+El campo "Energía (1-5)" acepta cualquier número (muestra "20"). Debe estar limitado.
+
+Reemplazar el input numérico por sliders visuales igual que el diseño que se mostró:
+
+ENERGÍA — reemplazar input por slider:
+- Mínimo: 1, Máximo: 5, Paso: 1
+- Mostrar valor actual en grande
+- Color de la barra: #10B981
+
+SUEÑO — reemplazar input por slider:
+- Mínimo: 0, Máximo: 12, Paso: 0.5
+- Mostrar valor con "h" (ej: "7.5h")
+- Color de la barra: #10B981
+
+ESTADO DE ÁNIMO — mejorar los emojis:
+- Reemplazar los íconos actuales por emojis reales más grandes
+- 😩 Muy mal (valor 1)
+- 😔 Mal (valor 2)
+- 😐 Regular (valor 3)
+- 😊 Bien (valor 4)
+- 🤩 Excelente (valor 5)
+- Al seleccionar: fondo verde suave, borde verde, emoji más grande
+- Solo se puede seleccionar uno a la vez
+
+FACTORES DEL DÍA — agregar tags opcionales:
+Debajo de los emojis agregar tags clicables (selección múltiple):
+[ Trabajo ] [ Familia ] [ Cansancio ] [ Motivado ] [ Estrés ] [ Dolor ] [ Buena alimentación ] [ Mal sueño ] [ Logro del día ] [ Lesión ]
+- Al hacer clic se activan/desactivan
+- Se guardan junto con el check-in
+
+PROBLEMA 2 — SECCIÓN EMOCIONAL CARGA EN BLANCO:
+Cuando el cliente navega a "Emocional" la pantalla queda en blanco y hay que presionar F5.
+
+CAUSA: La sección no está cargando su contenido cuando se hace clic en el menú.
+
+CORRECCIÓN:
+1. El evento click del menú "Emocional" debe llamar a una función que cargue el contenido:
+
+function mostrarSeccionEmocional() {
+  const contenedor = document.getElementById('seccion-emocional');
+  if (!contenedor) return;
+  
+  // Mostrar el HTML de la sección inmediatamente
+  contenedor.innerHTML = renderizarFormularioEmocional();
+  
+  // Luego cargar historial de check-ins
+  cargarHistorialEmocional();
+  
+  // Inicializar sliders y eventos
+  inicializarSliders();
+  inicializarEmojis();
+  inicializarTags();
+}
+
+2. Aplicar el mismo fix a TODAS las secciones del cliente que cargan en blanco:
+- Mi Rutina
+- Mi Nutrición
+- Mi Progreso
+- Emocional
+- Mensajes
+- Mi Plan
+- Mis Pagos
+
+3. Estructura correcta del menú del cliente:
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', function() {
+    const seccion = this.dataset.seccion;
+    
+    // Ocultar todas las secciones
+    document.querySelectorAll('.seccion').forEach(s => s.style.display = 'none');
+    
+    // Mostrar la sección seleccionada
+    const seccionEl = document.getElementById(`seccion-${seccion}`);
+    if (seccionEl) {
+      seccionEl.style.display = 'block';
+      // Cargar datos de esa sección
+      cargarSeccion(seccion);
+    }
+    
+    // Actualizar menú activo
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+function cargarSeccion(nombre) {
+  switch(nombre) {
+    case 'rutina': cargarMiRutina(); break;
+    case 'nutricion': cargarMiNutricion(); break;
+    case 'progreso': cargarMiProgreso(); break;
+    case 'emocional': cargarEmocional(); break;
+    case 'mensajes': cargarMisMensajes(); break;
+    case 'plan': cargarMiPlan(); break;
+    case 'pagos': cargarMisPagos(); break;
+  }
+}
+
+4. Cada función de carga debe:
+- Mostrar spinner mientras carga
+- Mostrar contenido cuando llegan los datos
+- Mostrar mensaje amigable si no hay datos
+- NUNCA dejar la sección en blanco
+
+5. Al cargar el dashboard por primera vez, mostrar automáticamente la sección "Dashboard" sin necesidad de clic
+
+Republica la app después de los cambios.

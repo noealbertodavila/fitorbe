@@ -1,0 +1,74 @@
+Corrige estos dos problemas urgentes:
+
+═══════════════════════════════════════
+PROBLEMA 1 — CLIENTES CREADOS POR ADMIN NO APARECEN EN COACH
+═══════════════════════════════════════
+
+Cuando el administrador crea un cliente nuevo, ese cliente no aparece en el dashboard del coach al que fue asignado.
+
+Corrige esto:
+1. Cuando el admin crea un cliente y le asigna un coach, guardar el campo coach_id correctamente en la base de datos
+2. La ruta GET /api/clientes cuando la llama un COACH debe filtrar y devolver SOLO los clientes donde coach_id = el id del coach logueado
+3. Cuando el admin crea un cliente sin asignar coach, debe poder asignarlo después desde la lista de usuarios
+4. En el panel del admin, al crear cliente mostrar un dropdown "Asignar a coach" con todos los coaches disponibles
+5. Verificar que los clientes existentes también tengan el coach_id correcto en la base de datos
+6. Después de crear un cliente, el coach debe verlo inmediatamente sin necesidad de recargar
+7. Agregar en el panel del coach un contador real de "Mis clientes" que refleje solo los suyos
+
+═══════════════════════════════════════
+PROBLEMA 2 — INGREDIENTES CON GRAMOS EN NUTRICIÓN
+═══════════════════════════════════════
+
+En el plan de nutrición, cada comida debe mostrar los ingredientes con sus gramos exactos, no solo el nombre del plato.
+
+Corrige esto:
+
+1. En el formulario de nutrición (manual y generado por AI), cada comida tiene una sección de INGREDIENTES donde se pueden agregar:
+   - Nombre del ingrediente (ej: Pollo a la plancha)
+   - Cantidad en gramos (ej: 160g)
+   - Botón "+" para agregar más ingredientes
+   - Botón "×" para eliminar ingrediente
+
+2. Ejemplo de cómo debe verse una comida:
+   ALMUERZO — 12:30pm
+   Pollo con arroz y batata
+   Ingredientes:
+   • Pechuga de pollo a la plancha — 160g
+   • Arroz blanco cocido — 80g
+   • Batata/camote cocida — 120g
+   • Aceite de oliva — 5g
+   Total: 480g | 520 kcal | P: 45g | C: 62g | G: 8g
+
+3. Cuando el AI genera el plan de nutrición, el prompt debe pedir explícitamente:
+   - Listar CADA ingrediente de la comida por separado
+   - Especificar gramos exactos de cada ingrediente
+   - Calcular los macros totales sumando todos los ingredientes
+   - Formato JSON: ingredientes: [{nombre, gramos, calorias, proteinas, carbos, grasas}]
+
+4. En la vista del cliente, mostrar cada comida así:
+   - Nombre del plato en grande
+   - Lista de ingredientes con gramos: "• Pollo — 160g"
+   - Macros totales de la comida
+   - Calorías totales
+   - Hora recomendada
+
+5. El coach puede editar los gramos de cada ingrediente directamente
+6. Al cambiar los gramos, recalcular automáticamente los macros y calorías
+
+Base de datos — actualizar la estructura de comidas JSON así:
+{
+  "nombre": "Pollo con arroz y batata",
+  "hora": "12:30",
+  "ingredientes": [
+    {"nombre": "Pechuga de pollo", "gramos": 160, "calorias": 248, "proteinas": 46, "carbos": 0, "grasas": 5},
+    {"nombre": "Arroz blanco cocido", "gramos": 80, "calorias": 104, "proteinas": 2, "carbos": 23, "grasas": 0},
+    {"nombre": "Batata cocida", "gramos": 120, "calorias": 103, "proteinas": 2, "carbos": 24, "grasas": 0}
+  ],
+  "calorias_total": 455,
+  "proteinas_total": 50,
+  "carbos_total": 47,
+  "grasas_total": 5,
+  "notas": ""
+}
+
+Aplica ambas correcciones y republica la app.

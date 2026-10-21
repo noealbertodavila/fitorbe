@@ -1,0 +1,47 @@
+Corrige urgente el error HTTP 403 "Acceso denegado" cuando el coach intenta guardar el perfil de un cliente:
+
+PROBLEMA:
+El coach edita el perfil de un cliente y al hacer clic en "Guardar perfil completo" aparece error HTTP 403 Acceso denegado.
+
+CAUSA PROBABLE:
+La ruta PUT /api/clientes/:id solo permite acceso al ADMINISTRADOR y está bloqueando al COACH.
+
+CORRECCIONES:
+
+1. En el middleware de autenticación, la ruta PUT /api/clientes/:id debe permitir acceso a:
+   - ADMINISTRADOR: puede editar cualquier cliente
+   - COACH: puede editar solo sus propios clientes (donde cliente.coach_id = coach.id)
+   - CLIENTE: puede editar solo su propio perfil
+
+2. Verificar TODAS las rutas del coach y corregir permisos:
+   - PUT /api/clientes/:id → permitir COACH y ADMIN
+   - POST /api/rutina → permitir COACH y ADMIN
+   - POST /api/rutina/generar-ai → permitir COACH y ADMIN
+   - POST /api/plan-comida → permitir COACH y ADMIN
+   - POST /api/plan-comida/generar-ai → permitir COACH y ADMIN
+   - POST /api/progreso → permitir COACH, ADMIN y CLIENTE
+   - POST /api/checkin → permitir COACH, ADMIN y CLIENTE
+   - POST /api/emocional → permitir COACH, ADMIN y CLIENTE
+   - POST /api/mensajes → permitir COACH, ADMIN y CLIENTE
+   - POST /api/pagos → permitir COACH y ADMIN
+   - GET /api/clientes → COACH ve solo los suyos, ADMIN ve todos
+
+3. La lógica correcta de permisos es:
+   - ADMIN: acceso total a todo
+   - COACH: acceso a sus propios clientes y sus datos
+   - CLIENTE: acceso solo a sus propios datos
+
+4. También corrige el campo "Objetivo legacy" que aparece en el formulario — debe eliminarse y usar solo "Objetivo principal" con checkboxes múltiples
+
+5. El formulario de editar perfil debe tener pestañas que funcionen correctamente:
+   - Personal: nombre, email, teléfono, fecha nacimiento, sexo, país, ciudad
+   - Físico: peso, altura, IMC calculado, % grasa, complexión, peso meta, fecha meta, nivel urgencia
+   - Fitness: nivel experiencia, días disponibles, duración sesión, horario, lugar, equipamiento
+   - Nutrición: alergias, restricciones, tipo alimentación, num comidas, cocina/fuera, presupuesto, agua
+   - Coach: plan asignado, modalidad, fecha inicio, notas del coach
+
+6. Después de guardar exitosamente mostrar toast verde: "Perfil actualizado correctamente"
+
+7. Prueba guardando el perfil de Carlos Mendoza como coach y confirma que funciona sin error 403
+
+Republica la app después de los cambios.

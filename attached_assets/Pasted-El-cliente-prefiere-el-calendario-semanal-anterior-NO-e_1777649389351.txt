@@ -1,0 +1,72 @@
+El cliente prefiere el calendario semanal anterior, NO el mensual. Restaura la vista semanal y mejórala con estas adiciones:
+
+MANTENER la vista semanal actual con los 7 días de la semana.
+
+CORREGIR el problema de "FALLADO":
+- Los días 27, 28, 29, 30 muestran FALLADO porque Noe no tenía rutina asignada esos días
+- FALLADO solo debe mostrarse si el cliente TENÍA rutina asignada y NO la completó
+- Si no había rutina asignada ese día → mostrar ícono de descanso 🧘 con texto "Descanso" en gris neutro, nunca rojo
+
+LÓGICA CORRECTA DE ESTADOS:
+- ✅ Verde "Completado" → tenía rutina y la completó ≥80%
+- 🟡 Amarillo "Parcial" → tenía rutina y completó 40-79%
+- 🔴 Rojo "Fallado" → tenía rutina y completó <40% o no la hizo
+- 🧘 Gris "Descanso" → no había rutina asignada ese día
+- 📅 Gris claro "Futuro" → días que aún no llegaron
+- 🟢 Borde verde "Hoy" → el día actual
+
+AGREGAR debajo de cada día una referencia visual simple:
+Debajo del estado de cada día mostrar dos líneas pequeñas de texto:
+
+┌─────────────────┐
+│   VIE           │
+│    1            │
+│   [HOY]        │
+│                 │
+│ 💪 Piernas      │  ← nombre corto de la rutina del día
+│ 🥗 2,180 kcal   │  ← calorías del plan de nutrición
+└─────────────────┘
+
+Si no tiene rutina: no mostrar la línea de rutina
+Si no tiene nutrición: no mostrar la línea de nutrición
+Si tiene ambas: mostrar ambas líneas
+Texto pequeño, color verde suave #4B7A5E — no saturar visualmente
+
+AL HACER CLIC EN UN DÍA:
+Mostrar un panel compacto debajo del calendario semanal con 3 tarjetas simples:
+
+TARJETA 1 — RUTINA:
+💪 [Nombre del día de rutina] — [X ejercicios]
+Lista compacta: • Ejercicio 1 · Ejercicio 2 · Ejercicio 3...
+Estado: ✅ Completada / ⏳ Pendiente / 🧘 Día de descanso
+[Ver rutina completa →] (navega a Mi Rutina)
+
+TARJETA 2 — NUTRICIÓN:
+🥗 [Total calorías] kcal — P:[x]g C:[x]g G:[x]g
+Comidas: Desayuno · Almuerzo · Cena
+[Ver plan completo →] (navega a Mi Nutrición)
+
+TARJETA 3 — BIENESTAR:
+Si hizo check-in: 🧠 [emoji estado] · Energía [x]/5 · [x]h sueño
+Si es hoy sin check-in: "Aún no registraste hoy" + [Hacer check-in →]
+Si día pasado sin check-in: "No se registró este día"
+Si día futuro: no mostrar esta tarjeta
+
+NOTA ESPECIAL para días FUTUROS con plan:
+Mostrar en gris suave:
+💪 Rutina planificada: [nombre]
+🥗 Nutrición planificada: [calorías] kcal
+Texto en gris — indica que está planificado pero aún no es ese día
+
+NAVEGACIÓN SEMANAL:
+← semana anterior | Semana del [fecha] al [fecha] | semana siguiente →
+Permitir ver semanas pasadas para verificar historial
+Permitir ver semanas futuras si hay planes asignados
+
+RESUMEN SEMANAL (panel derecho — mantener):
+- Adherencia promedio (solo días con plan)
+- Días completados
+- Check-ins realizados
+- Corregir que muestre datos reales de la semana visible
+
+Republica la app después.

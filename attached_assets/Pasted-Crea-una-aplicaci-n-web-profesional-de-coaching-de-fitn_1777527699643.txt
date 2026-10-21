@@ -1,0 +1,339 @@
+Crea una aplicación web profesional de coaching de fitness y bienestar llamada NAHOFIT.LIFE usando Node.js, Express y SQLite.
+
+IDIOMA: Todo en español — menús, botones, labels, mensajes, fechas, notificaciones, absolutamente todo.
+
+MARCA:
+- Nombre: NAHOFIT.LIFE
+- Colores: fondo oscuro #0A0A0A, verde brillante #7FFF4F, cards #141414, bordes #1E1E1E
+- Fuentes: Syne para títulos, DM Sans para cuerpo (Google Fonts)
+- Footer: "Elaborado por Nahomy — NAHOFIT.LIFE" en todas las páginas
+- Estilo: profesional, serio, moderno — sin elementos de juego
+
+ENFOQUE:
+- Pérdida de peso, tonificación, ganancia muscular y bienestar integral
+- Clientes mixtos: hombres y mujeres de todas las edades
+- Modalidad híbrida: clientes online y presenciales
+- El coach trabaja con 31 a 100 clientes simultáneamente
+
+SISTEMA DE AUTENTICACIÓN:
+- Página de login con logo NAHOFIT.LIFE centrado, fondo oscuro, botón verde
+- JWT tokens + bcrypt para contraseñas
+- 3 roles: ADMINISTRADOR, COACH, CLIENTE
+- Navbar muestra nombre del usuario y su rol en todo momento
+- Botón cerrar sesión siempre visible
+- Token expirado redirige al login automáticamente
+
+CREDENCIALES INICIALES:
+- Admin: admin@nahofit.life / admin123
+- Coach: coach@nahofit.life / nahofit123 (nombre: Nahomy)
+- Cliente demo: cliente@nahofit.life / cliente123
+
+PANEL ADMINISTRADOR:
+Barra lateral: Panel, Usuarios, Planes y Precios, Pagos, Reportes, Configuración
+
+Panel principal:
+- Total clientes activos, total coaches, ingresos del mes, clientes con pago vencido
+
+Gestión de usuarios:
+- Crear, editar, desactivar cualquier usuario
+- Asignar clientes a coaches
+- Ver estado de pago de cada cliente
+
+MÓDULO DE PLANES Y PRECIOS (solo administrador):
+- 3 tarjetas editables: Básico, Premium, VIP
+- Cada plan tiene campos editables: nombre, precio mensual, precio 3 meses, precio 6 meses, porcentaje de descuento, descripción corta, badge (ej. "Más popular")
+- Lista de características INCLUIDAS: se pueden agregar, editar, eliminar individualmente
+- Lista de características NO INCLUIDAS: se muestran tachadas, también editables
+- Toggle para mover característica entre incluido y no incluido
+- Estado: activo o inactivo
+- Botón "Vista previa" muestra cómo lo verá el cliente
+- Cambios se reflejan automáticamente en dashboard del cliente
+- El coach NO puede modificar planes ni precios
+
+Valores iniciales:
+Plan Básico — $59/mes:
+INCLUYE: Rutina semanal personalizada, Videos de ejercicios YouTube, Ajuste mensual de rutina, Mensajes por la app, Chat AI Coach, Registro de peso y medidas
+NO INCLUYE: Plan de nutrición, Seguimiento emocional, Sesiones 1 a 1, Fotos de progreso, Reporte PDF
+
+Plan Premium — $119/mes (badge: Más popular):
+INCLUYE: Rutina semanal personalizada, Videos + instrucciones escritas, Ajuste semanal de rutina, Plan de nutrición semanal, Seguimiento emocional diario, Mensajes prioritarios, Chat AI Coach avanzado, Registro completo de medidas, Fotos de progreso, Reporte PDF mensual
+NO INCLUYE: Sesiones 1 a 1 con Nahomy
+
+Plan VIP — $249/mes (badge: Todo incluido):
+INCLUYE: Rutina 100% personalizada, Videos propios de Nahomy, Ajuste en tiempo real, Plan de nutrición + suplementos, Asesoría emocional completa, Respuesta en menos de 2 horas, Chat AI Coach ilimitado, 4 sesiones 1 a 1 por mes, Escaneo corporal mensual, Fotos antes y después, Reporte PDF completo + gráficas
+NO INCLUYE: Nada — plan completo
+
+MÓDULO DE PROGRESO FOTOGRÁFICO Y MEDIDAS (núcleo de la app):
+
+Reglas importantes:
+- Tanto el COACH como el CLIENTE pueden subir fotos y registrar medidas
+- NADIE puede eliminar registros anteriores — son permanentes
+- NADIE puede modificar registros anteriores — solo agregar nuevos
+- El coach NO puede modificar el plan del cliente desde este módulo
+- Cada registro es mensual y queda sellado con fecha
+
+Formulario de registro mensual (lo llena el coach o el cliente):
+FOTOS — 6 posiciones:
+1. Frente (foto frontal completa)
+2. Espalda (foto posterior completa)
+3. Perfil izquierdo
+4. Perfil derecho
+5. Foto adicional 1 (libre — ej. abdomen, brazos)
+6. Foto adicional 2 (libre)
+- Cada posición tiene su propio botón de subida
+- Vista previa de la foto antes de guardar
+- Formato aceptado: JPG, PNG — máximo 5MB por foto
+- Las fotos se guardan en carpeta /uploads/progreso/[cliente_id]/[fecha]/
+
+MEDIDAS CORPORALES completas:
+Básicas:
+- Peso (kg)
+- Porcentaje de grasa corporal (%)
+- Índice de masa corporal (calculado automáticamente)
+
+Circunferencias:
+- Cuello (cm)
+- Pecho / busto (cm)
+- Cintura (cm)
+- Cadera (cm)
+- Brazo derecho (cm)
+- Brazo izquierdo (cm)
+- Muslo derecho (cm)
+- Muslo izquierdo (cm)
+- Pantorrilla derecha (cm)
+- Pantorrilla izquierda (cm)
+- Pierna (cm)
+
+Escaneo corporal (bioimpedancia manual):
+- Masa muscular (kg)
+- Masa grasa (kg)
+- Agua corporal (%)
+- Metabolismo basal (kcal/día)
+- Edad metabólica (años)
+
+NOTAS DEL REGISTRO:
+- Campo "Observaciones del coach": el coach escribe su análisis profesional
+- Campo "¿Cómo te sentiste este mes?": el cliente escribe su experiencia
+- Ambos campos son visibles para coach y cliente
+- Fecha y hora del registro se guardan automáticamente
+- Se muestra quién hizo el registro (coach o cliente)
+
+GALERÍA DE PROGRESO:
+Vista línea de tiempo:
+- Todos los registros ordenados por fecha (más reciente primero)
+- Cada mes se muestra como una tarjeta con: fecha, peso, las 6 fotos en miniatura, resumen de medidas clave
+- Al hacer clic en una tarjeta se abre el registro completo
+
+Vista comparación lado a lado:
+- El coach o cliente selecciona 2 fechas de registro
+- Se muestran las 6 posiciones de ambas fechas en paralelo
+- Debajo de cada par de fotos: diferencia en medidas (ej. "Cintura: -3.5 cm")
+- Resumen de cambios totales: peso perdido, cm reducidos, % grasa reducida
+- Botón para exportar la comparación como imagen o PDF
+
+Gráficas de progreso (Chart.js):
+- Gráfica de peso en el tiempo (línea)
+- Gráfica de % grasa corporal (línea)
+- Gráfica de circunferencias principales: cintura, cadera, pecho (líneas múltiples)
+- Gráfica de masa muscular vs masa grasa (barras apiladas)
+- Todas las gráficas con puntos clicables que muestran el valor exacto
+
+PANEL DEL COACH — SECCIÓN PROGRESO:
+- Ver galería completa de cualquier cliente
+- Acceso al formulario de nuevo registro mensual para cualquier cliente
+- Ver comparación entre cualquier par de fechas
+- Descargar reporte PDF mensual con fotos y medidas
+- Alerta cuando un cliente lleva más de 35 días sin registro
+
+PANEL DEL CLIENTE — SECCIÓN MI PROGRESO:
+- Ver su propia galería de progreso
+- Subir sus propias fotos y medidas
+- Ver sus comparaciones antes/después
+- Ver sus gráficas de evolución
+- NO puede eliminar ni editar registros anteriores
+- NO puede ver registros de otros clientes
+
+DASHBOARD DEL COACH:
+Barra lateral: Panel, Mis Clientes, Rutinas, Nutrición, Progreso y Fotos, Bienestar Emocional, Mensajes, Reportes
+
+Panel principal:
+- Total clientes activos
+- Adherencia promedio esta semana
+- Mensajes sin leer
+- Clientes sin registro de progreso este mes (alerta en rojo)
+- Clientes sin check-in hoy
+
+Gestión de clientes:
+- Lista con buscador y filtros por plan, adherencia, modalidad
+- Perfil completo: foto de perfil, datos, objetivo, lesiones, nivel, plan contratado
+- Historial completo
+
+Rutinas (AI sugiere, coach ajusta y aprueba):
+- Botón "Generar con AI" crea rutina completa según perfil del cliente
+- Coach edita cada ejercicio antes de guardar
+- 7 días: nombre del ejercicio, series, reps, descanso, instrucciones escritas, link YouTube, opción video propio
+- Biblioteca de ejercicios reutilizables con fotos e instrucciones
+
+Nutrición (AI sugiere, coach ajusta y aprueba):
+- Botón "Generar con AI" crea plan de comidas según objetivo y restricciones
+- Coach edita antes de guardar
+- 7 días: nombre, descripción, calorías, proteínas, carbohidratos, grasas
+
+Bienestar Emocional:
+- Ver check-ins emocionales de cada cliente
+- Ver entradas del diario de mentalidad
+- Alerta si cliente reporta estado bajo 3 días seguidos
+- Mensaje de apoyo directo desde la alerta
+
+Mensajes:
+- Chat con polling cada 30 segundos
+- Badge rojo de no leídos
+
+Reportes:
+- PDF mensual por cliente: fotos comparativas, medidas, gráficas, adherencia, notas del coach
+- Reporte global de adherencia
+- Descarga con logo NAHOFIT.LIFE
+
+Cobros:
+- Registrar pago: fecha, monto, método (efectivo, Zelle, transferencia, Stripe)
+- Estado por cliente: pagado, pendiente, vencido
+- Alertas de pago vencido
+- Reporte de ingresos mensual
+
+DASHBOARD DEL CLIENTE:
+Panel principal:
+- Saludo: "Buenos días, [nombre]"
+- Resumen: rutina de hoy, comidas de hoy, último peso registrado, días desde último registro
+
+Rutina de hoy:
+- Checkbox por ejercicio
+- Series x reps, descanso, instrucciones, botón de video
+- Barra de progreso
+- Mensaje motivacional AI al completar
+
+Plan de comidas de hoy:
+- Lista con macros y checkbox
+- Total de calorías del día
+
+Calendario semanal:
+- Verde = completado 100%
+- Amarillo = completado parcial
+- Rojo = no completado
+- Gris = día futuro
+
+Mi Progreso:
+- Galería de fotos y medidas mensuales
+- Comparación antes/después
+- Gráficas de evolución
+- Formulario para nuevo registro mensual
+
+Bienestar Emocional:
+- Check-in diario: estado de ánimo (1-5), energía (1-5), horas de sueño, notas
+- Diario de mentalidad y gratitud
+- Frase motivacional generada por AI según estado emocional
+
+Mensajes con coach:
+- Chat con badge de no leídos
+
+Mi Plan:
+- Ver qué incluye su plan contratado
+- Botón para solicitar upgrade
+
+AI Coach (botón flotante verde esquina inferior derecha):
+- El AI conoce: rutina, plan de comidas, objetivo, lesiones, último estado emocional, último registro de progreso
+- Responde en español: ejercicios, sustituciones, técnica, motivación, estrés, sueño
+- Tono profesional y empático
+- Animación "Nahomy está escribiendo..."
+- Modelo: claude-sonnet-4-20250514
+
+BASE DE DATOS (SQLite con better-sqlite3):
+1. usuarios: id, nombre, email, password_hash, rol, telefono, fecha_nacimiento, objetivo, lesiones, nivel_fitness, modalidad, coach_id, plan_id, activo, creado_en
+2. planes: id, nombre, precio_mensual, precio_3meses, precio_6meses, descuento_pct, descripcion, badge, caracteristicas_incluidas JSON, caracteristicas_no_incluidas JSON, activo, actualizado_en
+3. rutinas: id, cliente_id, coach_id, semana_inicio, dia_semana, ejercicios JSON, aprobada, notas
+4. ejercicios_biblioteca: id, nombre, grupo_muscular, instrucciones, foto_url, video_url, creado_por
+5. planes_comida: id, cliente_id, coach_id, semana_inicio, dia_semana, comidas JSON, calorias_total, aprobada, notas
+6. registros_progreso: id, cliente_id, registrado_por, fecha_registro, peso_kg, grasa_corporal_pct, imc, cuello_cm, pecho_cm, cintura_cm, cadera_cm, brazo_der_cm, brazo_izq_cm, muslo_der_cm, muslo_izq_cm, pantorrilla_der_cm, pantorrilla_izq_cm, pierna_cm, masa_muscular_kg, masa_grasa_kg, agua_corporal_pct, metabolismo_basal, edad_metabolica, foto_frente, foto_espalda, foto_perfil_izq, foto_perfil_der, foto_extra1, foto_extra2, notas_coach, notas_cliente, creado_en
+7. checkins_diarios: id, cliente_id, fecha, ejercicios_completados JSON, comidas_completadas JSON, porcentaje_adherencia
+8. checkins_emocionales: id, cliente_id, fecha, estado_animo, nivel_energia, horas_sueno, notas
+9. diario_mentalidad: id, cliente_id, fecha, contenido, gratitud
+10. mensajes: id, remitente_id, receptor_id, contenido, leido, creado_en
+11. pagos: id, cliente_id, fecha, monto, metodo, concepto, estado, notas
+12. sesiones_ai: id, cliente_id, fecha, mensajes JSON
+
+RUTAS API:
+POST /api/auth/login
+POST /api/auth/logout
+GET /api/auth/me
+GET /api/usuarios (admin)
+POST /api/usuarios (admin)
+PUT /api/usuarios/:id
+DELETE /api/usuarios/:id (admin)
+GET /api/planes
+POST /api/planes (admin)
+PUT /api/planes/:id (admin)
+GET /api/clientes
+GET /api/clientes/:id
+PUT /api/clientes/:id
+GET /api/rutina/:clienteId/:semanaInicio
+POST /api/rutina
+POST /api/rutina/generar-ai
+GET /api/biblioteca-ejercicios
+POST /api/biblioteca-ejercicios
+GET /api/plan-comida/:clienteId/:semanaInicio
+POST /api/plan-comida
+POST /api/plan-comida/generar-ai
+GET /api/progreso/:clienteId
+POST /api/progreso (multipart/form-data para fotos)
+GET /api/progreso/:clienteId/comparacion?fecha1=&fecha2=
+GET /api/checkin/:clienteId/:fecha
+POST /api/checkin
+GET /api/emocional/:clienteId
+POST /api/emocional
+GET /api/diario/:clienteId
+POST /api/diario
+GET /api/mensajes/:userId
+POST /api/mensajes
+PUT /api/mensajes/:id/leido
+GET /api/pagos/:clienteId
+POST /api/pagos
+GET /api/reportes/adherencia
+GET /api/reportes/ingresos
+POST /api/ai-chat
+GET /api/frase-motivacional/:clienteId
+
+DATOS DE PRUEBA:
+- Admin: admin@nahofit.life / admin123
+- Coach Nahomy: coach@nahofit.life / nahofit123
+- 3 planes precargados con todas sus características
+- 5 clientes con perfiles completos variados
+- 2 semanas de rutinas y planes de comida por cliente
+- 3 registros de progreso mensual por cliente con medidas reales progresivas
+- 14 días de check-ins emocionales
+- Mensajes de ejemplo entre coach y clientes
+- Pagos de ejemplo: algunos al día, algunos pendientes
+
+VARIABLES DE ENTORNO:
+- ANTHROPIC_API_KEY
+- JWT_SECRET
+
+MANEJO DE ARCHIVOS:
+- Usar multer para subida de fotos
+- Guardar en /uploads/progreso/[cliente_id]/[año-mes]/
+- Servir archivos estáticos desde /uploads
+- Validar tipo (JPG, PNG) y tamaño máximo 5MB por foto
+- Generar nombre único por archivo para evitar colisiones
+
+DISEÑO:
+- Tema oscuro profesional y elegante
+- Logo NAHOFIT.LIFE: fondo negro, letras verdes #7FFF4F
+- Login: logo centrado grande, formulario minimalista
+- Sidebar con íconos y texto, sección activa en verde
+- Galería de fotos en grid responsivo
+- Comparación lado a lado con slider deslizable entre foto antigua y nueva
+- Responsive completo con menú hamburguesa
+- Toast notifications para cada acción
+- Transiciones suaves
+- Gráficas Chart.js en verde sobre fondo oscuro
+- Todo en español latino
+
+Escribe TODOS los archivos completos sin placeholders. Orden: package.json → server.js → database.js → middleware/auth.js → todas las rutas API → todos los archivos HTML/CSS/JS. Cada archivo 100% funcional y completo.

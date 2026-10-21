@@ -1,0 +1,155 @@
+Agrega sistema de notificación visual de mensajes nuevos para el cliente. Debe ser imposible de ignorar pero elegante:
+
+NOTIFICACIONES VISUALES DE MENSAJE NUEVO:
+
+1. BADGE EN EL MENÚ LATERAL:
+Cuando hay mensajes sin leer del coach, mostrar badge rojo en "Mensajes":
+<div class="menu-item" data-seccion="mensajes">
+  💬 Mensajes
+  <span class="badge-notif" id="badge-mensajes">2</span>
+</div>
+
+Estilo del badge:
+.badge-notif {
+  background: #EF4444;
+  color: white;
+  border-radius: 50%;
+  min-width: 20px;
+  height: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+2. BANNER EN EL DASHBOARD (parte superior):
+Cuando el cliente entra al dashboard y tiene mensajes sin leer, mostrar banner verde en la parte superior:
+
+<div id="banner-mensaje" style="
+  background: linear-gradient(135deg, #0F1A14, #10B981);
+  border: 1px solid #10B981;
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  animation: slideDown 0.4s ease;
+" onclick="navegarA('mensajes')">
+  <div style="font-size: 28px;">💬</div>
+  <div style="flex: 1;">
+    <div style="font-size: 14px; font-weight: 600; color: #ECFDF5;">
+      Nahomy te envió un mensaje
+    </div>
+    <div style="font-size: 12px; color: #4B7A5E; margin-top: 2px;">
+      Toca aquí para leerlo
+    </div>
+  </div>
+  <div style="background: #EF4444; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0;">
+    1
+  </div>
+</div>
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+- Al hacer clic en el banner abre directamente la sección Mensajes
+- Si hay más de 1 mensaje: "Tienes 3 mensajes nuevos de Nahomy"
+- Si no hay mensajes nuevos: el banner no aparece
+
+3. TÍTULO DE LA PESTAÑA DEL NAVEGADOR:
+Cuando hay mensajes sin leer, cambiar el título de la pestaña:
+// Sin mensajes:
+document.title = 'NAHOFIT.LIFE';
+// Con mensajes:
+document.title = '(1) Mensaje nuevo — NAHOFIT.LIFE';
+
+El número se actualiza cada vez que llega un mensaje nuevo.
+
+4. PARPADEO DEL FAVICON (ícono de la pestaña):
+Alternar entre ícono normal y ícono con punto rojo cada 2 segundos cuando hay mensajes:
+let parpadeando = false;
+function parpadearFavicon(hayMensajes) {
+  if (!hayMensajes) {
+    document.querySelector("link[rel='icon']").href = '/favicon-normal.ico';
+    return;
+  }
+  setInterval(() => {
+    const favicon = document.querySelector("link[rel='icon']");
+    parpadeando = !parpadeando;
+    favicon.href = parpadeando ? '/favicon-notif.ico' : '/favicon-normal.ico';
+  }, 2000);
+}
+
+5. VERIFICACIÓN AUTOMÁTICA CADA 30 SEGUNDOS:
+async function verificarMensajesNuevos() {
+  const token = localStorage.getItem('nahofitToken');
+  const usuario = JSON.parse(localStorage.getItem('nahofitUsuario') || '{}');
+  
+  try {
+    const res = await fetch('/api/mensajes/no-leidos', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    const cantidad = data.cantidad || 0;
+    
+    // Actualizar badge del menú
+    const badge = document.getElementById('badge-mensajes');
+    if (badge) {
+      badge.textContent = cantidad;
+      badge.style.display = cantidad > 0 ? 'flex' : 'none';
+    }
+    
+    // Mostrar/ocultar banner
+    const banner = document.getElementById('banner-mensaje');
+    if (banner) {
+      banner.style.display = cantidad > 0 ? 'flex' : 'none';
+      const texto = banner.querySelector('.texto-banner');
+      if (texto) {
+        texto.textContent = cantidad === 1 
+          ? 'Nahomy te envió un mensaje' 
+          : `Tienes ${cantidad} mensajes nuevos de Nahomy`;
+      }
+      const numBadge = banner.querySelector('.num-badge');
+      if (numBadge) numBadge.textContent = cantidad;
+    }
+    
+    // Actualizar título pestaña
+    document.title = cantidad > 0 
+      ? `(${cantidad}) Mensaje nuevo — NAHOFIT.LIFE` 
+      : 'NAHOFIT.LIFE';
+      
+  } catch(e) {
+    console.log('Error verificando mensajes:', e);
+  }
+}
+
+// Verificar al cargar y cada 30 segundos
+verificarMensajesNuevos();
+setInterval(verificarMensajesNuevos, 30000);
+
+6. RUTA API NUEVA NECESARIA:
+GET /api/mensajes/no-leidos
+- Devuelve { cantidad: N } con el total de mensajes no leídos del usuario logueado
+- Query: SELECT COUNT(*) FROM mensajes WHERE receptor_id = miId AND leido = 0
+
+7. AL ABRIR LA SECCIÓN MENSAJES:
+- Marcar todos como leídos automáticamente
+- Badge desaparece
+- Banner desaparece
+- Título vuelve a 'NAHOFIT.LIFE'
+
+Aplica estos cambios en el dashboard del cliente.
+Republica la app después.

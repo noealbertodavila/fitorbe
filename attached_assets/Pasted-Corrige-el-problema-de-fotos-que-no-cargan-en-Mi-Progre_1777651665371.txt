@@ -1,0 +1,62 @@
+Corrige el problema de fotos que no cargan en Mi Progreso:
+
+PROBLEMA:
+Cannot GET /api/uploads/progreso/9/2026-05/fotoFrente_1777651241458.jpg
+La ruta /api/uploads no existe — las fotos se sirven desde /api pero debería ser /uploads directamente.
+
+CORRECCIÓN EN server.js:
+
+1. Agregar ruta estática para servir las fotos de progreso:
+const path = require('path');
+const express = require('express');
+
+// Servir archivos estáticos de uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Verificar que la carpeta existe, si no crearla:
+const fs = require('fs');
+const carpetasNecesarias = [
+  './uploads',
+  './uploads/progreso',
+  './uploads/perfil'
+];
+carpetasNecesarias.forEach(carpeta => {
+  if (!fs.existsSync(carpeta)) {
+    fs.mkdirSync(carpeta, { recursive: true });
+    console.log('Carpeta creada:', carpeta);
+  }
+});
+
+2. Verificar que multer guarda las fotos en la ruta correcta:
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    const clienteId = req.body.cliente_id || req.usuario.id;
+    const fecha = new Date().toISOString().slice(0, 7); // 2026-05
+    const carpeta = path.join(__dirname, 'uploads', 'progreso', String(clienteId), fecha);
+    
+    // Crear carpeta si no existe
+    fs.mkdirSync(carpeta, { recursive: true });
+    cb(null, carpeta);
+  },
+  filename: function(req, file, cb) {
+    const nombre = file.fieldname + '_' + Date.now() + path.extname(file.originalname);
+    cb(null, nombre);
+  }
+});
+
+3. Al guardar la URL de la foto en la base de datos, usar ruta SIN /api:
+// MAL:
+foto_frente: '/api/uploads/progreso/9/2026-05/fotoFrente_123.jpg'
+
+// BIEN:
+foto_frente: '/uploads/progreso/9/2026-05/fotoFrente_123.jpg'
+
+4. Actualizar registros existentes con ruta incorrecta:
+UPDATE registros_progreso 
+SET 
+  foto_frente = REPLACE(foto_frente, '/api/uploads/', '/uploads/'),
+  foto_espalda = REPLACE(foto_espalda, '/api/uploads/', '/uploads/'),
+  foto_perfil_izq = REPLACE(foto_perfil_izq, '/api/uploads/', '/uploads/'),
+  foto_perfil_der = REPLACE(foto_perfil_der, '/api/uploads/', '/uploads/'),
+  foto_extra1 = REPLACE(foto_extra1, '/api/uploads/', '/uploads/'),
+  foto_extra2 = REPLACE(foto_extra2, '/ap

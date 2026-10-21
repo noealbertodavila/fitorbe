@@ -1,0 +1,71 @@
+Agrega los tres planes de membresía en la base de datos y en el panel de administrador con todos sus detalles:
+
+PLAN BÁSICO — $59/mes:
+Badge: "Para empezar"
+Descripción: "Ideal para quienes inician su transformación"
+INCLUYE:
+- Rutina semanal personalizada
+- Videos de ejercicios (YouTube)
+- Ajuste mensual de rutina
+- Mensajes por la app
+- Chat AI Coach
+- Registro de peso y medidas
+NO INCLUYE:
+- Plan de nutrición
+- Seguimiento emocional
+- Sesiones 1 a 1 con Nahomy
+- Fotos de progreso
+- Reporte PDF mensual
+
+PLAN PREMIUM — $119/mes:
+Badge: "Más popular"
+Descripción: "Entrenamiento + nutrición para resultados reales"
+INCLUYE:
+- Rutina semanal personalizada
+- Videos + instrucciones escritas detalladas
+- Ajuste semanal de rutina
+- Plan de nutrición semanal completo
+- Seguimiento emocional diario
+- Mensajes prioritarios con el coach
+- Chat AI Coach avanzado
+- Registro completo de medidas corporales
+- Fotos de progreso mensuales
+- Reporte PDF mensual con gráficas
+NO INCLUYE:
+- Sesiones 1 a 1 con Nahomy
+
+PLAN VIP — $249/mes:
+Badge: "Todo incluido"
+Descripción: "Experiencia completa 1 a 1 con Nahomy"
+INCLUYE:
+- Rutina 100% personalizada
+- Videos propios de Nahomy
+- Ajuste de rutina en tiempo real
+- Plan de nutrición + guía de suplementos
+- Asesoría emocional completa
+- Respuesta del coach en menos de 2 horas
+- Chat AI Coach ilimitado
+- 4 sesiones 1 a 1 por mes (video o presencial)
+- Escaneo corporal mensual completo
+- Fotos antes y después organizadas
+- Reporte PDF completo + gráficas de evolución
+NO INCLUYE: Nada — plan completamente completo
+
+INSTRUCCIONES TÉCNICAS:
+1. Inserta los 3 planes en la tabla "planes" de la base de datos si no existen
+2. Si ya existen, actualízalos con estos valores exactos
+3. En el panel del administrador, sección "Planes y Precios", mostrar las 3 tarjetas con:
+   - Nombre y badge en la parte superior
+   - Precio mensual grande y destacado
+   - Precio a 3 meses con 10% descuento calculado automáticamente
+   - Precio a 6 meses con 15% descuento calculado automáticamente
+   - Lista de características incluidas con ícono de check verde
+   - Lista de características NO incluidas tachadas con ícono de X gris
+   - Botón "Editar plan" que abre formulario inline para modificar cualquier campo
+   - Toggle activo/inactivo para activar o desactivar el plan
+4. El plan Premium debe tener borde verde destacado como "Más popular"
+5. Cuando el admin edita un plan y guarda, los cambios se reflejan inmediatamente en:
+   - El dashboard del cliente en la sección "Mi Plan"
+   - La página de bienvenida pública
+6. El coach puede ver los planes pero NO puede editarlos
+7. Republica la app después de los cambios

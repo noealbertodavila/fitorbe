@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "NAHOFIT.LIFE"
+version = "1.0.0"
+id = "artifacts/nahofit"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20376
+
+[services.development]
+run = "pnpm --filter @workspace/nahofit run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nahofit", "run", "build" ]
+publicDir = "artifacts/nahofit/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20376"
+BASE_PATH = "/"

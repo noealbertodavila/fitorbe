@@ -1,0 +1,148 @@
+Dos cambios urgentes:
+
+═══════════════════════════════════════
+CAMBIO 1 — NUEVO TEMA DE COLORES: VERDE ESMERALDA
+═══════════════════════════════════════
+
+Cambia TODOS los colores de la app al nuevo tema Verde Esmeralda profesional:
+
+VARIABLES DE COLOR NUEVAS:
+- Fondo principal: #0A0F0D
+- Fondo sidebar: #0F1A14
+- Cards y panels: #0F1A14
+- Bordes: #1A2E20
+- Acento principal: #10B981 (verde esmeralda)
+- Acento hover: #059669
+- Acento suave (backgrounds): #10B98115
+- Texto principal: #ECFDF5
+- Texto secundario: #4B7A5E
+- Texto muted: #2D5240
+- Botón primario: background #10B981, texto #ffffff
+- Botón hover: #059669
+- Sidebar item activo: background #10B98120, texto #10B981
+- Alertas/badges verdes: background #10B98120, texto #10B981
+- Badges de plan: Básico=#3B82F620, Premium=#10B98120, VIP=#F59E0B20
+- Gráficas Chart.js: color de línea #10B981, fill #10B98120
+- Logo NAHOFIT.LIFE: texto verde #10B981 sobre fondo oscuro
+- Toast éxito: #10B981
+- Toast error: #EF4444
+- Toast warning: #F59E0B
+
+Aplicar en TODOS los archivos CSS y estilos inline de toda la app.
+
+═══════════════════════════════════════
+CAMBIO 2 — DASHBOARD DEL CLIENTE SIN DATOS (USUARIO NOE)
+═══════════════════════════════════════
+
+Cuando un cliente no tiene rutina, nutrición u otros datos asignados, la página queda en blanco. Debe mostrar siempre contenido útil.
+
+REGLA GENERAL — NUNCA página en blanco:
+Cada sección debe manejar el caso de "sin datos" con mensaje amigable y llamada a la acción.
+
+CORRECCIONES POR SECCIÓN:
+
+MI RUTINA — sin datos:
+┌─────────────────────────────────────┐
+│  💪  Sin rutina esta semana         │
+│                                     │
+│  Tu coach aún no ha asignado        │
+│  tu plan de entrenamiento.          │
+│                                     │
+│  [✉️ Enviar mensaje al coach]       │
+└─────────────────────────────────────┘
+
+MI NUTRICIÓN — sin datos:
+┌─────────────────────────────────────┐
+│  🥗  Sin plan de nutrición          │
+│                                     │
+│  Tu coach aún no ha asignado        │
+│  tu plan de alimentación.           │
+│                                     │
+│  [✉️ Enviar mensaje al coach]       │
+└─────────────────────────────────────┘
+
+MI PROGRESO — sin registros:
+┌─────────────────────────────────────┐
+│  📸  Sin registros aún              │
+│                                     │
+│  ¡Agrega tu primer registro         │
+│  mensual de progreso hoy!           │
+│                                     │
+│  [+ Agregar primer registro]        │
+└─────────────────────────────────────┘
+
+BIENESTAR EMOCIONAL — sin check-ins:
+┌─────────────────────────────────────┐
+│  🧠  Sin registros emocionales      │
+│                                     │
+│  Completa tu primer check-in        │
+│  emocional del día.                 │
+│                                     │
+│  [+ Hacer check-in de hoy]         │
+└─────────────────────────────────────┘
+
+MENSAJES — sin mensajes:
+┌─────────────────────────────────────┐
+│  💬  Sin mensajes aún               │
+│                                     │
+│  Escríbele a tu coach para          │
+│  comenzar la conversación.          │
+│                                     │
+│  [✉️ Escribir al coach]            │
+└─────────────────────────────────────┘
+
+MI PLAN — sin plan asignado:
+┌─────────────────────────────────────┐
+│  📋  Sin plan asignado              │
+│                                     │
+│  Contacta a tu coach para           │
+│  activar tu membresía.              │
+└─────────────────────────────────────┘
+
+MIS PAGOS — sin pagos:
+┌─────────────────────────────────────┐
+│  💳  Sin pagos registrados          │
+│                                     │
+│  Aún no hay pagos en tu historial.  │
+└─────────────────────────────────────┘
+
+PANEL PRINCIPAL — sin datos:
+- Saludo siempre visible: "¡Bienvenido, [nombre]! 👋"
+- Si no tiene rutina hoy: "Sin rutina asignada esta semana"
+- Si no tiene plan de comidas: "Sin plan de nutrición asignado"
+- Si no tiene peso registrado: "Sin medidas registradas aún"
+- Botón siempre visible: "📸 Agregar mi primer registro"
+
+IMPLEMENTACIÓN TÉCNICA:
+En cada fetch de datos del cliente:
+try {
+  const data = await fetch(url, {headers}).then(r => r.json());
+  if (!data || (Array.isArray(data) && data.length === 0) || data.error) {
+    mostrarEstadoVacio(seccion);
+  } else {
+    renderizarDatos(data);
+  }
+} catch(e) {
+  mostrarEstadoVacio(seccion);
+}
+
+function mostrarEstadoVacio(seccion) {
+  const mensajes = {
+    rutina: { icono: '💪', titulo: 'Sin rutina esta semana', desc: 'Tu coach aún no ha asignado tu plan de entrenamiento.' },
+    nutricion: { icono: '🥗', titulo: 'Sin plan de nutrición', desc: 'Tu coach aún no ha asignado tu plan de alimentación.' },
+    progreso: { icono: '📸', titulo: 'Sin registros aún', desc: '¡Agrega tu primer registro mensual!' },
+    emocional: { icono: '🧠', titulo: 'Sin check-ins', desc: 'Completa tu primer check-in emocional.' },
+    mensajes: { icono: '💬', titulo: 'Sin mensajes', desc: 'Escríbele a tu coach para comenzar.' },
+    pagos: { icono: '💳', titulo: 'Sin pagos', desc: 'No hay pagos en tu historial aún.' }
+  };
+  const m = mensajes[seccion];
+  return `
+    <div style="text-align:center; padding: 60px 20px; color: var(--texto-secundario);">
+      <div style="font-size:48px; margin-bottom:16px;">${m.icono}</div>
+      <h3 style="color: var(--texto-principal); margin-bottom:8px;">${m.titulo}</h3>
+      <p style="margin-bottom:24px;">${m.desc}</p>
+    </div>`;
+}
+
+Prueba entrando como noe@gmail.com y verificar que NINGUNA sección queda en blanco.
+Aplica ambos cambios y republica la app.

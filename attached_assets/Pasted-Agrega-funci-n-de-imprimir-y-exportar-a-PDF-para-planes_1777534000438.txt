@@ -1,0 +1,82 @@
+Agrega función de imprimir y exportar a PDF para planes de entrenamiento y nutrición, tanto para el coach como para el cliente:
+
+═══════════════════════════════════════
+FUNCIONALIDAD DE PDF E IMPRESIÓN
+═══════════════════════════════════════
+
+1. BOTONES A AGREGAR:
+En la vista de Rutinas (coach y cliente) agregar dos botones:
+- "🖨️ Imprimir" — abre diálogo de impresión del navegador
+- "📄 Descargar PDF" — descarga PDF automáticamente
+
+En la vista de Nutrición (coach y cliente) agregar los mismos botones:
+- "🖨️ Imprimir"
+- "📄 Descargar PDF"
+
+2. DISEÑO DEL PDF DE RUTINAS:
+Página con membrete NAHOFIT.LIFE:
+- Header: Logo NAHOFIT.LIFE a la izquierda, "Plan de Entrenamiento" a la derecha
+- Línea verde separadora
+- Datos del cliente: Nombre, Objetivo, Nivel, Fecha de inicio del plan, Duración
+- Firma: "Elaborado por Nahomy — NAHOFIT.LIFE"
+- Fecha de generación
+
+Por cada día del plan:
+- Encabezado del día: "DÍA 1 — LUNES | Pecho y Tríceps"
+- Tabla de ejercicios con columnas:
+  * Ejercicio | Series | Reps | Descanso | Instrucciones
+- Notas del día al final
+- Separador entre días
+
+Pie de página en cada hoja:
+- "NAHOFIT.LIFE — Elaborado por Nahomy"
+- Número de página
+
+3. DISEÑO DEL PDF DE NUTRICIÓN:
+Página con membrete NAHOFIT.LIFE:
+- Header: Logo NAHOFIT.LIFE, "Plan de Nutrición"
+- Datos del cliente: Nombre, Objetivo, Calorías diarias meta, Macros meta (P/C/G)
+- TMB y TDEE calculados
+- Firma: "Elaborado por Nahomy — NAHOFIT.LIFE"
+
+Por cada día del plan:
+- Encabezado: "DÍA 1 — LUNES"
+- Resumen del día: Total calorías | Proteínas | Carbos | Grasas
+- Por cada comida:
+  * Nombre de la comida y hora
+  * Lista de ingredientes con gramos: "• Pechuga de pollo — 160g"
+  * Macros de la comida: Kcal / P / C / G
+- Nota nutricional del día al final
+
+Pie de página:
+- "NAHOFIT.LIFE — Elaborado por Nahomy"
+- Número de página
+
+4. IMPLEMENTACIÓN TÉCNICA:
+- Usar la librería jsPDF + html2canvas para generar el PDF en el navegador
+- Instalar: npm install jspdf html2canvas
+- No necesita backend — generar el PDF directo en el frontend
+- El PDF se descarga automáticamente con nombre:
+  * Rutinas: "NAHOFIT-Rutina-[NombreCliente]-[Fecha].pdf"
+  * Nutrición: "NAHOFIT-Nutricion-[NombreCliente]-[Fecha].pdf"
+
+5. ESTILOS DE IMPRESIÓN:
+Agregar CSS @media print para que al imprimir:
+- Ocultar sidebar, navbar, botones
+- Mostrar solo el contenido del plan
+- Fondo blanco, texto negro
+- Logo NAHOFIT.LIFE en header
+- Cada día empieza en nueva página si es necesario
+- Tamaño carta (Letter) o A4
+
+6. PERMISOS:
+- Coach: puede imprimir/descargar PDF de cualquier cliente
+- Cliente: puede imprimir/descargar solo sus propios planes
+- El PDF no muestra información de otros clientes
+
+7. VERSIÓN COMPACTA vs COMPLETA:
+Al hacer clic en "Descargar PDF" mostrar opciones:
+- "Versión completa" — incluye instrucciones detalladas de cada ejercicio
+- "Versión compacta" — solo nombres, series, reps y gramos (para llevar al gym)
+
+Aplica estos cambios en Rutinas y Nutrición, tanto en la vista del coach como del cliente. Republica la app cuando termine.

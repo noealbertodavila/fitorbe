@@ -1,0 +1,175 @@
+Dos mejoras urgentes:
+
+═══════════════════════════════════════
+MEJORA 1 — CHECKBOXES QUE SE GUARDAN
+═══════════════════════════════════════
+
+Cuando el cliente marca ejercicios como completados, guardar inmediatamente en la base de datos para que persistan al cambiar de sección.
+
+1. Cada checkbox al hacer clic llama a esta función:
+async function marcarEjercicio(ejercicioIndex, completado) {
+  const token = localStorage.getItem('nahofitToken');
+  const usuario = JSON.parse(localStorage.getItem('nahofitUsuario'));
+  const hoy = new Date().toISOString().split('T')[0];
+  
+  // Guardar en localStorage inmediatamente (respuesta visual instantánea)
+  const key = `checkin_${usuario.id}_${hoy}`;
+  let completados = JSON.parse(localStorage.getItem(key) || '[]');
+  if (completado) {
+    if (!completados.includes(ejercicioIndex)) completados.push(ejercicioIndex);
+  } else {
+    completados = completados.filter(i => i !== ejercicioIndex);
+  }
+  localStorage.setItem(key, JSON.stringify(completados));
+  
+  // Actualizar barra de progreso inmediatamente
+  const totalEjercicios = document.querySelectorAll('.ejercicio-item').length;
+  actualizarBarraProgreso(completados.length, totalEjercicios);
+  
+  // Guardar en base de datos en segundo plano
+  try {
+    await fetch('/api/checkin/ejercicio', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        cliente_id: usuario.id,
+        fecha: hoy,
+        ejercicio_index: ejercicioIndex,
+        completado: completado
+      })
+    });
+  } catch(e) {
+    console.log('Error guardando en BD, pero quedó en localStorage:', e);
+  }
+}
+
+2. Al cargar Mi Rutina, restaurar estado guardado:
+async function restaurarEstadoEjercicios() {
+  const usuario = JSON.parse(localStorage.getItem('nahofitUsuario'));
+  const hoy = new Date().toISOString().split('T')[0];
+  const key = `checkin_${usuario.id}_${hoy}`;
+  
+  // Primero usar localStorage para respuesta inmediata
+  let completados = JSON.parse(localStorage.getItem(key) || '[]');
+  
+  // Luego verificar con el servidor
+  try {
+    const token = localStorage.getItem('nahofitToken');
+    const res = await fetch(`/api/checkin/ejercicios/${usuario.id}/${hoy}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      completados = data.ejercicios_completados || completados;
+      localStorage.setItem(key, JSON.stringify(completados));
+    }
+  } catch(e) {
+    console.log('Usando localStorage como fallback');
+  }
+  
+  // Aplicar estado a los checkboxes
+  completados.forEach(index => {
+    const card = document.querySelector(`[data-ejercicio-index="${index}"]`);
+    if (card) {
+      const checkbox = card.querySelector('input[type="checkbox"]');
+      if (checkbox) checkbox.checked = true;
+      card.classList.add('completado');
+      card.style.opacity = '0.7';
+      card.querySelector('.nombre-ejercicio')?.classList.add('tachado');
+    }
+  });
+  
+  // Actualizar barra de progreso
+  const total = document.querySelectorAll('.ejercicio-item').length;
+  actualizarBarraProgreso(completados.length, total);
+}
+
+3. Ruta API para guardar:
+POST /api/checkin/ejercicio
+Body: { cliente_id, fecha, ejercicio_index, completado }
+Lógica: INSERT OR REPLACE en checkins_diarios actualizando ejercicios_completados JSON
+
+GET /api/checkin/ejercicios/:clienteId/:fecha
+Respuesta: { ejercicios_completados: [0, 2, 4] }
+
+═══════════════════════════════════════
+MEJORA 2 — MODAL DE GENERACIÓN DE RUTINA CON MÁS OPCIONES
+═══════════════════════════════════════
+
+Cuando el coach hace clic en "Crear Plan" o "Generar con IA", mostrar un modal con estas opciones ANTES de generar:
+
+PASO 1 — ¿Cómo crear el plan?
+┌────────────────────────────────────┐
+│  🤖 Generar con IA                 │
+│  El AI diseña el plan completo     │
+├────────────────────────────────────┤
+│  ✏️ Crear manualmente              │
+│  El coach llena cada ejercicio     │
+└────────────────────────────────────┘
+
+PASO 2 — ¿Por cuánto tiempo?
+[ 1 semana ]  [ 15 días ]  [ 1 mes ]
+
+PASO 3 — ¿Cómo organizar los ejercicios? (NUEVO)
+┌─────────────────┬──────────────────┐
+│ 💪 Por grupo    │ 📅 Por día       │
+│ muscular        │ de la semana     │
+│                 │                  │
+│ Lunes: Pecho    │ Lunes: Full body │
+│ Martes: Espalda │ Martes: Cardio   │
+│ Miércoles: Legs │ etc.             │
+├─────────────────┴──────────────────┤
+│ 🔄 Fullbody (cuerpo completo)      │
+│ Todos los días trabajan todo       │
+├────────────────────────────────────┤
+│ 🏃 Cardio + Fuerza                 │
+│ Combina días de cardio y pesas     │
+├────────────────────────────────────┤
+│ ⚡ HIIT                            │
+│ Alta intensidad por intervalos     │
+├────────────────────────────────────┤
+│ 🎯 Personalizado                   │
+│ El coach define la estructura      │
+└────────────────────────────────────┘
+
+PASO 4 — Confirmar datos del cliente (resumen):
+Nombre: [nombre]
+Objetivo: [objetivo]
+Nivel: [nivel]
+Días disponibles: [X días/semana]
+Lesiones: [lesiones]
+Lugar: [gym/casa]
+Organización elegida: [la seleccionada]
+
+[Confirmar y generar] [Cancelar]
+
+PROMPT AL AI según la organización elegida:
+
+Si eligió "Por grupo muscular":
+"Organiza la rutina dividiendo por grupos musculares:
+Día 1: Pecho + Tríceps
+Día 2: Espalda + Bíceps  
+Día 3: Piernas + Glúteos
+Día 4: Hombros + Core
+Día 5: Fullbody o descanso activo
+Adapta según los días disponibles del cliente."
+
+Si eligió "Por día de la semana":
+"Organiza la rutina por tipo de entrenamiento diario variado, no por grupo muscular fijo."
+
+Si eligió "Fullbody":
+"Cada día de entrenamiento trabaja el cuerpo completo con ejercicios compuestos. Varía los ejercicios cada día."
+
+Si eligió "Cardio + Fuerza":
+"Alterna días de cardio (LISS o HIIT) con días de entrenamiento de fuerza."
+
+Si eligió "HIIT":
+"Diseña circuitos de alta intensidad por intervalos. Incluye trabajo:descanso en cada ejercicio."
+
+Si eligió "Personalizado":
+"El coach ajustará manualmente — generar estructura base solamente."
+
+Aplica ambas mejoras y republica la app.

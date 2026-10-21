@@ -1,0 +1,212 @@
+Corrige estos 3 problemas críticos de una sola vez:
+
+═══════════════════════════════════════
+PROBLEMA 1 — DÍAS "FALLADO" SIN DATOS
+═══════════════════════════════════════
+
+En el calendario semanal, días sin rutina asignada muestran "FALLADO" en rojo. Esto es incorrecto.
+
+REGLA DEFINITIVA:
+- FALLADO rojo = tenía rutina asignada Y no la completó
+- DESCANSO gris = NO tenía rutina asignada ese día
+- NUNCA mostrar FALLADO si no había plan
+
+CORRECCIÓN en la lógica del calendario:
+async function obtenerEstadoDia(clienteId, fecha) {
+  const token = localStorage.getItem('nahofitToken');
+  
+  // Verificar si tenía rutina ese día
+  const semana = obtenerLunesDeFecha(fecha);
+  const diaSemana = obtenerDiaSemana(fecha); // lunes, martes, etc.
+  
+  const rutina = await fetch(`/api/rutina/${clienteId}/${semana}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  }).then(r => r.json()).catch(() => null);
+  
+  const tienePlan = rutina && rutina.dias && 
+    rutina.dias.some(d => d.dia_semana === diaSemana && d.ejercicios?.length > 0);
+  
+  if (!tienePlan) {
+    return { estado: 'descanso', color: 'gris', texto: 'Descanso' };
+  }
+  
+  // Si tenía plan, verificar si lo completó
+  const checkin = await fetch(`/api/checkin/${clienteId}/${fecha}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  }).then(r => r.json()).catch(() => null);
+  
+  const porcentaje = checkin?.porcentaje_adherencia || 0;
+  
+  if (porcentaje >= 80) return { estado: 'completado', color: 'verde', texto: 'Completado' };
+  if (porcentaje >= 40) return { estado: 'parcial', color: 'amarillo', texto: 'Parcial' };
+  
+  const fechaObj = new Date(fecha);
+  const hoy = new Date();
+  hoy.setHours(0,0,0,0);
+  
+  if (fechaObj < hoy) return { estado: 'fallado', color: 'rojo', texto: 'Fallado' };
+  return { estado: 'pendiente', color: 'gris', texto: 'Pendiente' };
+}
+
+Aplica esta lógica en AMBAS versiones del calendario (semanal y mensual).
+
+═══════════════════════════════════════
+PROBLEMA 2 — PANTALLA NEGRA AL NAVEGAR
+═══════════════════════════════════════
+
+Al hacer clic en cualquier sección del menú la pantalla queda negra.
+
+SOLUCIÓN DEFINITIVA — reemplazar navegación por URL con show/hide:
+
+En TODOS los dashboards (cliente, coach, admin) aplicar este patrón:
+
+// Función global de navegación — NUNCA usar window.location.href entre secciones
+function navegarA(seccion) {
+  // 1. Ocultar todas las secciones
+  document.querySelectorAll('[data-seccion]').forEach(el => {
+    el.style.display = 'none';
+  });
+  
+  // 2. Mostrar la sección seleccionada
+  const target = document.querySelector(`[data-seccion="${seccion}"]`);
+  if (target) {
+    target.style.display = 'block';
+    target.style.opacity = '0';
+    setTimeout(() => { target.style.opacity = '1'; target.style.transition = 'opacity 0.2s'; }, 10);
+  }
+  
+  // 3. Actualizar menú activo
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.classList.toggle('activo', item.dataset.ir === seccion);
+  });
+  
+  // 4. Cargar datos frescos
+  cargarDatos(seccion);
+}
+
+// Cada sección carga sus datos independientemente
+async function cargarDatos(seccion) {
+  const token = localStorage.getItem('nahofitToken');
+  const usuario = JSON.parse(localStorage.getItem('nahofitUsuario') || '{}');
+  if (!token || !usuario.id) return;
+  
+  const contenedor = document.querySelector(`[data-seccion="${seccion}"]`);
+  if (!contenedor) return;
+  
+  // Mostrar spinner
+  contenedor.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;padding:60px;color:#4B7A5E;">
+      <div>Cargando...</div>
+    </div>`;
+  
+  try {
+    switch(seccion) {
+      case 'dashboard': await cargarDashboard(usuario.id, token, contenedor); break;
+      case 'rutina': await cargarRutina(usuario.id, token, contenedor); break;
+      case 'nutricion': await cargarNutricion(usuario.id, token, contenedor); break;
+      case 'calendario': await cargarCalendario(usuario.id, token, contenedor); break;
+      case 'progreso': await cargarProgreso(usuario.id, token, contenedor); break;
+      case 'emocional': await cargarEmocional(usuario.id, token, contenedor); break;
+      case 'mensajes': await cargarMensajes(usuario.id, token, contenedor); break;
+      case 'plan': await cargarPlan(usuario.id, token, contenedor); break;
+      case 'pagos': await cargarPagos(usuario.id, token, contenedor); break;
+      // COACH
+      case 'clientes': await cargarClientes(token, contenedor); break;
+      case 'rutinas': await cargarGestionRutinas(token, contenedor); break;
+      case 'nutricion-coach': await cargarGestionNutricion(token, contenedor); break;
+      case 'reportes': await cargarReportes(token, contenedor); break;
+    }
+  } catch(e) {
+    contenedor.innerHTML = `
+      <div style="text-align:center;padding:60px;color:#4B7A5E;">
+        <div style="font-size:32px;margin-bottom:16px;">⚠️</div>
+        <div style="color:#ECFDF5;margin-bottom:8px;">Error al cargar esta sección</div>
+        <button onclick="cargarDatos('${seccion}')" 
+          style="background:#10B981;color:#000;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;margin-top:8px;">
+          Reintentar
+        </button>
+      </div>`;
+  }
+}
+
+// Menú HTML — cada item usa onclick con navegarA:
+// <div class="menu-item" data-ir="rutina" onclick="navegarA('rutina')">Mi Rutina</div>
+
+// Al cargar la app:
+document.addEventListener('DOMContentLoaded', function() {
+  const token = localStorage.getItem('nahofitToken');
+  if (!token) { window.location.href = '/'; return; }
+  navegarA('dashboard'); // Siempre empieza en dashboard
+});
+
+Aplicar en cliente.html, coach.html y admin.html.
+
+═══════════════════════════════════════
+PROBLEMA 3 — PLANES EN ADMINISTRADOR
+═══════════════════════════════════════
+
+Los planes Básico, Premium y VIP no aparecen en el panel del administrador.
+
+PASO 1 — Verificar y reinsertar planes en la base de datos:
+Crear archivo fix-planes.js y ejecutarlo con node fix-planes.js:
+
+const Database = require('better-sqlite3');
+const db = new Database('./database.db');
+
+// Verificar si existen
+const planes = db.prepare('SELECT * FROM planes').all();
+console.log('Planes actuales:', planes.length);
+
+// Eliminar planes de prueba
+db.prepare("DELETE FROM planes WHERE nombre NOT IN ('Básico', 'Premium', 'VIP')").run();
+
+// Insertar los 3 planes oficiales si no existen
+const insertPlan = db.prepare(`
+  INSERT OR IGNORE INTO planes 
+  (nombre, precio_mensual, precio_3meses, precio_6meses, descuento_pct, descripcion, badge, caracteristicas_incluidas, caracteristicas_no_incluidas, activo)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+`);
+
+insertPlan.run('Básico', 59, 159, 300, 10,
+  'Ideal para quienes inician su transformación',
+  'Para empezar',
+  JSON.stringify(["Rutina semanal personalizada","Videos de ejercicios YouTube","Ajuste mensual de rutina","Mensajes por la app","Chat AI Coach","Registro de peso y medidas"]),
+  JSON.stringify(["Plan de nutrición","Seguimiento emocional","Sesiones 1 a 1 con Nahomy","Fotos de progreso","Reporte PDF mensual"])
+);
+
+insertPlan.run('Premium', 119, 321, 606, 10,
+  'Entrenamiento + nutrición para resultados reales',
+  'Más popular',
+  JSON.stringify(["Rutina semanal personalizada","Videos + instrucciones escritas","Ajuste semanal de rutina","Plan de nutrición semanal","Seguimiento emocional diario","Mensajes prioritarios","Chat AI Coach avanzado","Registro completo de medidas","Fotos de progreso mensuales","Reporte PDF mensual"]),
+  JSON.stringify(["Sesiones 1 a 1 con Nahomy"])
+);
+
+insertPlan.run('VIP', 249, 672, 1254, 10,
+  'Experiencia completa 1 a 1 con Nahomy',
+  'Todo incluido',
+  JSON.stringify(["Rutina 100% personalizada","Videos propios de Nahomy","Ajuste en tiempo real","Plan de nutrición + suplementos","Asesoría emocional completa","Respuesta en menos de 2 horas","Chat AI Coach ilimitado","4 sesiones 1 a 1 por mes","Escaneo corporal mensual","Fotos antes y después","Reporte PDF completo + gráficas"]),
+  JSON.stringify([])
+);
+
+console.log('Planes después:', db.prepare('SELECT id, nombre, precio_mensual FROM planes').all());
+db.close();
+
+PASO 2 — Verificar ruta GET /api/planes:
+- Devuelve TODOS los planes activos
+- No requiere autenticación de admin para GET
+- Sí requiere admin para POST, PUT, DELETE
+
+PASO 3 — En admin.html, sección Planes y Precios:
+- Al cargar la sección hace fetch a GET /api/planes
+- Renderiza una tarjeta por cada plan con todos sus campos editables
+- Botón "Editar" abre formulario inline
+- Botón "Guardar" hace PUT /api/planes/:id
+- Botón "+ Nuevo Plan" hace POST /api/planes
+- Los cambios se reflejan inmediatamente
+
+PASO 4 — En el formulario de crear/editar usuario:
+- El dropdown de Plan carga desde GET /api/planes dinámicamente
+- Muestra: "Básico — $59/mes", "Premium — $119/mes", "VIP — $249/mes"
+- Se actualiza automáticamente si se agregan nuevos planes
+
+Ejecuta fix-planes.js, verifica que los 3 planes existen, luego republica la app.

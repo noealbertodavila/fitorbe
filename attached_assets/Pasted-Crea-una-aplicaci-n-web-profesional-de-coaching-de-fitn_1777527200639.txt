@@ -1,0 +1,148 @@
+Crea una aplicación web profesional de coaching de fitness y bienestar llamada NAHOFIT.LIFE usando Node.js, Express y SQLite.
+
+IDIOMA: Todo en español — menús, botones, labels, mensajes, fechas, notificaciones, absolutamente todo.
+
+MARCA:
+- Nombre: NAHOFIT.LIFE
+- Colores: fondo oscuro #0A0A0A, verde brillante #7FFF4F, cards #141414, bordes #1E1E1E
+- Fuentes: Syne para títulos, DM Sans para cuerpo (Google Fonts)
+- Footer: "Elaborado por Nahomy — NAHOFIT.LIFE" en todas las páginas
+- Estilo: profesional, serio, moderno — sin elementos de juego
+
+ENFOQUE:
+- Pérdida de peso, tonificación, ganancia muscular y bienestar integral
+- Clientes mixtos: hombres y mujeres de todas las edades
+- Modalidad híbrida: clientes online y presenciales
+- El coach trabaja con 31 a 100 clientes simultáneamente
+
+SISTEMA DE AUTENTICACIÓN:
+- Página de login con logo NAHOFIT.LIFE centrado, fondo oscuro, botón verde
+- JWT tokens + bcrypt para contraseñas
+- 3 roles: ADMINISTRADOR, COACH, CLIENTE
+- Navbar muestra nombre del usuario y su rol en todo momento
+- Botón cerrar sesión siempre visible
+- Token expirado redirige al login automáticamente
+
+CREDENCIALES INICIALES:
+- Admin: admin@nahofit.life / admin123
+- Coach: coach@nahofit.life / nahofit123 (nombre: Nahomy)
+- Cliente demo: cliente@nahofit.life / cliente123
+
+PANEL ADMINISTRADOR:
+Barra lateral: Panel, Usuarios, Planes y Precios, Pagos, Reportes, Configuración
+
+Panel principal:
+- Total clientes activos, total coaches, ingresos del mes, clientes con pago vencido
+
+Gestión de usuarios:
+- Crear, editar, desactivar cualquier usuario
+- Asignar clientes a coaches
+- Ver estado de pago de cada cliente
+
+MÓDULO DE PLANES Y PRECIOS (exclusivo del administrador):
+Esta es una sección completa donde el administrador define y edita los planes desde la interfaz, sin tocar código.
+
+Página de gestión de planes con 3 tarjetas editables: Básico, Premium, VIP
+
+Cada plan tiene estos campos editables:
+- Nombre del plan (texto editable)
+- Precio mensual en dólares (número editable)
+- Precio con descuento 3 meses (número editable, se calcula automáticamente con el % que defina)
+- Precio con descuento 6 meses (número editable)
+- Porcentaje de descuento por pago anticipado (editable)
+- Descripción corta del plan (texto editable)
+- Lista de características incluidas (se pueden agregar, editar y eliminar individualmente)
+- Lista de características NO incluidas (se muestran tachadas, también editables)
+- Estado: activo o inactivo
+- Badge del plan: texto editable (ej. "Más popular", "Todo incluido", "Para empezar")
+
+Valores iniciales precargados:
+Plan Básico — $59/mes:
+INCLUYE:
+- Rutina semanal personalizada
+- Videos de ejercicios (YouTube)
+- Ajuste mensual de rutina
+- Mensajes por la app
+- Chat AI Coach
+- Registro de peso y medidas
+NO INCLUYE:
+- Plan de nutrición
+- Seguimiento emocional
+- Sesiones 1 a 1 con Nahomy
+- Fotos de progreso
+- Reporte PDF mensual
+
+Plan Premium — $119/mes (badge: Más popular):
+INCLUYE:
+- Rutina semanal personalizada
+- Videos + instrucciones escritas
+- Ajuste semanal de rutina
+- Plan de nutrición semanal
+- Seguimiento emocional diario
+- Mensajes prioritarios
+- Chat AI Coach avanzado
+- Registro completo de medidas
+- Fotos de progreso
+- Reporte PDF mensual
+NO INCLUYE:
+- Sesiones 1 a 1 con Nahomy
+
+Plan VIP — $249/mes (badge: Todo incluido):
+INCLUYE:
+- Rutina 100% personalizada
+- Videos propios de Nahomy
+- Ajuste en tiempo real
+- Plan de nutrición + suplementos
+- Asesoría emocional completa
+- Respuesta en menos de 2 horas
+- Chat AI Coach ilimitado
+- 4 sesiones 1 a 1 por mes (video o presencial)
+- Escaneo corporal mensual
+- Fotos antes y después
+- Reporte PDF completo + gráficas
+NO INCLUYE: (nada — plan completo)
+
+Funciones del módulo de planes:
+- Botón "Editar" en cada plan abre formulario inline
+- Botón "Guardar cambios" actualiza en la base de datos inmediatamente
+- Botón "Vista previa" muestra cómo verá el cliente ese plan en la página de bienvenida
+- Agregar nueva característica: campo de texto + botón "+"
+- Eliminar característica: botón "×" al lado de cada una
+- Mover característica entre incluido y no incluido con un toggle
+- Los cambios se reflejan automáticamente en el dashboard del cliente y en la página pública
+
+Base de datos para planes (tabla: planes):
+id, nombre, precio_mensual, precio_3meses, precio_6meses, descuento_pct, descripcion, badge, caracteristicas_incluidas (JSON), caracteristicas_no_incluidas (JSON), activo, actualizado_en
+
+DASHBOARD DEL COACH (Nahomy):
+Barra lateral: Panel, Mis Clientes, Rutinas, Nutrición, Bienestar Emocional, Mensajes, Reportes
+
+Panel principal:
+- Total clientes activos
+- Adherencia promedio esta semana
+- Mensajes sin leer
+- Alerta: clientes sin check-in hoy
+
+Gestión de clientes:
+- Lista con buscador y filtros por plan, adherencia, modalidad
+- Perfil completo: foto, datos, objetivo, lesiones, nivel, plan contratado
+- Historial completo de planes y progreso
+
+Rutinas (AI sugiere, coach ajusta y aprueba):
+- Botón "Generar con AI" crea rutina completa según perfil del cliente
+- Coach edita cada ejercicio antes de guardar
+- 7 días, cada ejercicio: nombre, series, reps, descanso, instrucciones, link YouTube, opción video propio
+- Biblioteca de ejercicios reutilizables con fotos e instrucciones
+
+Nutrición (AI sugiere, coach ajusta y aprueba):
+- Botón "Generar con AI" crea plan de comidas según objetivo y restricciones
+- Coach edita antes de guardar
+- 7 días, cada comida: nombre, descripción, calorías, proteínas, carbohidratos, grasas
+
+Bienestar Emocional:
+- Ver check-ins emocionales de cada cliente
+- Ver entradas del diario de mentalidad
+- Alerta si cliente reporta estado bajo 3 días seguidos
+- Botón de mensaje de apoyo directo desde la alerta
+
+M

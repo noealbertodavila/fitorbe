@@ -1,0 +1,153 @@
+Corrige urgente dos problemas en el dashboard del CLIENTE:
+
+═══════════════════════════════════════
+PROBLEMA 1 — DASHBOARD DEL CLIENTE QUEDA EN BLANCO
+═══════════════════════════════════════
+
+Cuando el cliente inicia sesión y hace clic en cualquier opción del menú, la página queda sin datos.
+
+SOLUCIÓN:
+1. Al cargar el dashboard del cliente, hacer fetch de TODOS los datos de una vez:
+
+async function cargarDashboardCliente() {
+  const clienteId = usuarioLogueado.id;
+  const token = localStorage.getItem('token');
+  const headers = { Authorization: `Bearer ${token}` };
+  const hoy = new Date().toISOString().split('T')[0];
+  const semanaActual = obtenerLunesActual();
+
+  const [perfil, rutina, nutricion, progreso, mensajes, emocional, pagos] = await Promise.all([
+    fetch(`/api/clientes/${clienteId}`, {headers}).then(r => r.json()).catch(() => null),
+    fetch(`/api/rutina/${clienteId}/${semanaActual}`, {headers}).then(r => r.json()).catch(() => null),
+    fetch(`/api/plan-comida/${clienteId}/${semanaActual}`, {headers}).then(r => r.json()).catch(() => null),
+    fetch(`/api/progreso/${clienteId}`, {headers}).then(r => r.json()).catch(() => []),
+    fetch(`/api/mensajes/${clienteId}`, {headers}).then(r => r.json()).catch(() => []),
+    fetch(`/api/emocional/${clienteId}`, {headers}).then(r => r.json()).catch(() => []),
+    fetch(`/api/pagos/${clienteId}`, {headers}).then(r => r.json()).catch(() => [])
+  ]);
+
+  renderizarTodo(perfil, rutina, nutricion, progreso, mensajes, emocional, pagos);
+}
+
+2. Las secciones del cliente (Inicio, Mi Rutina, Mi Nutrición, Mi Progreso, Bienestar, Mensajes, Mi Plan, Mis Pagos) deben ser tabs que muestran/ocultan contenido YA CARGADO — nunca navegar a otra URL
+
+3. Si alguna sección no tiene datos mostrar mensaje amigable:
+- Mi Rutina: "Tu coach aún no ha asignado una rutina esta semana 💪"
+- Mi Nutrición: "Tu coach aún no ha asignado un plan de comidas esta semana 🥗"
+- Mi Progreso: "Aún no hay registros — ¡agrega tu primer registro hoy! 📸"
+- Mensajes: "No tienes mensajes aún — escríbele a tu coach"
+- Mi Plan: mostrar el plan contratado con todas sus características
+
+═══════════════════════════════════════
+PROBLEMA 2 — MÓDULO DE PROGRESO FOTOGRÁFICO MENSUAL
+═══════════════════════════════════════
+
+Crear el módulo completo de progreso mensual con fotos en el dashboard del cliente Y en el perfil del cliente visto por el coach.
+
+SECCIÓN "MI PROGRESO" EN EL CLIENTE:
+
+A) BOTÓN NUEVO REGISTRO MENSUAL:
+- Botón verde grande: "+ Agregar registro del mes"
+- Solo habilitado si no hay registro del mes actual
+- Si ya hay registro del mes, mostrar: "Ya registraste este mes — próximo registro disponible el [fecha]"
+
+B) FORMULARIO DE REGISTRO MENSUAL (modal o página completa):
+
+PASO 1 — FOTOS (6 posiciones):
+Mostrar 6 zonas de carga con ícono de cámara:
+┌─────────────┬─────────────┬─────────────┐
+│   FRENTE    │   ESPALDA   │  PERFIL IZQ │
+│  [📷 subir] │  [📷 subir] │  [📷 subir] │
+├─────────────┼─────────────┼─────────────┤
+│ PERFIL DER  │   EXTRA 1   │   EXTRA 2   │
+│  [📷 subir] │  [📷 subir] │  [📷 subir] │
+└─────────────┴─────────────┴─────────────┘
+- Cada zona: al hacer clic abre selector de archivo
+- Al seleccionar foto: mostrar preview de la imagen
+- Formatos: JPG, PNG — máximo 5MB
+- Las fotos son opcionales — no todas son obligatorias
+
+PASO 2 — MEDIDAS CORPORALES:
+Dividido en 3 grupos:
+
+BÁSICAS:
+- Peso actual (kg) *obligatorio*
+- % Grasa corporal
+- IMC (calculado automático con peso y altura del perfil)
+
+CIRCUNFERENCIAS (en cm):
+- Cuello | Pecho/Busto | Cintura | Cadera
+- Brazo derecho | Brazo izquierdo
+- Muslo derecho | Muslo izquierdo
+- Pantorrilla derecha | Pantorrilla izquierda
+
+ESCANEO CORPORAL (bioimpedancia):
+- Masa muscular (kg)
+- Masa grasa (kg)
+- Agua corporal (%)
+- Metabolismo basal (kcal/día)
+- Edad metabólica (años)
+
+PASO 3 — NOTAS:
+- "¿Cómo te sentiste este mes?" (textarea del cliente)
+- Fecha del registro (automática — hoy)
+- Quién registra (automático — cliente o coach)
+
+Botón: "Guardar registro mensual"
+
+C) GALERÍA DE PROGRESO — LÍNEA DE TIEMPO:
+Mostrar todos los registros ordenados del más reciente al más antiguo:
+
+┌─────────────────────────────────────┐
+│ ABRIL 2026 — Hace 0 días            │
+│ Peso: 65kg | Cintura: 78cm          │
+│ [🖼️][🖼️][🖼️][🖼️][🖼️][🖼️]       │
+│ [Ver detalle completo]              │
+├─────────────────────────────────────┤
+│ MARZO 2026 — Hace 30 días           │
+│ Peso: 67kg | Cintura: 81cm          │
+│ [🖼️][🖼️][🖼️][🖼️][🖼️][🖼️]       │
+│ [Ver detalle completo]              │
+└─────────────────────────────────────┘
+
+D) COMPARACIÓN ANTES vs DESPUÉS:
+- Botón: "Comparar dos registros"
+- El cliente selecciona dos fechas de sus registros
+- Mostrar las 6 fotos de cada fecha en paralelo lado a lado
+- Debajo de cada par de fotos: diferencia de medida
+  Ejemplo: "Cintura: 81cm → 78cm (-3cm ✅)"
+- Resumen total de cambios:
+  * Peso: -2kg
+  * Cintura: -3cm
+  * Grasa corporal: -1.5%
+- Slider deslizable entre foto antes y después para cada posición
+- Botón "Descargar comparación PDF" con logo NAHOFIT.LIFE
+
+E) GRÁFICAS DE EVOLUCIÓN (Chart.js):
+- Peso en el tiempo (línea verde)
+- Grasa corporal % en el tiempo
+- Circunferencias principales: cintura, cadera, pecho
+- Masa muscular vs masa grasa (barras)
+- Todas con puntos clicables que muestran valor exacto
+
+SECCIÓN PROGRESO EN EL COACH (perfil del cliente):
+- El coach ve la misma galería del cliente
+- El coach también puede agregar registros mensuales para el cliente
+- El coach puede ver y agregar notas profesionales en cada registro
+- Alerta si el cliente lleva más de 35 días sin registro
+
+REGLAS IMPORTANTES:
+- Nadie puede ELIMINAR registros anteriores
+- Nadie puede MODIFICAR registros anteriores
+- Solo se puede AGREGAR nuevos registros
+- Cada registro queda sellado con fecha y nombre de quien lo creó
+- Las fotos se guardan en /uploads/progreso/[clienteId]/[año-mes]/
+
+API necesaria:
+GET /api/progreso/:clienteId — obtener todos los registros
+POST /api/progreso — crear nuevo registro (multipart/form-data con fotos)
+GET /api/progreso/:clienteId/comparacion?registro1=:id&registro2=:id
+
+Usar multer para manejo de fotos. Validar tipo JPG/PNG y tamaño máximo 5MB.
+
+Aplica TODOS estos cambios tanto en el dashboard del cliente como en el perfil del cliente visto por el coach. Republica la app.

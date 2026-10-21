@@ -1,0 +1,60 @@
+Corrige TODOS los campos de fecha en toda la app — el año siempre queda en "0001" o "0002" en lugar del año correcto.
+
+PROBLEMA RAÍZ:
+Los campos input type="date" no están manejando correctamente el año al cargar y guardar datos. Cuando se carga una fecha de la base de datos, el año se corrompe.
+
+SOLUCIÓN — Reemplazar TODOS los input type="date" en toda la app por tres selects separados:
+
+Para CADA campo de fecha en el formulario de editar/crear perfil, reemplazar así:
+
+EN LUGAR DE:
+<input type="date" id="fecha_nacimiento" value="...">
+
+USAR ESTO:
+<div class="fecha-selector">
+  <select id="fecha_nacimiento_dia" class="select-fecha">
+    <!-- opciones del 1 al 31 -->
+  </select>
+  <select id="fecha_nacimiento_mes" class="select-fecha">
+    <option value="01">Enero</option>
+    <option value="02">Febrero</option>
+    <option value="03">Marzo</option>
+    <option value="04">Abril</option>
+    <option value="05">Mayo</option>
+    <option value="06">Junio</option>
+    <option value="07">Julio</option>
+    <option value="08">Agosto</option>
+    <option value="09">Septiembre</option>
+    <option value="10">Octubre</option>
+    <option value="11">Noviembre</option>
+    <option value="12">Diciembre</option>
+  </select>
+  <select id="fecha_nacimiento_ano" class="select-fecha">
+    <!-- opciones de 1950 al 2010 para fecha nacimiento -->
+  </select>
+</div>
+
+CAMPOS DE FECHA A CORREGIR EN TODA LA APP:
+1. Fecha de nacimiento → años de 1940 a 2010
+2. Fecha meta (objetivo) → años de 2024 a 2030
+3. Fecha de inscripción del cliente → años de 2020 a 2030
+4. Fecha de pago → años de 2024 a 2030
+5. Cualquier otro campo de fecha en formularios
+
+AL CARGAR EL PERFIL:
+- Si la fecha viene como "1990-03-07" del servidor, parsear correctamente:
+  * año = 1990, mes = 03, día = 07
+  * Seleccionar el valor correcto en cada dropdown
+- Si la fecha es null o inválida, dejar los selects en blanco o en valor por defecto
+
+AL GUARDAR:
+- Combinar los tres selects: año + "-" + mes + "-" + día
+- Ejemplo: "1990-03-07"
+- Enviar al servidor en formato ISO correcto
+
+ESTILOS:
+- Los tres selects deben estar en una sola fila con gap pequeño entre ellos
+- Mismo estilo dark que el resto del formulario
+- Ancho: día=70px, mes=130px, año=100px
+
+Aplica este cambio en TODOS los formularios de toda la app donde aparezca un campo de fecha. Republica la app.

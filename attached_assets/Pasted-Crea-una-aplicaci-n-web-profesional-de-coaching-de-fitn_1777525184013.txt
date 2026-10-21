@@ -1,0 +1,217 @@
+Crea una aplicación web profesional de coaching de fitness y bienestar llamada NAHOFIT.LIFE usando Node.js, Express y SQLite.
+
+IDIOMA: Todo en español — menús, botones, labels, mensajes, fechas, notificaciones, absolutamente todo.
+
+MARCA:
+- Nombre: NAHOFIT.LIFE
+- Colores: fondo oscuro #0A0A0A, verde brillante #7FFF4F, cards #141414, bordes #1E1E1E
+- Fuentes: Syne para títulos, DM Sans para cuerpo (Google Fonts)
+- Footer: "Elaborado por Nahomy — NAHOFIT.LIFE" en todas las páginas
+- Estilo: profesional, serio, moderno — sin elementos de juego
+
+ENFOQUE DE LA APP:
+- Pérdida de peso, tonificación, ganancia muscular y bienestar integral
+- Clientes mixtos: hombres y mujeres de todas las edades
+- Modalidad híbrida: clientes online y presenciales
+- El coach trabaja con 31 a 100 clientes simultáneamente
+
+SISTEMA DE AUTENTICACIÓN:
+- Página de login con logo NAHOFIT.LIFE centrado, fondo oscuro, botón verde
+- JWT tokens para sesiones seguras con bcrypt para contraseñas
+- 3 roles con permisos distintos:
+  1. ADMINISTRADOR: acceso total al sistema
+  2. COACH: gestiona sus clientes asignados
+  3. CLIENTE: solo ve sus propios datos
+- Navbar muestra nombre del usuario y su rol en todo momento
+- Botón "Cerrar sesión" siempre visible
+- Token expirado redirige al login automáticamente
+
+CREDENCIALES INICIALES:
+- Admin: admin@nahofit.life / admin123
+- Coach: coach@nahofit.life / nahofit123 (nombre: Nahomy)
+- Cliente demo: cliente@nahofit.life / cliente123
+
+PANEL ADMINISTRADOR:
+- Dashboard: total clientes, total coaches, clientes activos este mes
+- Gestión de usuarios: crear, editar, desactivar cualquier usuario
+- Asignar clientes a coaches
+- Ver reportes globales de adherencia
+- Configuración general
+
+DASHBOARD DEL COACH (Nahomy):
+Barra lateral con: Panel, Mis Clientes, Rutinas, Nutrición, Bienestar Emocional, Mensajes, Reportes
+
+Panel principal:
+- Total clientes activos
+- Adherencia promedio esta semana
+- Mensajes sin leer
+- Clientes que no han hecho check-in hoy (alerta)
+
+Gestión de clientes:
+- Lista con buscador y filtros (activo/inactivo, nivel, objetivo)
+- Perfil completo: foto, datos personales, objetivo, lesiones, nivel fitness, modalidad (online/presencial)
+- Historial completo de planes y progreso
+
+Rutinas (el AI sugiere, el coach ajusta y aprueba):
+- Botón "Generar con AI" que crea rutina completa según perfil del cliente usando Anthropic API
+- Coach puede editar cada ejercicio antes de guardar
+- 7 días, cada día con: nombre del ejercicio, series, repeticiones, descanso, instrucciones escritas, link a video de YouTube, opción de subir video propio
+- Biblioteca de ejercicios con fotos e instrucciones reutilizables
+
+Nutrición (el AI sugiere, el coach ajusta y aprueba):
+- Botón "Generar con AI" que crea plan de comidas según objetivo y restricciones del cliente
+- Coach edita antes de guardar
+- 7 días, cada día con: nombre de comida, descripción, calorías, proteínas, carbohidratos, grasas
+- Opción de paquetes: Básico (solo rutina), Premium (rutina + nutrición), VIP (rutina + nutrición + sesiones 1a1)
+
+Bienestar Emocional (sección exclusiva de NAHOFIT.LIFE):
+- Ver check-ins emocionales de cada cliente (estado de ánimo, energía, sueño)
+- Ver entradas del diario de mentalidad y gratitud de cada cliente
+- Alertas automáticas si un cliente reporta estado emocional bajo 3 días seguidos
+- El coach puede enviar mensaje de apoyo directo desde la alerta
+
+Mensajes:
+- Lista de conversaciones con todos los clientes
+- Chat en tiempo real con polling cada 30 segundos
+- Badge rojo con número de no leídos
+- El coach puede escribir a cualquier cliente
+
+Reportes:
+- Reporte mensual PDF por cliente con: foto de progreso, medidas, gráfica de peso, adherencia, notas del coach
+- Reporte global de adherencia de todos los clientes
+- Gráficas con Chart.js: peso, medidas, adherencia por semana
+- Botón de descarga PDF con logo NAHOFIT.LIFE
+
+Cobros (gestión dentro de la app):
+- Registrar pago de cliente: fecha, monto, método (efectivo, Zelle, transferencia, Stripe)
+- Ver estado de cuenta por cliente: pagado, pendiente, vencido
+- Alertas de clientes con pago vencido
+- Historial de pagos por cliente
+- Reporte de ingresos mensual
+
+DASHBOARD DEL CLIENTE:
+Panel principal:
+- Saludo personalizado: "Buenos días, [nombre] 💪"
+- Racha de días consecutivos con check-in completado
+- Resumen: rutina de hoy, comidas de hoy, último peso registrado
+
+Rutina de hoy:
+- Lista de ejercicios con checkbox para marcar completado
+- Cada ejercicio muestra: nombre, series x reps, descanso, instrucciones escritas, botón de video YouTube
+- Barra de progreso de la rutina (ej. 3 de 6 ejercicios completados)
+- Al completar todo: mensaje motivacional del AI personalizado
+
+Plan de comidas de hoy:
+- Lista de comidas del día con macros
+- Checkbox para marcar cada comida consumida
+- Total de calorías del día
+
+Calendario semanal:
+- Verde = día completado al 100%
+- Amarillo = completado parcialmente
+- Rojo = no completado
+- Gris = día futuro
+
+Progreso corporal:
+- Formulario: peso, grasa corporal %, cintura, cadera, pecho, brazos, piernas
+- Datos de escaneo corporal manual (bioimpedancia): masa muscular, agua corporal, metabolismo basal
+- Subir fotos de progreso (antes/después organizadas por fecha)
+- Gráficas de cada medida con Chart.js
+
+Bienestar Emocional (sección exclusiva):
+- Check-in diario: estado de ánimo (1-5), nivel de energía (1-5), horas de sueño, notas
+- Diario de mentalidad: entrada libre de texto para reflexiones y gratitud
+- Frase motivacional personalizada generada por AI cada mañana según su estado emocional
+
+Mensajes con coach:
+- Chat con su coach asignado
+- Badge rojo de mensajes no leídos
+- Notificación visual cuando llega mensaje nuevo
+
+AI Coach (botón flotante verde esquina inferior derecha):
+- Panel de chat elegante
+- El AI conoce: rutina actual, plan de comidas, objetivo, lesiones, último estado emocional
+- Responde en español preguntas sobre: ejercicios, sustituciones de comida, técnica, motivación, manejo del estrés, sueño
+- Tono profesional y empático como coach y asesor emocional
+- Historial de conversación en localStorage
+- Animación de "Nahomy está escribiendo..."
+- Usa Anthropic API: claude-sonnet-4-20250514
+
+BASE DE DATOS (SQLite con better-sqlite3):
+1. usuarios: id, nombre, email, password_hash, rol, telefono, fecha_nacimiento, objetivo, lesiones, nivel_fitness, modalidad, coach_id, plan_tipo, activo, creado_en
+2. rutinas: id, cliente_id, coach_id, semana_inicio, dia_semana, ejercicios JSON, aprobada, notas
+3. ejercicios_biblioteca: id, nombre, grupo_muscular, instrucciones, foto_url, video_url, creado_por
+4. planes_comida: id, cliente_id, coach_id, semana_inicio, dia_semana, comidas JSON, calorias_total, aprobada, notas
+5. registros_progreso: id, cliente_id, fecha, peso_kg, grasa_corporal, cintura_cm, cadera_cm, pecho_cm, brazo_cm, pierna_cm, masa_muscular, agua_corporal, metabolismo_basal, foto_url, notas
+6. checkins_diarios: id, cliente_id, fecha, ejercicios_completados JSON, comidas_completadas JSON, porcentaje_adherencia
+7. checkins_emocionales: id, cliente_id, fecha, estado_animo, nivel_energia, horas_sueno, notas
+8. diario_mentalidad: id, cliente_id, fecha, contenido, gratitud
+9. mensajes: id, remitente_id, receptor_id, contenido, leido, creado_en
+10. pagos: id, cliente_id, fecha, monto, metodo, concepto, estado, notas
+11. sesiones_ai: id, cliente_id, fecha, mensajes JSON
+
+RUTAS API:
+POST /api/auth/login
+POST /api/auth/logout
+GET /api/auth/me
+GET /api/usuarios (admin)
+POST /api/usuarios (admin)
+PUT /api/usuarios/:id
+DELETE /api/usuarios/:id (admin)
+GET /api/clientes
+GET /api/clientes/:id
+PUT /api/clientes/:id
+GET /api/rutina/:clienteId/:semanaInicio
+POST /api/rutina
+POST /api/rutina/generar-ai (genera con Anthropic)
+GET /api/biblioteca-ejercicios
+POST /api/biblioteca-ejercicios
+GET /api/plan-comida/:clienteId/:semanaInicio
+POST /api/plan-comida
+POST /api/plan-comida/generar-ai (genera con Anthropic)
+GET /api/progreso/:clienteId
+POST /api/progreso
+GET /api/checkin/:clienteId/:fecha
+POST /api/checkin
+GET /api/emocional/:clienteId
+POST /api/emocional
+GET /api/diario/:clienteId
+POST /api/diario
+GET /api/mensajes/:userId
+POST /api/mensajes
+PUT /api/mensajes/:id/leido
+GET /api/pagos/:clienteId
+POST /api/pagos
+GET /api/reportes/adherencia
+GET /api/reportes/ingresos
+POST /api/ai-chat
+GET /api/frase-motivacional/:clienteId
+
+DATOS DE PRUEBA:
+- Admin: admin@nahofit.life / admin123
+- Coach Nahomy: coach@nahofit.life / nahofit123
+- 5 clientes con perfiles completos variados (hombres y mujeres, distintos objetivos)
+- 2 semanas de rutinas y planes de comida aprobados por cliente
+- 30 días de registros de progreso para gráficas reales
+- 14 días de check-ins emocionales por cliente
+- Mensajes de ejemplo entre coach y clientes
+- Pagos de ejemplo: algunos al día, algunos pendientes
+- Entradas de diario de mentalidad de ejemplo
+
+VARIABLES DE ENTORNO:
+- ANTHROPIC_API_KEY
+- JWT_SECRET
+
+DISEÑO Y UX:
+- Tema oscuro profesional y elegante, sin elementos de juego
+- Logo NAHOFIT.LIFE en navbar: fondo negro, letras verdes #7FFF4F
+- Página de login: logo centrado grande, fondo oscuro, formulario minimalista
+- Sidebar con íconos y texto, sección activa destacada en verde
+- Cards con bordes sutiles, sin sombras exageradas
+- Responsive completo en móvil con menú hamburguesa
+- Notificaciones toast elegantes para cada acción
+- Transiciones suaves entre secciones
+- Gráficas con Chart.js en verde sobre fondo oscuro
+- Todos los textos, fechas y números en formato español latino
+
+Escribe todos los archivos completos sin placeholders ni comentarios de "completar después". Empieza con package.json, luego server.js, database.js, middleware/auth.js, todas las rutas API, y finalmente todos los archivos HTML, CSS y JS del frontend. Cada archivo debe estar 100% funcional.

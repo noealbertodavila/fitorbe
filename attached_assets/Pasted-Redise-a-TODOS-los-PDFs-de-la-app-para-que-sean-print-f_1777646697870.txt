@@ -1,0 +1,167 @@
+Rediseña TODOS los PDFs de la app para que sean print-friendly (ahorrativo en tinta) con fondo blanco y diseño profesional.
+
+DISEÑO NUEVO PARA TODOS LOS PDFs:
+
+COLORES PARA IMPRESIÓN:
+- Fondo: blanco #FFFFFF
+- Texto principal: negro #1A1A1A
+- Texto secundario: gris oscuro #4A4A4A
+- Acento/líneas: verde esmeralda #10B981 (solo en detalles, no fondos)
+- Tablas: bordes gris claro #E5E7EB
+- Headers de tabla: gris muy claro #F9FAFB con texto negro
+- Eliminar TODOS los fondos oscuros
+- Eliminar TODOS los fondos de color que gasten tinta
+
+═══════════════════════════════════════
+PDF DE RUTINA DE ENTRENAMIENTO
+═══════════════════════════════════════
+
+HEADER (parte superior de cada página):
+┌─────────────────────────────────────────────────┐
+│ NAHOFIT.LIFE          Plan de Entrenamiento      │
+│ [línea verde delgada de separación]              │
+│ Cliente: Noe Davila   Semana: 27 abril 2026      │
+│ Coach: Nahomy         Duración: 1 semana         │
+└─────────────────────────────────────────────────┘
+
+CADA DÍA:
+┌─────────────────────────────────────────────────┐
+│ DÍA 1 — LUNES | Cuerpo completo        6 ej.   │
+├──────────────────┬───────┬──────┬────────┬──────┤
+│ EJERCICIO        │ SERIES│ REPS │DESCANSO│ PESO │
+├──────────────────┼───────┼──────┼────────┼──────┤
+│ Sentadilla barra │   4   │ 8-10 │ 90 seg │ ___  │
+│ Press banca      │   4   │ 8-10 │ 75 seg │ ___  │
+│ Remo con barra   │   4   │ 8-10 │ 90 seg │ ___  │
+├──────────────────┴───────┴──────┴────────┴──────┤
+│ Nota del día: Enfócate en la técnica            │
+└─────────────────────────────────────────────────┘
+
+FOOTER (parte inferior de cada página):
+"NAHOFIT.LIFE · Elaborado por Nahomy · Página X de Y"
+
+═══════════════════════════════════════
+PDF DE NUTRICIÓN
+═══════════════════════════════════════
+
+HEADER:
+┌─────────────────────────────────────────────────┐
+│ NAHOFIT.LIFE          Plan de Nutrición          │
+│ [línea verde delgada]                            │
+│ Cliente: Noe Davila   Semana: 27 abril 2026      │
+│ Calorías diarias: 2,200 kcal  P:150g C:220g G:70g│
+└─────────────────────────────────────────────────┘
+
+CADA DÍA:
+┌─────────────────────────────────────────────────┐
+│ DÍA 1 — LUNES         Total: 2,180 kcal         │
+├────────────┬──────────────────────────┬──────────┤
+│ COMIDA     │ DESCRIPCIÓN + INGREDIENTES│ MACROS   │
+├────────────┼──────────────────────────┼──────────┤
+│ Desayuno   │ Avena con frutas         │ 380 kcal │
+│ 7:00 am    │ • Avena — 80g            │ P: 12g   │
+│            │ • Leche — 200ml          │ C: 65g   │
+│            │ • Banana — 100g          │ G: 6g    │
+├────────────┼──────────────────────────┼──────────┤
+│ Almuerzo   │ Pollo con arroz y batata │ 520 kcal │
+│ 12:30 pm   │ • Pechuga pollo — 160g   │ P: 45g   │
+│            │ • Arroz cocido — 80g     │ C: 62g   │
+│            │ • Batata — 120g          │ G: 8g    │
+└────────────┴──────────────────────────┴──────────┘
+
+═══════════════════════════════════════
+PDF DE PROGRESO MENSUAL
+═══════════════════════════════════════
+
+HEADER:
+NAHOFIT.LIFE — Reporte de Progreso Mensual
+Cliente: [nombre] | Período: Abril 2026 | Coach: Nahomy
+
+SECCIÓN MEDIDAS:
+Tabla comparativa: Medida | Mes anterior | Mes actual | Diferencia
+Peso:     67kg → 65kg    (-2kg ✓)
+Cintura:  81cm → 78cm    (-3cm ✓)
+Cadera:   95cm → 93cm    (-2cm ✓)
+
+SECCIÓN FOTOS:
+[Espacio reservado para fotos 3x2 con etiquetas: Frente / Espalda / Perfil Izq / Perfil Der / Extra 1 / Extra 2]
+Nota: Las fotos se imprimen en escala de grises para ahorrar tinta
+
+SECCIÓN ADHERENCIA:
+Semana 1: ████████░░ 80%
+Semana 2: █████████░ 90%
+Semana 3: ███████░░░ 70%
+Semana 4: ████████░░ 80%
+
+Promedio del mes: 80%
+
+Notas del coach: [campo de texto]
+Notas del cliente: [campo de texto]
+
+═══════════════════════════════════════
+PDF DE RECIBO DE PAGO
+═══════════════════════════════════════
+
+DISEÑO LIMPIO:
+┌─────────────────────────────────────────────────┐
+│ NAHOFIT.LIFE                    RECIBO DE PAGO  │
+│ Elaborado por Nahomy            #NF-2026-0001   │
+│ [línea verde]                                    │
+│                                                  │
+│ CLIENTE:                        FECHA:           │
+│ Noe Davila                      1 mayo 2026      │
+│ noe@gmail.com                                    │
+│                                                  │
+│ CONCEPTO:                                        │
+│ Membresía Plan Básico — Mayo 2026                │
+│ Período: 1 mayo → 31 mayo 2026                  │
+│                                                  │
+│ MÉTODO DE PAGO: Zelle                            │
+│ Referencia: #ZLL-89234                          │
+│                                                  │
+│ ─────────────────────────────────────────────── │
+│ TOTAL PAGADO:                          $59.00    │
+│ ─────────────────────────────────────────────── │
+│                                                  │
+│ Firma coach: _____________  Fecha: __________    │
+│                                                  │
+│ "Gracias por confiar en NAHOFIT.LIFE"           │
+└─────────────────────────────────────────────────┘
+
+═══════════════════════════════════════
+REGLAS GENERALES PARA TODOS LOS PDFs
+═══════════════════════════════════════
+
+IMPLEMENTACIÓN:
+- Usar jsPDF + html2canvas O puppeteer para generar PDFs
+- CSS especial @media print con fondo blanco obligatorio
+- Fuente: Arial o Helvetica (disponibles sin internet)
+- Tamaño de página: Carta (8.5" x 11") o A4
+- Márgenes: 20mm en todos los lados
+- El logo NAHOFIT.LIFE en texto verde #10B981 (no imagen — ahorra tinta)
+
+OPCIONES AL DESCARGAR:
+Mostrar modal con dos opciones:
+1. "🖨️ Versión para imprimir" → fondo blanco, sin colores de fondo
+2. "📱 Versión digital" → fondo oscuro, colores completos (la actual)
+
+LOGO EN TEXTO:
+En lugar de imagen del logo usar texto CSS:
+<span style="color:#10B981;font-weight:700;font-family:Arial;">NAHOFIT</span><span style="color:#1A1A1A;">.LIFE</span>
+
+NÚMEROS DE PÁGINA:
+Cada página muestra: "NAHOFIT.LIFE · Página X de Y · Generado: [fecha]"
+
+VERSIÓN COMPACTA (para llevar al gym):
+- Solo ejercicios, series y reps — sin instrucciones largas
+- Formato más pequeño, más ejercicios por página
+- Espacio para anotar el peso usado: "Peso: ____kg"
+
+Aplica estos cambios en TODOS los PDFs de la app:
+- PDF de rutinas
+- PDF de nutrición  
+- PDF de progreso mensual
+- PDF de recibo de pago
+- PDF de reporte de adherencia
+
+Republica la app después de los cambios.

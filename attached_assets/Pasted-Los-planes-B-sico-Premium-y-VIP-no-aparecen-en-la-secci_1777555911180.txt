@@ -1,0 +1,35 @@
+Los planes Básico, Premium y VIP no aparecen en la sección "Planes y Precios" del administrador. Solo aparece el plan "vacaciones" de prueba.
+
+Haz esto:
+
+1. Ejecuta este SQL directamente en la base de datos para insertar los 3 planes oficiales:
+
+INSERT OR IGNORE INTO planes (nombre, precio_mensual, precio_3meses, precio_6meses, descuento_pct, descripcion, badge, caracteristicas_incluidas, caracteristicas_no_incluidas, activo) VALUES 
+('Básico', 59, 159, 300, 10, 'Ideal para quienes inician su transformación', 'Para empezar', 
+'["Rutina semanal personalizada","Videos de ejercicios YouTube","Ajuste mensual de rutina","Mensajes por la app","Chat AI Coach","Registro de peso y medidas"]',
+'["Plan de nutrición","Seguimiento emocional","Sesiones 1 a 1 con Nahomy","Fotos de progreso","Reporte PDF mensual"]',
+1),
+('Premium', 119, 321, 606, 10, 'Entrenamiento + nutrición para resultados reales', 'Más popular',
+'["Rutina semanal personalizada","Videos + instrucciones escritas detalladas","Ajuste semanal de rutina","Plan de nutrición semanal completo","Seguimiento emocional diario","Mensajes prioritarios con el coach","Chat AI Coach avanzado","Registro completo de medidas corporales","Fotos de progreso mensuales","Reporte PDF mensual con gráficas"]',
+'["Sesiones 1 a 1 con Nahomy"]',
+1),
+('VIP', 249, 672, 1254, 10, 'Experiencia completa 1 a 1 con Nahomy', 'Todo incluido',
+'["Rutina 100% personalizada","Videos propios de Nahomy","Ajuste de rutina en tiempo real","Plan de nutrición + guía de suplementos","Asesoría emocional completa","Respuesta del coach en menos de 2 horas","Chat AI Coach ilimitado","4 sesiones 1 a 1 por mes (video o presencial)","Escaneo corporal mensual completo","Fotos antes y después organizadas","Reporte PDF completo + gráficas de evolución"]',
+'[]',
+1);
+
+2. Después de insertar, verificar con SELECT * FROM planes; que los 4 planes existen (vacaciones + 3 nuevos)
+
+3. El plan "vacaciones" que se creó de prueba — eliminarlo con DELETE FROM planes WHERE nombre = 'vacaciones';
+
+4. Verificar que la ruta GET /api/planes devuelve los 3 planes correctamente
+
+5. Refrescar la página de Planes y Precios del administrador para confirmar que aparecen los 3 planes con sus tarjetas completas incluyendo:
+   - Lista de características incluidas con check verde
+   - Lista de características NO incluidas tachadas
+   - Precios de 3 y 6 meses calculados
+   - Botones Editar y Vista previa funcionando
+
+6. También verificar que el dropdown de planes al crear un nuevo usuario ahora muestra: Básico, Premium y VIP
+
+Republica la app después.

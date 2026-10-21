@@ -1,0 +1,56 @@
+Corrige urgente el problema de navegación en el perfil del cliente — cuando el coach hace clic en las pestañas "Rutinas", "Nutrición", "Progreso" o "Pagos", la página queda en blanco y hay que presionar F5 para ver los datos.
+
+PROBLEMA RAÍZ:
+Las pestañas están cambiando la URL sin recargar los datos necesarios. El contenido de cada pestaña no se está cargando dinámicamente al hacer clic.
+
+SOLUCIÓN COMPLETA:
+
+1. Las pestañas NO deben cambiar la URL ni hacer navegación — deben funcionar como tabs puros que muestran/ocultan contenido en la misma página
+
+2. Estructura correcta de las pestañas en el perfil del cliente:
+
+// Al cargar el perfil, cargar TODOS los datos de una vez:
+async function cargarPerfilCompleto(clienteId) {
+  const [perfil, rutina, nutricion, progreso, pagos] = await Promise.all([
+    fetch(`/api/clientes/${clienteId}`, {headers: {Authorization: `Bearer ${token}`}}).then(r => r.json()),
+    fetch(`/api/rutina/${clienteId}/${semanaActual}`, {headers: {Authorization: `Bearer ${token}`}}).then(r => r.json()),
+    fetch(`/api/plan-comida/${clienteId}/${semanaActual}`, {headers: {Authorization: `Bearer ${token}`}}).then(r => r.json()),
+    fetch(`/api/progreso/${clienteId}`, {headers: {Authorization: `Bearer ${token}`}}).then(r => r.json()),
+    fetch(`/api/pagos/${clienteId}`, {headers: {Authorization: `Bearer ${token}`}}).then(r => r.json())
+  ]);
+  
+  renderizarPerfil(perfil);
+  renderizarRutinas(rutina);
+  renderizarNutricion(nutricion);
+  renderizarProgreso(progreso);
+  renderizarPagos(pagos);
+}
+
+3. Las pestañas solo muestran/ocultan secciones ya cargadas:
+function cambiarPestana(pestana) {
+  // Ocultar todas las secciones
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  // Mostrar solo la seleccionada
+  document.getElementById(`tab-${pestana}`).style.display = 'block';
+  // Actualizar estilo de pestaña activa
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.querySelector(`[data-tab="${pestana}"]`).classList.add('active');
+}
+
+4. Si una sección no tiene datos, mostrar mensaje amigable en lugar de quedar en blanco:
+- Rutinas: "Sin rutina asignada esta semana — usa el botón Generar con IA"
+- Nutrición: "Sin plan de nutrición esta semana — usa el botón Generar con IA"  
+- Progreso: "Sin registros de progreso aún — agrega el primer registro"
+- Pagos: "Sin pagos registrados — registra el primer pago"
+
+5. Mostrar spinner de carga mientras se obtienen los datos iniciales
+
+6. Si algún fetch falla, mostrar error específico en esa sección sin afectar las demás
+
+7. Al hacer clic en "Volver a Clientes" tampoco debe perder datos — usar history.back() o mantener el estado
+
+8. También corregir la sección "Medidas Actuales" que aparece vacía en el perfil de María García — debe mostrar las medidas del último registro de progreso o mensaje "Sin medidas registradas aún"
+
+9. La sección "Nutrición" que aparece vacía en el perfil también debe mostrar el plan actual o mensaje apropiado
+
+Aplica estos cambios en el perfil del cliente visto desde el coach. Republica la app.

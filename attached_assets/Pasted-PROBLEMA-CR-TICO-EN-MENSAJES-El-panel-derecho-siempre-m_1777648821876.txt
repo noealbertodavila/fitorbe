@@ -1,0 +1,174 @@
+PROBLEMA CRÍTICO EN MENSAJES:
+El panel derecho siempre muestra la misma conversación sin importar qué cliente se seleccione en la lista.
+
+CAUSA RAÍZ:
+La función que carga los mensajes no está usando el ID del cliente seleccionado — está mostrando siempre los mismos mensajes hardcodeados o de la última carga.
+
+CORRECCIÓN COMPLETA:
+
+1. Cada item de la lista debe tener el ID real del cliente en data-attribute:
+document.querySelectorAll('.conversacion-item').forEach(item => {
+  item.addEventListener('click', function() {
+    const clienteId = this.dataset.clienteId;
+    const clienteNombre = this.dataset.clienteNombre;
+    
+    // Verificar que el ID es correcto
+    console.log('Cliente seleccionado:', clienteId, clienteNombre);
+    
+    cargarConversacion(clienteId, clienteNombre);
+  });
+});
+
+2. Verificar que al renderizar la lista, cada item tiene su ID correcto:
+function renderizarListaMensajes(clientes) {
+  const lista = document.getElementById('lista-conversaciones');
+  lista.innerHTML = clientes.map(cliente => `
+    <div class="conversacion-item" 
+         data-cliente-id="${cliente.id}" 
+         data-cliente-nombre="${cliente.nombre}"
+         onclick="cargarConversacion(${cliente.id}, '${cliente.nombre}')">
+      <div class="avatar">${cliente.nombre[0]}</div>
+      <div class="info">
+        <div class="nombre">${cliente.nombre}</div>
+        <div class="ultimo-msj">${cliente.ultimo_mensaje || ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+3. La función cargarConversacion DEBE limpiar el panel antes de cargar:
+async function cargarConversacion(clienteId, clienteNombre) {
+  const token = localStorage.getItem('nahofitToken');
+  
+  // LIMPIAR panel derecho inmediatamente
+  const panel = document.getElementById('panel-conversacion');
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;height:200px;">
+      <div style="color:#4B7A5E;">Cargando mensajes de ${clienteNombre}...</div>
+    </div>`;
+  
+  // Marcar item activo
+  document.querySelectorAll('.conversacion-item').forEach(i => i.classList.remove('activo'));
+  document.querySelector(`[data-cliente-id="${clienteId}"]`)?.classList.add('activo');
+  
+  try {
+    const res = await fetch(`/api/mensajes/conversacion/${clienteId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    if (!res.ok) throw new Error('Error al cargar');
+    const mensajes = await res.json();
+    
+    // Verificar en consola que son los mensajes correctos
+    console.log(`Mensajes de ${clienteNombre} (ID:${clienteId}):`, mensajes.length, 'mensajes');
+    
+    renderizarConversacion(clienteId, clienteNombre, mensajes);
+    
+  } catch(e) {
+    panel.innerHTML = `
+      <div style="text-align:center;padding:40px;color:#EF4444;">
+        Error al cargar mensajes de ${clienteNombre}
+      </div>`;
+  }
+}
+
+4. La ruta API debe filtrar correctamente:
+// GET /api/mensajes/conversacion/:otroUsuarioId
+app.get('/api/mensajes/conversacion/:otroId', authMiddleware, async (req, res) => {
+  try {
+    const miId = req.usuario.id;
+    const otroId = parseInt(req.params.otroId);
+    
+    // Verificar en log que los IDs son correctos
+    console.log(`Cargando conversación entre ${miId} y ${otroId}`);
+    
+    const mensajes = db.prepare(`
+      SELECT m.*, 
+        u.nombre as remitente_nombre,
+        u.rol as remitente_rol
+      FROM mensajes m
+      JOIN usuarios u ON m.remitente_id = u.id
+      WHERE (m.remitente_id = ? AND m.receptor_id = ?)
+         OR (m.remitente_id = ? AND m.receptor_id = ?)
+      ORDER BY m.creado_en ASC
+    `).all(miId, otroId, otroId, miId);
+    
+    console.log(`Encontrados ${mensajes.length} mensajes`);
+    res.json(mensajes);
+    
+  } catch(e) {
+    console.error('Error mensajes:', e);
+    res.status(500).json({ error: 'Error al cargar mensajes' });
+  }
+});
+
+5. renderizarConversacion debe mostrar mensajes con burbujas correctas:
+function renderizarConversacion(clienteId, clienteNombre, mensajes) {
+  const miId = JSON.parse(localStorage.getItem('nahofitUsuario')).id;
+  const panel = document.getElementById('panel-conversacion');
+  
+  panel.innerHTML = `
+    <div class="conv-header">
+      <div class="avatar-grande">${clienteNombre[0]}</div>
+      <div>
+        <div class="conv-nombre">${clienteNombre}</div>
+        <div class="conv-rol">Cliente</div>
+      </div>
+    </div>
+    <div class="conv-mensajes" id="lista-mensajes">
+      ${mensajes.length === 0 
+        ? '<div style="text-align:center;padding:40px;color:#4B7A5E;">Inicia la conversación con ' + clienteNombre + '</div>'
+        : mensajes.map(m => `
+          <div class="burbuja ${m.remitente_id == miId ? 'burbuja-mia' : 'burbuja-otro'}">
+            <div class="texto-burbuja">${m.contenido}</div>
+            <div class="hora-burbuja">${formatearHora(m.creado_en)}</div>
+          </div>
+        `).join('')
+      }
+    </div>
+    <div class="conv-input">
+      <input type="text" id="input-mensaje" placeholder="Escribe un mensaje..." 
+             onkeypress="if(event.key==='Enter') enviarMensaje(${clienteId})">
+      <button onclick="enviarMensaje(${clienteId})" class="btn-enviar">➤</button>
+    </div>`;
+  
+  // Scroll al último mensaje
+  const listaMensajes = document.getElementById('lista-mensajes');
+  if (listaMensajes) listaMensajes.scrollTop = listaMensajes.scrollHeight;
+}
+
+6. Función enviar mensaje:
+async function enviarMensaje(receptorId) {
+  const input = document.getElementById('input-mensaje');
+  const contenido = input.value.trim();
+  if (!contenido) return;
+  
+  const token = localStorage.getItem('nahofitToken');
+  input.value = '';
+  
+  try {
+    await fetch('/api/mensajes', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}` 
+      },
+      body: JSON.stringify({ receptor_id: receptorId, contenido })
+    });
+    
+    // Recargar conversación
+    const nombreCliente = document.querySelector(`[data-cliente-id="${receptorId}"]`)?.dataset.clienteNombre || '';
+    cargarConversacion(receptorId, nombreCliente);
+    
+  } catch(e) {
+    console.error('Error enviando mensaje:', e);
+  }
+}
+
+7. Marcar mensajes como leídos al abrir conversación:
+PUT /api/mensajes/leer/:remitentId
+UPDATE mensajes SET leido = 1 WHERE receptor_id = miId AND remitente_id = remitenteId
+
+8. Prueba específica — al hacer clic en cada cliente verificar en consola del navegador (F12) que aparece el log correcto con el ID y nombre del cliente seleccionado.
+
+Republica la app después.

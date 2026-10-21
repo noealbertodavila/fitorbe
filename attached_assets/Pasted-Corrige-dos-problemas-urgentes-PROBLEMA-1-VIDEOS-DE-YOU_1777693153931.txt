@@ -1,0 +1,75 @@
+Corrige dos problemas urgentes:
+
+PROBLEMA 1 — VIDEOS DE YOUTUBE ROTOS:
+Los botones "Ver Video de Referencia" abren videos que no existen.
+
+CORRECCIÓN DEFINITIVA:
+Cambiar todos los links de video por búsqueda dinámica en YouTube.
+
+En el frontend, reemplazar cualquier función que abre videos:
+function abrirVideoEjercicio(nombreEjercicio, urlGuardada) {
+  let url;
+  
+  if (urlGuardada && urlGuardada.includes('youtube.com/watch')) {
+    // Si el coach pegó un link real específico, usarlo
+    url = urlGuardada;
+  } else {
+    // Si no hay link o el link está roto, buscar en YouTube
+    const query = encodeURIComponent(nombreEjercicio + ' ejercicio técnica correcta en español');
+    url = `https://www.youtube.com/results?search_query=${query}`;
+  }
+  
+  window.open(url, '_blank');
+}
+
+Cambiar el texto del botón de "Ver Video de Referencia" a "🔍 Buscar video en YouTube" cuando no hay link específico del coach.
+
+En el prompt al AI para generar rutinas, agregar esta instrucción:
+"Para cada ejercicio, deja el campo video_url como null o vacío. NO inventes links de YouTube."
+
+PROBLEMA 2 — PLAN DE RUTINA NO RESPETA DÍAS DISPONIBLES:
+Cuando el cliente tiene 3 días disponibles por semana, el AI genera rutina para los 7 días de la semana.
+
+CORRECCIÓN EN EL PROMPT AL AI:
+
+Antes de llamar al AI, leer los días disponibles del cliente:
+const diasDisponibles = cliente.dias_entrenamiento || 3;
+const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+Luego en el prompt enviar esto explícitamente:
+
+`El cliente tiene disponibilidad para entrenar EXACTAMENTE ${diasDisponibles} días por semana.
+
+REGLA OBLIGATORIA: Genera rutina SOLO para ${diasDisponibles} días de entrenamiento.
+Los días restantes (${7 - diasDisponibles} días) son días de DESCANSO — no incluyas ejercicios en esos días.
+
+Ejemplo para 3 días:
+- Lunes: Entrenamiento (Pecho + Tríceps)
+- Martes: DESCANSO
+- Miércoles: Entrenamiento (Espalda + Bíceps)
+- Jueves: DESCANSO
+- Viernes: Entrenamiento (Piernas + Hombros)
+- Sábado: DESCANSO
+- Domingo: DESCANSO
+
+Distribuye los días de entrenamiento de forma óptima con descanso entre sesiones.
+Adapta el volumen (series y repeticiones) según sean ${diasDisponibles} días — más días = menos volumen por día, menos días = más volumen por día.`
+
+También respetar la duración máxima de sesión:
+const duracionSesion = cliente.duracion_sesion || 60; // minutos
+
+`Cada sesión debe durar máximo ${duracionSesion} minutos. 
+Incluye solo los ejercicios que quepan en ese tiempo.
+Calcula aproximadamente: calentamiento 10min + (series × descanso × ejercicios) + enfriamiento 5min.`
+
+Y el lugar de entrenamiento:
+const lugar = cliente.lugar_entrenamiento || 'gym';
+const equipamiento = cliente.equipamiento || 'equipamiento completo';
+
+`El cliente entrena en: ${lugar}
+Equipamiento disponible: ${equipamiento}
+SOLO incluir ejercicios realizables con ese equipamiento.`
+
+Verificación: Si el cliente tiene 3 días disponibles, el JSON de respuesta del AI debe tener EXACTAMENTE 3 objetos con ejercicios y 4 objetos marcados como "descanso: true".
+
+Aplica ambas correcciones y republica la app.

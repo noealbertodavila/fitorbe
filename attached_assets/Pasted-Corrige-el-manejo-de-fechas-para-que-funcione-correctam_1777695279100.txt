@@ -1,0 +1,121 @@
+Corrige el manejo de fechas para que funcione correctamente en cualquier país o zona horaria:
+
+PASO 1 — SERVIDOR (server.js):
+Eliminar esta línea si existe:
+process.env.TZ = 'America/Denver';
+o cualquier otra configuración de TZ.
+
+El servidor NO debe tener zona horaria fija — solo recibe y guarda las fechas que le envía el frontend.
+
+PASO 2 — FUNCIÓN GLOBAL DE FECHA (agregar en cliente.html, coach.html y admin.html):
+Agregar estas funciones al inicio de cada archivo JS, antes de cualquier otra función:
+
+// Fecha local del usuario (funciona en cualquier país)
+function getFechaHoy() {
+  const ahora = new Date();
+  const anio = ahora.getFullYear();
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
+
+// Lunes de la semana actual en hora local
+function getLunesActual() {
+  const hoy = new Date();
+  const diaSemana = hoy.getDay();
+  const diff = diaSemana === 0 ? -6 : 1 - diaSemana;
+  const lunes = new Date(hoy);
+  lunes.setDate(hoy.getDate() + diff);
+  const anio = lunes.getFullYear();
+  const mes = String(lunes.getMonth() + 1).padStart(2, '0');
+  const dia = String(lunes.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
+
+// Formatear fecha en español sin problema de zona horaria
+function formatearFecha(fechaStr) {
+  if (!fechaStr) return '';
+  const [anio, mes, dia] = fechaStr.split('-').map(Number);
+  const fecha = new Date(anio, mes - 1, dia);
+  return fecha.toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+}
+
+// Saludo según hora local del usuario
+function getSaludo(nombre) {
+  const hora = new Date().getHours();
+  if (hora >= 5 && hora < 12) return `Buenos días, ${nombre} 👋`;
+  if (hora >= 12 && hora < 18) return `Buenas tardes, ${nombre} 👋`;
+  return `Buenas noches, ${nombre} 👋`;
+}
+
+// Formatear hora de mensaje en hora local
+function formatearHora(fechaISO) {
+  if (!fechaISO) return '';
+  return new Date(fechaISO).toLocaleTimeString('es-ES', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+}
+
+// Formatear fecha corta (ej: "1 may")
+function formatearFechaCorta(fechaStr) {
+  if (!fechaStr) return '';
+  const [anio, mes, dia] = fechaStr.split('-').map(Number);
+  const fecha = new Date(anio, mes - 1, dia);
+  return fecha.toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'short'
+  });
+}
+
+PASO 3 — REEMPLAZAR en todos los archivos frontend:
+
+Buscar y reemplazar TODAS las ocurrencias de:
+new Date().toISOString().split('T')[0]
+→ getFechaHoy()
+
+Buscar y reemplazar TODAS las ocurrencias de:
+new Date().toLocaleDateString()
+→ formatearFecha(getFechaHoy())
+
+Buscar y reemplazar el cálculo del lunes:
+Cualquier código que calcule el lunes de la semana
+→ getLunesActual()
+
+PASO 4 — FECHAS EN LA BASE DE DATOS:
+El servidor guarda las fechas exactamente como las recibe del frontend (string YYYY-MM-DD).
+No convertir, no procesar, no cambiar zona horaria en el servidor.
+
+Al consultar por fecha de hoy en el servidor, recibir la fecha del cliente como parámetro:
+// MAL — usa fecha del servidor:
+const hoy = new Date().toISOString().split('T')[0];
+
+// BIEN — recibe la fecha del cliente:
+const hoy = req.query.fecha || req.body.fecha;
+
+PASO 5 — VERIFICACIÓN FINAL:
+Después de los cambios, verificar que:
+- El dashboard muestra el día correcto según el navegador del usuario
+- El calendario marca HOY correctamente
+- Los mensajes muestran la hora local del usuario
+- La rutina de hoy carga el día correcto
+- Un usuario en Miami ve viernes 1 mayo y uno en España ve sábado 2 mayo si corresponde
+
+PASO 6 — HORAS DE MENSAJES:
+Los mensajes guardados en la BD tienen timestamp UTC.
+Al mostrarlos en pantalla usar siempre:
+new Date(mensaje.creado_en).toLocaleTimeString('es-ES', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+})
+Esto convierte automáticamente a la hora local del usuario.
+
+Aplica todos estos cambios en cliente.html, coach.html, admin.html y server.js.
+Republica la app después.
