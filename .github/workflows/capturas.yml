@@ -1,6 +1,9 @@
 # Fotos de las pantallas para revisar el diseño (se descargan como artefacto).
 name: Capturas
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
   push:
@@ -45,7 +48,11 @@ jobs:
           for i in $(seq 1 30); do curl -sf http://localhost:8080/api/healthz && break; sleep 1; done
           cp scripts/capturas/capturas.mjs /tmp/pw/
           (cd /tmp/pw && OUT="$GITHUB_WORKSPACE/capturas" node capturas.mjs) || (tail -50 servidor.log; exit 1)
-      - uses: actions/upload-artifact@v4
-        with:
-          name: capturas
-          path: capturas/
+      - name: Guardar en la rama capturas
+        run: |
+          cd capturas
+          git init -q -b capturas
+          git config user.name "capturas"
+          git config user.email "capturas@users.noreply.github.com"
+          git add -A && git commit -qm "Capturas de ${GITHUB_SHA::7}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" capturas
