@@ -16,7 +16,7 @@ export default function AiCoachChat() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [message, setMessage] = useState("");
   const [history, setHistory] = useState<AIChatBodyHistorialItem[]>([
-    { role: "assistant", content: "¡Hola! Soy tu asistente de NAHOFIT.LIFE. Conozco tu rutina, nutrición y progreso. ¿En qué te puedo ayudar hoy?" }
+    { role: "assistant", content: "¡Hola! Soy tu asistente con inteligencia artificial. Conozco tu rutina, nutrición y progreso. ¿En qué te puedo ayudar hoy?" }
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -133,7 +133,7 @@ export default function AiCoachChat() {
           <CardHeader className="p-3 border-b border-border/50 bg-background/50 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-syne flex items-center">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2"></div>
-              NAHOFIT<span className="text-primary mx-1">.AI</span> Coach
+              Asistente <span className="text-primary mx-1">IA</span>
             </CardTitle>
             <div className="flex items-center gap-1 text-muted-foreground">
               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsExpanded(!isExpanded)}>
@@ -166,7 +166,7 @@ export default function AiCoachChat() {
                 {isTyping && (
                   <div className="flex justify-start">
                     <div className="max-w-[85%] p-3 rounded-lg text-sm bg-muted border border-border/50 text-foreground rounded-tl-none flex items-center space-x-2">
-                      <span className="animate-pulse">Nahomy está escribiendo</span>
+                      <span className="animate-pulse">Escribiendo…</span>
                       <span className="flex space-x-1">
                         <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
                         <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>

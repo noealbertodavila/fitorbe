@@ -56,7 +56,7 @@ router.post("/superadmin/coaches", requireAuth, requireRol("admin"), async (req,
     res.status(r.status).json({ error: r.error });
     return;
   }
-  res.status(201).json({ usuarioId: r.usuario.id, ...r.ficha });
+  res.status(201).json({ ...r.ficha, usuarioId: r.usuario.id });
 });
 
 router.patch("/superadmin/coaches/:usuarioId", requireAuth, requireRol("admin"), async (req, res) => {
@@ -133,7 +133,8 @@ registroRouter.get("/mi-negocio", requireAuth, async (req, res) => {
     res.json(null);
     return;
   }
-  const publico = { negocio: f.negocio, slug: f.slug, logo: f.logo, colorPrimario: f.colorPrimario };
+  const [cu] = await db.select({ nombre: usuariosTable.nombre }).from(usuariosTable).where(eq(usuariosTable.id, coachId)).limit(1);
+  const publico = { negocio: f.negocio, slug: f.slug, logo: f.logo, colorPrimario: f.colorPrimario, coachId, coachNombre: cu?.nombre ?? "" };
   res.json(me.rol === "coach" ? { ...publico, estado: f.estado, plan: f.plan, pruebaHasta: f.pruebaHasta } : publico);
 });
 

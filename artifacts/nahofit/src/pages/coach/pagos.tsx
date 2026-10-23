@@ -17,6 +17,7 @@ import { format, addMonths } from "date-fns";
 import { usePdfExport } from "@/hooks/use-pdf-export";
 import { PdfModeModal } from "@/components/PdfModeModal";
 import { DateField } from "@/components/ui/date-field";
+import { useNegocio } from "@/hooks/use-negocio";
 
 const METODOS = [
   { value: "zelle", label: "Zelle", campos: ["telefono", "nombre"] },
@@ -33,6 +34,7 @@ const metodoCampos: Record<string, { key: string; label: string; placeholder: st
 };
 
 function ReceiptDocument({ pago, clienteNombre, printMode = "digital" }: { pago: any; clienteNombre: string; printMode?: "print" | "digital" }) {
+  const { marca, coachNombre } = useNegocio();
   const isPrint = printMode === "print";
   const md = pago.metodoDatos as Record<string, string> | null;
 
@@ -66,10 +68,9 @@ function ReceiptDocument({ pago, clienteNombre, printMode = "digital" }: { pago:
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
           <div>
             <div style={{ display: "flex", alignItems: "baseline" }}>
-              <span style={{ color: C.accent, fontSize: "20px", fontWeight: 700 }}>NAHOFIT</span>
-              <span style={{ color: C.text, fontSize: "20px", fontWeight: 700 }}>.LIFE</span>
+              <span style={{ color: C.accent, fontSize: "20px", fontWeight: 700 }}>{marca}</span>
             </div>
-            <p style={{ color: C.textMuted, fontSize: "11px", margin: "2px 0 0 0" }}>Elaborado por Nahomy</p>
+            <p style={{ color: C.textMuted, fontSize: "11px", margin: "2px 0 0 0" }}>Elaborado por {coachNombre}</p>
           </div>
           <div style={{ textAlign: "right" }}>
             <p style={{ fontWeight: 700, fontSize: "18px", color: C.text, margin: "0 0 2px 0" }}>RECIBO DE PAGO</p>
@@ -164,9 +165,9 @@ function ReceiptDocument({ pago, clienteNombre, printMode = "digital" }: { pago:
 
       {/* Footer */}
       <div style={{ marginTop: "24px", paddingTop: "12px", borderTop: `1px solid ${C.cardBorder}`, display: "flex", justifyContent: "space-between", color: C.textMuted, fontSize: "10px" }}>
-        <span style={{ color: C.accent, fontWeight: 700 }}>NAHOFIT.LIFE</span>
-        <span style={{ fontStyle: "italic" }}>"Gracias por confiar en NAHOFIT.LIFE"</span>
-        <span>Elaborado por Nahomy</span>
+        <span style={{ color: C.accent, fontWeight: 700 }}>{marca}</span>
+        <span style={{ fontStyle: "italic" }}>"Gracias por tu confianza"</span>
+        <span>Elaborado por {coachNombre}</span>
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ import { format, startOfWeek } from "date-fns";
 import { usePdfExport } from "@/hooks/use-pdf-export";
 import { PrintableProgreso } from "@/components/PrintableProgreso";
 import { PdfModeModal } from "@/components/PdfModeModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PlanPrecio {
   id: number;
@@ -419,7 +420,7 @@ function EditarClienteDialog({ cliente, open, onClose }: { cliente: ClienteCompl
                 </Select>
               </div>
               <S label="Modalidad de entrenamiento" field="modalidad" options={opts(["Online", "Presencial", "Híbrido"])} />
-              <DateField label="Fecha de inicio con Nahomy" value={form.fechaInicio} onChange={v => set("fechaInicio", v)} minYear={2020} maxYear={2030} />
+              <DateField label="Fecha de inicio" value={form.fechaInicio} onChange={v => set("fechaInicio", v)} minYear={2020} maxYear={2030} />
             </div>
             <T label="Observaciones iniciales del coach" field="notasCoach" placeholder="Primera impresión del cliente, actitud, motivación..." />
             <T label="Estrategia de entrenamiento propuesta" field="estrategiaEntrenamiento" placeholder="Fase 1: adaptación (4 semanas), foco en técnica..." />
@@ -449,6 +450,7 @@ const DIAS_SEMANA = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function CoachClienteDetalle({ id }: { id: number }) {
+  const { user } = useAuth();
   const { data: cliente, isLoading } = useGetCliente(id, { query: { queryKey: ["/api/clientes/", id] as any, enabled: !!id } });
   const [editOpen, setEditOpen] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
@@ -692,7 +694,7 @@ export default function CoachClienteDetalle({ id }: { id: number }) {
               <div style={{ position: "absolute", left: "-9999px", top: 0, pointerEvents: "none" }}>
                 <PrintableProgreso
                   clienteNombre={c?.nombre || "Cliente"}
-                  coachNombre="Nahomy"
+                  coachNombre={user?.nombre ?? ""}
                   periodo={new Date((progresoList[0] as any).fecha + "T12:00:00").toLocaleDateString("es-ES", { month: "long", year: "numeric" })}
                   registroActual={progresoList[0] as any}
                   registroAnterior={progresoList[1] as any || null}

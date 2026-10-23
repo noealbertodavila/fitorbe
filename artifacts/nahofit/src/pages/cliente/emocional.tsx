@@ -290,7 +290,7 @@ export default function ClienteEmocional() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-muted-foreground">
-                        Notas para Nahomy <span className="text-xs opacity-60">(opcional)</span>
+                        Notas para tu coach <span className="text-xs opacity-60">(opcional)</span>
                       </FormLabel>
                       <FormControl>
                         <Textarea

@@ -29,6 +29,7 @@ function lunesDate(): Date {
 }
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useNegocio } from "@/hooks/use-negocio";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type DiaSemana = {
@@ -159,6 +160,7 @@ function getDiaLabelColor(estado: string): string {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ClienteCalendario() {
+  const { marca, coachNombre } = useNegocio();
   const { user } = useAuth();
   const hoyStr = getFechaHoy();
 
@@ -575,7 +577,7 @@ export default function ClienteCalendario() {
                         <blockquote className="text-sm text-white/90 italic leading-relaxed">
                           "{getFrase()}"
                         </blockquote>
-                        <p className="text-xs text-primary font-medium mt-2 text-right">— Nahomy</p>
+                        <p className="text-xs text-primary font-medium mt-2 text-right">— {coachNombre}</p>
                       </CardContent>
                     </Card>
                   )}

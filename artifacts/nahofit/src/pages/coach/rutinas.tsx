@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, startOfWeek, addWeeks } from "date-fns";
 import { es } from "date-fns/locale";
+import { useAuth } from "@/contexts/AuthContext";
 
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
@@ -66,6 +67,7 @@ const ejercicioVacio = (): Ejercicio => ({
 });
 
 export default function CoachRutinas() {
+  const { user } = useAuth();
   const urlParams = new URLSearchParams(window.location.search);
   const clienteIdFromUrl = urlParams.get("clienteId") || "";
   const { exportToPdf, isExporting } = usePdfExport();
@@ -424,7 +426,7 @@ export default function CoachRutinas() {
         <Card className="bg-card border-primary/30 border">
           <CardContent className="p-8 text-center">
             <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-            <h3 className="text-lg font-syne font-bold text-white mb-2">Nahomy está generando tu plan personalizado...</h3>
+            <h3 className="text-lg font-syne font-bold text-white mb-2">Generando el plan personalizado...</h3>
             <p className="text-muted-foreground text-sm">La IA está creando una rutina adaptada al perfil de {clienteSeleccionado?.nombre}. Por favor espera.</p>
           </CardContent>
         </Card>
@@ -610,7 +612,7 @@ export default function CoachRutinas() {
                 <PrintablePlan
                   tipo="rutina"
                   clienteNombre={clienteSeleccionado?.nombre || "Cliente"}
-                  coachNombre="Nahomy"
+                  coachNombre={user?.nombre ?? ""}
                   semanaInicio={semanaInicio}
                   printMode={rutinaPrintMode}
                   dias={(rutinas as any[]).map((r: any) => ({

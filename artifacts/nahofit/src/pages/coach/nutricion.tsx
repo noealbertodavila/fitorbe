@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, startOfWeek, addWeeks } from "date-fns";
 import { es } from "date-fns/locale";
+import { useAuth } from "@/contexts/AuthContext";
 
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
@@ -88,6 +89,7 @@ const calcTotales = (comidas: Comida[]) => ({
 });
 
 export default function CoachNutricion() {
+  const { user } = useAuth();
   const urlParams = new URLSearchParams(window.location.search);
   const clienteIdFromUrl = urlParams.get("clienteId") || "";
   const { exportToPdf, isExporting } = usePdfExport();
@@ -435,7 +437,7 @@ export default function CoachNutricion() {
         <Card className="bg-card border-primary/30 border">
           <CardContent className="p-8 text-center">
             <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-            <h3 className="text-lg font-syne font-bold text-white mb-2">Nahomy está generando tu plan personalizado...</h3>
+            <h3 className="text-lg font-syne font-bold text-white mb-2">Generando el plan personalizado...</h3>
             <p className="text-muted-foreground text-sm">Creando un plan nutricional adaptado a {clienteSeleccionado?.nombre}. Por favor espera.</p>
           </CardContent>
         </Card>
@@ -654,7 +656,7 @@ export default function CoachNutricion() {
                 <PrintablePlan
                   tipo="nutricion"
                   clienteNombre={clienteSeleccionado?.nombre || "Cliente"}
-                  coachNombre="Nahomy"
+                  coachNombre={user?.nombre ?? ""}
                   semanaInicio={semanaInicio}
                   printMode={nutricionPrintMode}
                   dias={(planes as any[]).map((p: any) => ({

@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { useNegocio } from "@/hooks/use-negocio";
 
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
@@ -57,6 +58,7 @@ interface PrintablePlanProps {
 
 export const PrintablePlan = forwardRef<HTMLDivElement, PrintablePlanProps>(
   ({ tipo, clienteNombre, coachNombre, semanaInicio, dias, printMode = "digital" }, ref) => {
+    const { marca, coachNombre: coachDelNegocio } = useNegocio();
     const isPrint = printMode === "print";
     const fecha = new Date(semanaInicio + "T12:00:00").toLocaleDateString("es-ES", {
       day: "numeric", month: "long", year: "numeric"
@@ -100,8 +102,7 @@ export const PrintablePlan = forwardRef<HTMLDivElement, PrintablePlanProps>(
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
             <div>
               <div style={{ display: "flex", alignItems: "baseline", gap: "0px", marginBottom: "6px" }}>
-                <span style={{ color: C.accent, fontSize: "18px", fontWeight: 700, letterSpacing: "0px", fontFamily: "Arial, Helvetica, sans-serif" }}>NAHOFIT</span>
-                <span style={{ color: C.text, fontSize: "18px", fontWeight: 700, fontFamily: "Arial, Helvetica, sans-serif" }}>.LIFE</span>
+                <span style={{ color: C.accent, fontSize: "18px", fontWeight: 700, letterSpacing: "0px", fontFamily: "Arial, Helvetica, sans-serif" }}>{marca}</span>
               </div>
               <h1 style={{ fontSize: "20px", fontWeight: 800, margin: 0, color: C.text }}>
                 {tipo === "rutina" ? "Plan de Entrenamiento" : "Plan de Nutrición"}
@@ -284,8 +285,8 @@ export const PrintablePlan = forwardRef<HTMLDivElement, PrintablePlanProps>(
           color: C.textMuted,
           fontSize: "10px"
         }}>
-          <span style={{ color: C.accent, fontWeight: 700 }}>NAHOFIT.LIFE</span>
-          <span>Elaborado por {coachNombre || "Nahomy"} · {generado}</span>
+          <span style={{ color: C.accent, fontWeight: 700 }}>{marca}</span>
+          <span>Elaborado por {coachNombre || coachDelNegocio} · {generado}</span>
           <span style={{ color: C.textMuted }}>Este plan es de uso exclusivo del cliente.</span>
         </div>
       </div>

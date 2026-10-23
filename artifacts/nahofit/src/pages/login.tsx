@@ -70,11 +70,11 @@ export default function Login() {
       {/* Logo */}
       <div style={{ textAlign: "center", marginBottom: "32px", position: "relative", zIndex: 1 }}>
         <div style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(32px, 8vw, 44px)", fontWeight: 700, letterSpacing: "-1px", lineHeight: 1 }}>
-          <span style={{ color: "#ECFDF5" }}>NAHOFIT</span>
-          <span style={{ color: "#10B981" }}>.LIFE</span>
+          <span style={{ color: "#ECFDF5" }}>Fit</span>
+          <span style={{ color: "#10B981" }}>orbe</span>
         </div>
         <div style={{ fontSize: "11px", color: "#4B7A5E", letterSpacing: "2px", textTransform: "uppercase", marginTop: "6px" }}>
-          Premium Coaching
+          Para coaches y sus clientes
         </div>
       </div>
 
@@ -220,7 +220,7 @@ export default function Login() {
 
       {/* Footer */}
       <div style={{ textAlign: "center", marginTop: "24px", fontSize: "11px", color: "#2D5240", position: "relative", zIndex: 1 }}>
-        Elaborado por Nahomy — NAHOFIT.LIFE
+        ¿Eres coach y no tienes cuenta? <a href="/registro" style={{ color: "#10B981", fontWeight: 700 }}>Prueba Fitorbe gratis 14 días</a>
         <span style={{ display: "block", marginTop: 6 }}><a href="/privacidad" style={{ color: "inherit", textDecoration: "underline" }}>Privacidad</a> · <a href="/terminos" style={{ color: "inherit", textDecoration: "underline" }}>Términos</a></span>
       </div>
 

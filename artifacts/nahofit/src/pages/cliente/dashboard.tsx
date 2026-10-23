@@ -9,8 +9,10 @@ import { useState, useEffect } from "react";
 import { customFetch } from "@workspace/api-client-react";
 import { useQuery } from "@tanstack/react-query";
 import { getFechaHoy, getSaludo } from "@/lib/date-mt";
+import { useNegocio } from "@/hooks/use-negocio";
 
 export default function ClienteDashboard() {
+  const { marca, coachNombre } = useNegocio();
   const { user } = useAuth();
   const fechaHoy = getFechaHoy();
   const { data: dashboard, isLoading } = useQuery({
@@ -74,7 +76,7 @@ export default function ClienteDashboard() {
             "{fraseDia}"
           </div>
           <div style={{ fontSize: "11px", color: "#10B981", marginTop: "4px" }}>
-            — Nahomy
+            — {coachNombre}
           </div>
         </div>
       )}
@@ -178,7 +180,7 @@ export default function ClienteDashboard() {
         <Card className="bg-card border border-primary/20 overflow-hidden">
           <div className="h-1 w-full bg-primary" />
           <CardContent className="p-6">
-            <h2 className="font-syne font-bold text-white text-xl mb-1">¡Bienvenida a NAHOFIT.LIFE! 🌿</h2>
+            <h2 className="font-syne font-bold text-white text-xl mb-1">¡Bienvenida a {marca}! 🌿</h2>
             <p className="text-muted-foreground text-sm mb-6">
               Tu coach está configurando tu plan personalizado. Mientras tanto, puedes hacer estas acciones:
             </p>

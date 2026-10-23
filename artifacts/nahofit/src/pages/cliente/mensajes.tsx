@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Send, UserCircle, MessageSquare } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNegocio } from "@/hooks/use-negocio";
 
 export default function ClienteMensajes() {
+  const { marca, coachNombre } = useNegocio();
   const { user } = useAuth();
   const coachId = user?.coachId;
   const [mensajeText, setMensajeText] = useState("");
@@ -82,7 +84,7 @@ export default function ClienteMensajes() {
             N
           </div>
           <div>
-            <h3 className="font-syne font-bold text-lg text-white">Nahomy</h3>
+            <h3 className="font-syne font-bold text-lg text-white">{coachNombre}</h3>
             <p className="text-xs text-primary font-medium tracking-wider uppercase">Coach Principal</p>
           </div>
         </div>
@@ -137,7 +139,7 @@ export default function ClienteMensajes() {
         <div className="p-4 border-t border-border/50 bg-background/30">
           <form onSubmit={handleSend} className="flex items-center space-x-2">
             <Input
-              placeholder="Escribe un mensaje para Nahomy..."
+              placeholder={`Escribe un mensaje para ${coachNombre}...`}
               value={mensajeText}
               onChange={(e) => setMensajeText(e.target.value)}
               className="flex-1 bg-background/50 border-border/50 focus-visible:ring-primary h-12"

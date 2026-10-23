@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { useNegocio } from "@/hooks/use-negocio";
 
 interface RegistroProgreso {
   id: number;
@@ -79,6 +80,7 @@ function AdherenciaBar({ porcentaje, isPrint }: { porcentaje: number; isPrint: b
 
 export const PrintableProgreso = forwardRef<HTMLDivElement, PrintableProgresoProps>(
   ({ clienteNombre, coachNombre, periodo, registroActual, registroAnterior, adherenciaSemanal, printMode = "digital" }, ref) => {
+    const { marca, coachNombre: coachDelNegocio } = useNegocio();
     const isPrint = printMode === "print";
     const generado = new Date().toLocaleDateString("es-ES");
 
@@ -146,8 +148,7 @@ export const PrintableProgreso = forwardRef<HTMLDivElement, PrintableProgresoPro
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
             <div>
               <div style={{ display: "flex", alignItems: "baseline", gap: "0px", marginBottom: "6px" }}>
-                <span style={{ color: C.accent, fontSize: "18px", fontWeight: 700, fontFamily: "Arial, Helvetica, sans-serif" }}>NAHOFIT</span>
-                <span style={{ color: C.text, fontSize: "18px", fontWeight: 700, fontFamily: "Arial, Helvetica, sans-serif" }}>.LIFE</span>
+                <span style={{ color: C.accent, fontSize: "18px", fontWeight: 700, fontFamily: "Arial, Helvetica, sans-serif" }}>{marca}</span>
               </div>
               <h1 style={{ fontSize: "20px", fontWeight: 800, margin: 0, color: C.text }}>
                 Reporte de Progreso Mensual
@@ -333,7 +334,7 @@ export const PrintableProgreso = forwardRef<HTMLDivElement, PrintableProgresoPro
           <div style={{ display: "flex", gap: "40px", marginBottom: "24px" }}>
             <div style={{ flex: 1 }}>
               <div style={{ borderBottom: `1px solid ${C.text}`, marginBottom: "4px", height: "30px" }} />
-              <p style={{ color: C.textMuted, fontSize: "11px", textAlign: "center", margin: 0 }}>Firma del Coach · {coachNombre || "Nahomy"}</p>
+              <p style={{ color: C.textMuted, fontSize: "11px", textAlign: "center", margin: 0 }}>Firma del Coach · {coachNombre || coachDelNegocio}</p>
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ borderBottom: `1px solid ${C.text}`, marginBottom: "4px", height: "30px" }} />
@@ -352,8 +353,8 @@ export const PrintableProgreso = forwardRef<HTMLDivElement, PrintableProgresoPro
           color: C.textMuted,
           fontSize: "10px"
         }}>
-          <span style={{ color: C.accent, fontWeight: 700 }}>NAHOFIT.LIFE</span>
-          <span>Elaborado por {coachNombre || "Nahomy"} · {generado}</span>
+          <span style={{ color: C.accent, fontWeight: 700 }}>{marca}</span>
+          <span>Elaborado por {coachNombre || coachDelNegocio} · {generado}</span>
           <span>Este reporte es confidencial.</span>
         </div>
       </div>

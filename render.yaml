@@ -1,13 +1,10 @@
-# Blueprint de Render: NAHOFIT.LIFE (nahofit.com).
-# La base de datos NO se crea aquí: NAHOFIT usa su propia base "nahofit"
-# (con su propio usuario) dentro del servidor de Postgres de Obrix.
+# Blueprint de Render: Fitorbe (fitorbe.com), plataforma para coaches.
 # DATABASE_URL se pega en Render al crear el Blueprint; no se guarda en el código.
-# Para llevarla a su propio servidor más adelante: pg_dump de la base "nahofit"
-# y pg_restore en el servidor nuevo; solo cambia DATABASE_URL.
+# La base de Fitorbe es aparte de Obrix y de NAHOFIT.
 
 services:
   - type: web
-    name: nahofit
+    name: fitorbe
     runtime: node
     plan: starter
     region: oregon
@@ -32,8 +29,8 @@ services:
       # Llave de la cuenta de Anthropic para las funciones de IA (rutinas, comida, asistente).
       - key: ANTHROPIC_API_KEY
         sync: false
-      # Cuenta de Nahomy: se crea sola la primera vez si la base está vacía.
-      - key: COACH_EMAIL
+      # Cuenta del superadmin (Noe): se crea sola la primera vez si no hay ninguno.
+      - key: SUPERADMIN_EMAIL
         sync: false
-      - key: COACH_PASSWORD
+      - key: SUPERADMIN_PASSWORD
         sync: false

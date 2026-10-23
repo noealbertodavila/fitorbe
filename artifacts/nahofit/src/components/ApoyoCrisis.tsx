@@ -13,7 +13,7 @@ export function ApoyoCrisis({ onClose }: { onClose?: () => void }) {
         call: "Call 988",
         text: "Text 988",
         emergency: "If you're in immediate danger, call 911.",
-        coach: "Nahomy will also see this so she can check in with you.",
+        coach: "Your coach will also see this so they can check in with you.",
         close: "Close",
       }
     : {
@@ -22,7 +22,7 @@ export function ApoyoCrisis({ onClose }: { onClose?: () => void }) {
         call: "Llamar al 988",
         text: "Mensaje al 988",
         emergency: "Si estás en peligro inmediato, llama al 911.",
-        coach: "Nahomy también verá esto para poder escribirte.",
+        coach: "Tu coach también verá esto para poder escribirte.",
         close: "Cerrar",
       };
   return (

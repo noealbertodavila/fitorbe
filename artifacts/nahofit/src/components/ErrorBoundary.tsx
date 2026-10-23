@@ -91,7 +91,7 @@ export class ErrorBoundary extends Component<Props, State> {
         >
           <div>
             <h2 style={{ fontSize: "1.5rem", marginBottom: "8px" }}>
-              NAHOFIT<span style={{ color: "#10B981" }}>.LIFE</span>
+              Fitorbe
             </h2>
             <p style={{ color: "#6B9E80", marginBottom: "20px", fontSize: "0.9rem" }}>
               Ocurrió un error al cargar la aplicación.

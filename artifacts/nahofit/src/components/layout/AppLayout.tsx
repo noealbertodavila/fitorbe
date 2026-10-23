@@ -15,32 +15,36 @@ import {
   LineChart,
   Tags,
   Inbox,
+  Store,
+  Briefcase,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import AiCoachChat from "@/components/AiCoachChat";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
+import { useNegocio } from "@/hooks/use-negocio";
+import PausaServicio from "@/components/PausaServicio";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { cantidad: mensajesNoLeidos } = useUnreadMessages();
+  const { marca, negocio } = useNegocio();
+  const ROL: Record<string, string> = { admin: "Superadmin", coach: "Coach", cliente: "Cliente" };
 
   useEffect(() => {
     if (mensajesNoLeidos > 0) {
-      document.title = `(${mensajesNoLeidos}) Mensaje${mensajesNoLeidos > 1 ? "s" : ""} nuevo${mensajesNoLeidos > 1 ? "s" : ""} — NAHOFIT.LIFE`;
+      document.title = `(${mensajesNoLeidos}) Mensaje${mensajesNoLeidos > 1 ? "s" : ""} nuevo${mensajesNoLeidos > 1 ? "s" : ""} — ${marca}`;
     } else {
-      document.title = "NAHOFIT.LIFE";
+      document.title = marca;
     }
-  }, [mensajesNoLeidos]);
+  }, [mensajesNoLeidos, marca]);
 
   const adminNav = [
     { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
-    { label: "Usuarios", path: "/admin/usuarios", icon: Users },
-    { label: "Planes y Precios", path: "/admin/planes", icon: Tags },
-    { label: "Reportes", path: "/admin/reportes", icon: FileText },
+    { label: "Coaches", path: "/admin/coaches", icon: Briefcase },
   ];
 
   const coachNav = [
@@ -53,6 +57,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { label: "Reportes", path: "/coach/reportes", icon: LineChart },
     { label: "Pagos", path: "/coach/pagos", icon: DollarSign },
     { label: "Solicitudes", path: "/coach/solicitudes", icon: Inbox },
+    { label: "Planes y precios", path: "/coach/planes", icon: Tags },
+    { label: "Mi negocio", path: "/coach/negocio", icon: Store },
   ];
 
   const clientNav = [
@@ -111,11 +117,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col w-64 border-r border-border/50 bg-card fixed h-full z-10">
         <div className="p-6 border-b border-border/50 flex-shrink-0">
           <h2 className="text-2xl font-syne font-bold text-white tracking-tight">
-            NAHOFIT<span className="text-primary">.LIFE</span>
+            {negocio?.logo ? (
+            <img src={negocio.logo} alt={marca} className="max-h-10 max-w-[180px] object-contain" />
+          ) : (
+            <span className="block truncate">{marca}</span>
+          )}
           </h2>
           {user && (
-            <p className="text-xs text-muted-foreground mt-1 capitalize">
-              Panel {user.rol}
+            <p className="text-xs text-muted-foreground mt-1">
+              Panel {ROL[user.rol] ?? user.rol}
             </p>
           )}
         </div>
@@ -131,7 +141,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="overflow-hidden flex-1 min-w-0">
               <p className="text-sm font-semibold text-white truncate leading-tight">{user?.nombre}</p>
-              <p className="text-[11px] text-muted-foreground/70 truncate capitalize leading-tight mt-0.5">{user?.rol}</p>
+              <p className="text-[11px] text-muted-foreground/70 truncate leading-tight mt-0.5">{user ? ROL[user.rol] ?? user.rol : ""}</p>
             </div>
           </div>
           <Button 
@@ -150,8 +160,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col md:ml-64 min-w-0 relative">
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 border-b border-border/50 bg-card sticky top-0 z-20">
-          <h2 className="text-xl font-syne font-bold text-white tracking-tight">
-            NAHOFIT<span className="text-primary">.LIFE</span>
+          <h2 className="text-xl font-syne font-bold text-white tracking-tight truncate max-w-[70%]">
+            {marca}
           </h2>
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
@@ -161,12 +171,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </SheetTrigger>
             <SheetContent side="left" className="bg-card border-r-border/50 w-72 p-0 flex flex-col">
               <div className="p-6 border-b border-border/50">
-                <h2 className="text-2xl font-syne font-bold text-white tracking-tight">
-                  NAHOFIT<span className="text-primary">.LIFE</span>
+                <h2 className="text-2xl font-syne font-bold text-white tracking-tight truncate">
+                  {marca}
                 </h2>
                 {user && (
-                  <p className="text-xs text-muted-foreground mt-1 capitalize">
-                    Panel {user.rol}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Panel {ROL[user.rol] ?? user.rol}
                   </p>
                 )}
               </div>
@@ -196,11 +206,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         
         {/* Global Footer */}
         <footer className="py-4 px-6 border-t border-border/50 bg-card text-center text-xs text-muted-foreground mt-auto">
-          Elaborado por Nahomy — NAHOFIT.LIFE
+          {user?.rol === "admin" ? "Fitorbe" : `${marca} · con Fitorbe`}
         </footer>
 
         {/* AI Chat (only visible for clients) */}
         {user?.rol === "cliente" && <AiCoachChat />}
+        <PausaServicio />
       </div>
     </div>
   );

@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Link } from "wouter";
 
 /**
- * Política de privacidad y Términos de NAHOFIT.LIFE (coaching de Nahomy), en español e inglés.
+ * Política de privacidad y Términos de Fitorbe (plataforma para coaches), en español e inglés.
  * Es un texto base claro; conviene que un abogado lo revise.
  */
 type Lang = "es" | "en";
-const ACTUALIZADO = "22 de octubre de 2026";
-const UPDATED = "October 22, 2026";
+const ACTUALIZADO = "23 de octubre de 2026";
+const UPDATED = "October 23, 2026";
 
 type Seccion = { t: string; p: string[] };
 
@@ -15,7 +15,7 @@ const PRIVACIDAD: Record<Lang, { title: string; intro: string; s: Seccion[] }> =
   es: {
     title: "Política de privacidad",
     intro:
-      "NAHOFIT.LIFE es el servicio de coaching en línea de la coach Nahomy, en Salt Lake City, Utah. Aquí explicamos qué datos guardamos, para qué y quién los ve. Tus datos de salud son tuyos: los usamos solo para acompañarte.",
+      "Fitorbe es una plataforma en línea que usan los coaches para acompañar a sus clientes. El servicio de coaching te lo da tu coach; Fitorbe guarda tus datos para que tu coach pueda trabajar contigo. Aquí explicamos qué datos guardamos, para qué y quién los ve. Tus datos de salud son tuyos: se usan solo para acompañarte.",
     s: [
       { t: "Qué datos guardamos", p: [
         "Cuenta: nombre, correo, teléfono y contraseña (guardada cifrada).",
@@ -30,7 +30,7 @@ const PRIVACIDAD: Record<Lang, { title: string; intro: string; s: Seccion[] }> =
         "No vendemos tus datos ni los usamos para publicidad.",
       ]},
       { t: "Quién los ve", p: [
-        "Tú, tu coach (Nahomy) y la persona que administra la plataforma. Otros clientes no ven nada tuyo.",
+        "Tú y tu coach. Otros clientes y otros coaches no ven nada tuyo. El equipo de Fitorbe no ve tus rutinas, tu ánimo, tu diario, tus fotos, tus mensajes ni tus pagos; solo datos de tu cuenta cuando hace falta para darle soporte técnico a tu coach.",
         "Inteligencia artificial: para proponer rutinas, planes de comida y responder el chat, enviamos tu perfil y tu mensaje a nuestro proveedor de IA (Anthropic). Solo se usa para generar esa respuesta. Tu coach revisa cada rutina y plan antes de que te llegue.",
         "La app y los datos se guardan en servidores de nuestro proveedor de hospedaje en Estados Unidos.",
         "Solo compartiríamos datos si la ley nos obliga o para proteger la vida de alguien en peligro.",
@@ -46,14 +46,14 @@ const PRIVACIDAD: Record<Lang, { title: string; intro: string; s: Seccion[] }> =
       ]},
       { t: "Edad", p: ["El servicio es para mayores de 18 años."] },
       { t: "Cambios y contacto", p: [
-        "Si cambiamos esta política te avisamos en la app. Para cualquier pregunta o para pedir tus datos, escríbele a tu coach desde Mensajes en la app.",
+        "Si cambiamos esta política te avisamos en la app. Para cualquier pregunta o para pedir tus datos, escríbele a tu coach desde Mensajes en la app; tu coach puede pedirle a Fitorbe que los entregue o los borre.",
       ]},
     ],
   },
   en: {
     title: "Privacy policy",
     intro:
-      "NAHOFIT.LIFE is coach Nahomy's online coaching service, based in Salt Lake City, Utah. This explains what data we keep, why, and who sees it. Your health data is yours: we only use it to support you.",
+      "Fitorbe is an online platform that coaches use to support their clients. The coaching service is provided by your coach; Fitorbe stores your data so your coach can work with you. This explains what data we keep, why, and who sees it. Your health data is yours: it is only used to support you.",
     s: [
       { t: "What we keep", p: [
         "Account: name, email, phone and password (stored encrypted).",
@@ -68,7 +68,7 @@ const PRIVACIDAD: Record<Lang, { title: string; intro: string; s: Seccion[] }> =
         "We don't sell your data or use it for advertising.",
       ]},
       { t: "Who sees it", p: [
-        "You, your coach (Nahomy) and the platform administrator. Other clients can't see anything of yours.",
+        "You and your coach. Other clients and other coaches can't see anything of yours. The Fitorbe team doesn't see your workouts, mood, journal, photos, messages or payments; only account details when needed to give your coach technical support.",
         "Artificial intelligence: to suggest workouts and meal plans and answer the chat, we send your profile and your message to our AI provider (Anthropic). It is only used to generate that answer. Your coach reviews every workout and plan before you get it.",
         "The app and data are stored on our hosting provider's servers in the United States.",
         "We would only share data if the law requires it or to protect someone's life in danger.",
@@ -82,7 +82,7 @@ const PRIVACIDAD: Record<Lang, { title: string; intro: string; s: Seccion[] }> =
       ]},
       { t: "Age", p: ["The service is for people 18 and older."] },
       { t: "Changes and contact", p: [
-        "If we change this policy we'll let you know in the app. For any question or to request your data, write to your coach from Messages in the app.",
+        "If we change this policy we'll let you know in the app. For any question or to request your data, write to your coach from Messages in the app; your coach can ask Fitorbe to provide or delete it.",
       ]},
     ],
   },
@@ -91,11 +91,11 @@ const PRIVACIDAD: Record<Lang, { title: string; intro: string; s: Seccion[] }> =
 const TERMINOS: Record<Lang, { title: string; intro: string; s: Seccion[] }> = {
   es: {
     title: "Términos de uso",
-    intro: "Al usar NAHOFIT.LIFE aceptas estos términos. Están escritos para que se entiendan.",
+    intro: "Al usar Fitorbe aceptas estos términos. Están escritos para que se entiendan.",
     s: [
-      { t: "El servicio", p: ["Coaching en línea de fitness, nutrición y bienestar con la coach Nahomy, con ayuda de herramientas de inteligencia artificial que ella revisa."] },
+      { t: "El servicio", p: ["Fitorbe es la plataforma; el coaching de bienestar, entrenamiento y nutrición te lo da tu coach, que usa herramientas de inteligencia artificial y las revisa. Cada coach es responsable de su servicio, sus precios y sus cobros."] },
       { t: "No es consejo médico", p: [
-        "NAHOFIT.LIFE no sustituye a tu médico, nutriólogo clínico ni terapeuta. Consulta a tu médico antes de empezar un programa de ejercicio o de alimentación, sobre todo si tienes alguna condición de salud, estás embarazada o tomas medicamentos.",
+        "Ni Fitorbe ni tu coach sustituyen a tu médico, nutriólogo clínico ni terapeuta. Consulta a tu médico antes de empezar un programa de ejercicio o de alimentación, sobre todo si tienes alguna condición de salud, estás embarazada o tomas medicamentos.",
         "Si sientes dolor fuerte, mareo, falta de aire o cualquier síntoma raro, para y busca atención médica.",
       ]},
       { t: "Si estás en crisis", p: ["Si piensas en hacerte daño, llama o manda mensaje al 988 (Línea de Crisis y Suicidio, 24 horas) o al 911 si estás en peligro inmediato. La app no es un servicio de emergencias."] },
@@ -104,17 +104,17 @@ const TERMINOS: Record<Lang, { title: string; intro: string; s: Seccion[] }> = {
       { t: "Tu cuenta", p: ["Eres responsable de tu contraseña y de que tus datos sean ciertos (sobre todo los de salud). La cuenta es personal."] },
       { t: "Pagos y cancelación", p: ["El precio y la forma de pago son los de tu plan. Puedes cancelar cuando quieras; el servicio sigue hasta el final del periodo pagado. Lo ya pagado no se reembolsa, salvo que se acuerde con tu coach."] },
       { t: "Contenido", p: ["Las rutinas, planes y materiales son para tu uso personal; no se pueden revender ni publicar."] },
-      { t: "Responsabilidad", p: ["Haces los ejercicios y sigues los planes bajo tu propia responsabilidad. En la medida que la ley lo permita, NAHOFIT.LIFE no responde por lesiones o daños derivados de su uso."] },
+      { t: "Responsabilidad", p: ["Haces los ejercicios y sigues los planes bajo tu propia responsabilidad. En la medida que la ley lo permita, Fitorbe no responde por lesiones o daños derivados de su uso."] },
       { t: "Ley aplicable y cambios", p: ["Estos términos se rigen por las leyes del estado de Utah, EE. UU. Si cambian, te avisamos en la app."] },
     ],
   },
   en: {
     title: "Terms of use",
-    intro: "By using NAHOFIT.LIFE you accept these terms. They are written to be easy to understand.",
+    intro: "By using Fitorbe you accept these terms. They are written to be easy to understand.",
     s: [
-      { t: "The service", p: ["Online fitness, nutrition and wellbeing coaching with coach Nahomy, with help from artificial intelligence tools that she reviews."] },
+      { t: "The service", p: ["Fitorbe is the platform; wellbeing, training and nutrition coaching is provided by your coach, who uses artificial intelligence tools and reviews them. Each coach is responsible for their service, prices and payments."] },
       { t: "Not medical advice", p: [
-        "NAHOFIT.LIFE does not replace your doctor, clinical dietitian or therapist. Talk to your doctor before starting an exercise or eating program, especially if you have a health condition, are pregnant or take medication.",
+        "Neither Fitorbe nor your coach replaces your doctor, clinical dietitian or therapist. Talk to your doctor before starting an exercise or eating program, especially if you have a health condition, are pregnant or take medication.",
         "If you feel strong pain, dizziness, shortness of breath or any unusual symptom, stop and seek medical care.",
       ]},
       { t: "If you're in crisis", p: ["If you're thinking about hurting yourself, call or text 988 (Suicide & Crisis Lifeline, 24/7) or 911 if you're in immediate danger. The app is not an emergency service."] },
@@ -123,7 +123,7 @@ const TERMINOS: Record<Lang, { title: string; intro: string; s: Seccion[] }> = {
       { t: "Your account", p: ["You're responsible for your password and for your information being accurate (especially health information). The account is personal."] },
       { t: "Payments and cancellation", p: ["The price and payment method are those of your plan. You can cancel anytime; the service continues until the end of the paid period. Amounts already paid are not refunded unless agreed with your coach."] },
       { t: "Content", p: ["Workouts, plans and materials are for your personal use; they can't be resold or published."] },
-      { t: "Liability", p: ["You do the exercises and follow the plans at your own risk. To the extent allowed by law, NAHOFIT.LIFE is not liable for injuries or damages arising from their use."] },
+      { t: "Liability", p: ["You do the exercises and follow the plans at your own risk. To the extent allowed by law, Fitorbe is not liable for injuries or damages arising from their use."] },
       { t: "Governing law and changes", p: ["These terms are governed by the laws of the State of Utah, USA. If they change, we'll let you know in the app."] },
     ],
   },
@@ -137,7 +137,7 @@ function Pagina({ doc }: { doc: typeof PRIVACIDAD }) {
       <main style={{ maxWidth: 760, margin: "0 auto", padding: "32px 20px 64px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 32 }}>
           <Link href="/" style={{ color: "#fff", textDecoration: "none", fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 20 }}>
-            NAHOFIT<span style={{ color: "#10B981" }}>.LIFE</span>
+            Fitorbe
           </Link>
           <div role="group" aria-label="Idioma / Language" style={{ display: "flex", gap: 4 }}>
             {(["es", "en"] as const).map((l) => (

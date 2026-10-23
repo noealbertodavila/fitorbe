@@ -14,9 +14,8 @@ import Landing from "@/pages/Landing";
 
 // Admin
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
-const AdminUsuarios = lazy(() => import("@/pages/admin/usuarios"));
-const AdminReportes = lazy(() => import("@/pages/admin/reportes"));
-const AdminPlanes = lazy(() => import("@/pages/admin/planes"));
+const AdminCoaches = lazy(() => import("@/pages/admin/coaches"));
+const Registro = lazy(() => import("@/pages/registro"));
 
 // Coach
 const CoachDashboard = lazy(() => import("@/pages/coach/dashboard"));
@@ -29,6 +28,8 @@ const CoachMensajes = lazy(() => import("@/pages/coach/mensajes"));
 const CoachReportes = lazy(() => import("@/pages/coach/reportes"));
 const CoachPagos = lazy(() => import("@/pages/coach/pagos"));
 const CoachSolicitudes = lazy(() => import("@/pages/coach/solicitudes"));
+const CoachPlanes = lazy(() => import("@/pages/coach/planes"));
+const CoachNegocio = lazy(() => import("@/pages/coach/negocio"));
 import { Redirect } from "wouter";
 
 // Cliente
@@ -57,6 +58,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/registro" component={Registro} />
       <Route path="/privacidad" component={Privacidad} />
       <Route path="/privacy" component={Privacidad} />
       <Route path="/terminos" component={Terminos} />
@@ -68,20 +70,13 @@ function Router() {
           <AdminDashboard />
         </ProtectedRoute>
       </Route>
-      <Route path="/admin/usuarios">
+      <Route path="/admin/coaches">
         <ProtectedRoute allowedRoles={["admin"]}>
-          <AdminUsuarios />
+          <AdminCoaches />
         </ProtectedRoute>
       </Route>
-      <Route path="/admin/reportes">
-        <ProtectedRoute allowedRoles={["admin"]}>
-          <AdminReportes />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/admin/planes">
-        <ProtectedRoute allowedRoles={["admin"]}>
-          <AdminPlanes />
-        </ProtectedRoute>
+      <Route path="/admin/:resto">
+        <Redirect to="/admin" />
       </Route>
 
       {/* Coach Routes */}
@@ -133,12 +128,19 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/coach/solicitudes">
-        <ProtectedRoute allowedRoles={["coach", "admin"]}>
+        <ProtectedRoute allowedRoles={["coach"]}>
           <CoachSolicitudes />
         </ProtectedRoute>
       </Route>
       <Route path="/coach/planes">
-        <Redirect to="/coach" />
+        <ProtectedRoute allowedRoles={["coach"]}>
+          <CoachPlanes />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/coach/negocio">
+        <ProtectedRoute allowedRoles={["coach"]}>
+          <CoachNegocio />
+        </ProtectedRoute>
       </Route>
 
       {/* Cliente Routes */}

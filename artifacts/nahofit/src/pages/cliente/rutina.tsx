@@ -155,7 +155,7 @@ export default function ClienteRutina() {
         <div className="text-center py-16 bg-card border border-red-500/30 rounded-lg">
           <Info className="w-10 h-10 text-red-500 mx-auto mb-3" />
           <p className="text-red-400 font-medium">Error al cargar tu rutina</p>
-          <p className="text-muted-foreground text-sm mt-1">Verifica tu conexión o contacta a Nahomy</p>
+          <p className="text-muted-foreground text-sm mt-1">Verifica tu conexión o contacta a tu coach</p>
         </div>
       </div>
     );
