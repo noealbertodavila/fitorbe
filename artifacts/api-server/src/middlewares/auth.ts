@@ -82,10 +82,10 @@ async function pausaDelCoach(u: { id: number; rol: string; coachId: number | nul
   if (f.estado !== "suspendido" && !vencida) return null;
   if (u.rol === "coach") {
     return vencida
-      ? { code: "PRUEBA_VENCIDA", error: "Tu prueba gratis terminó. Elige un plan para seguir usando Fitorbe." }
-      : { code: "COACH_SUSPENDIDO", error: "Tu cuenta está suspendida. Escríbenos para reactivarla." };
+      ? { code: "PRUEBA_VENCIDA", error: "Elige un plan para seguir usando Fitorbe. Tus datos y los de tus clientes están guardados." }
+      : { code: "COACH_SUSPENDIDO", error: "Escríbenos para reactivarla. Tus datos y los de tus clientes están guardados." };
   }
-  return { code: "SERVICIO_PAUSADO", error: "El servicio de tu coach está en pausa. Escríbele para más información." };
+  return { code: "SERVICIO_PAUSADO", error: "Por ahora no puedes entrar a la app. Escríbele a tu coach para más información; tus datos están guardados." };
 }
 
 export function requireRol(...roles: string[]) {

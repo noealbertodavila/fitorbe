@@ -39,6 +39,7 @@ export default function Landing() {
   const h2 = { fontFamily: syne, fontSize: "clamp(26px,3.2vw,38px)", fontWeight: 800, lineHeight: 1.15, margin: "0 0 14px" } as const;
   return (
     <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: dark, color: "#ECFDF5", minHeight: "100vh", overflowX: "hidden" }}>
+      <style>{`.fo-tres{grid-template-columns:repeat(3,minmax(0,1fr))}@media(max-width:900px){.fo-tres{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.fo-tres{grid-template-columns:1fr}}`}</style>
       <nav aria-label="Principal" style={{ maxWidth: 1150, margin: "0 auto", padding: "18px clamp(16px,4vw,40px)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <span style={{ fontFamily: syne, fontWeight: 800, fontSize: 24 }}>Fit<span style={{ color: em }}>orbe</span></span>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -55,11 +56,11 @@ export default function Landing() {
 
       <main>
         <section style={{ background: `radial-gradient(ellipse at 75% 10%, ${em}22, transparent 55%)`, padding: "64px clamp(16px,4vw,40px) 80px" }}>
-          <div style={{ maxWidth: 860, margin: "0 auto", textAlign: "center" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
             <span style={{ display: "inline-block", background: `${em}1F`, border: `1px solid ${em}66`, color: em, borderRadius: 20, padding: "6px 14px", fontSize: 12, fontWeight: 700, letterSpacing: "0.07em", marginBottom: 20 }}>
               PARA COACHES DE BIENESTAR Y ENTRENAMIENTO
             </span>
-            <h1 style={{ fontFamily: syne, fontSize: "clamp(36px,5.4vw,64px)", fontWeight: 800, lineHeight: 1.06, margin: "0 0 20px", textWrap: "balance" }}>
+            <h1 style={{ fontFamily: syne, fontSize: "clamp(32px,4.2vw,52px)", fontWeight: 800, lineHeight: 1.06, margin: "0 0 20px", textWrap: "balance" }}>
               Acompaña a tus clientes en <span style={{ color: em }}>cuerpo y mente</span>, desde una sola app.
             </h1>
             <p style={{ fontSize: "clamp(17px,2vw,20px)", color: "rgba(236,253,245,0.75)", lineHeight: 1.6, maxWidth: 680, margin: "0 auto 28px" }}>
@@ -77,7 +78,7 @@ export default function Landing() {
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <h2 style={h2}>Todo lo que necesitas para acompañar a cada cliente</h2>
             <p style={{ color: "#4B5563", fontSize: 18, maxWidth: 680, margin: "0 0 36px", lineHeight: 1.6 }}>Pensado para coaches que trabajan lo emocional y lo físico juntos.</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
+            <div className="fo-tres" style={{ display: "grid", gap: 18 }}>
               {FUNCIONES.map(({ icon: Icon, t, d }) => (
                 <div key={t} style={{ background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 16, padding: 24 }}>
                   <Icon aria-hidden="true" size={26} color={em} />

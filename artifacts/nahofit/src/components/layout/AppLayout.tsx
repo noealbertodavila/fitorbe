@@ -81,7 +81,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col space-y-1 mt-8">
       {navItems.map((item) => {
         const Icon = item.icon;
-        const isActive = location === item.path || location.startsWith(item.path + "/");
+        // El inicio de cada panel (/admin, /coach, /cliente) solo se marca cuando estás justo ahí.
+        const esInicio = item.path.split("/").length === 2;
+        const isActive = location === item.path || (!esInicio && location.startsWith(item.path + "/"));
         const isMensajes = item.label === "Mensajes";
         const showBadge = isMensajes && mensajesNoLeidos > 0;
         return (
@@ -116,11 +118,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 border-r border-border/50 bg-card fixed h-full z-10">
         <div className="p-6 border-b border-border/50 flex-shrink-0">
-          <h2 className="text-2xl font-syne font-bold text-white tracking-tight">
+          <h2 className="text-xl font-syne font-bold text-white tracking-tight leading-tight break-words line-clamp-2">
             {negocio?.logo ? (
             <img src={negocio.logo} alt={marca} className="max-h-10 max-w-[180px] object-contain" />
           ) : (
-            <span className="block truncate">{marca}</span>
+            <span className="block">{marca}</span>
           )}
           </h2>
           {user && (
