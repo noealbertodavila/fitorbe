@@ -221,6 +221,7 @@ export default function Login() {
       {/* Footer */}
       <div style={{ textAlign: "center", marginTop: "24px", fontSize: "11px", color: "#2D5240", position: "relative", zIndex: 1 }}>
         Elaborado por Nahomy — NAHOFIT.LIFE
+        <span style={{ display: "block", marginTop: 6 }}><a href="/privacidad" style={{ color: "inherit", textDecoration: "underline" }}>Privacidad</a> · <a href="/terminos" style={{ color: "inherit", textDecoration: "underline" }}>Términos</a></span>
       </div>
 
       <style>{`

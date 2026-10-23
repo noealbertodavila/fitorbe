@@ -1,0 +1,94 @@
+# Revisión automática: en cada cambio comprueba que el código no tenga errores
+# de tipos y que la app y el servidor se puedan construir. El resultado de la
+# revisión de tipos se deja como comentario en el commit.
+name: Revision
+
+on:
+  push:
+    branches: [main, pruebas, "fase*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  revision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Base de datos vacía solo para las pruebas.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: fitorbe
+          POSTGRES_PASSWORD: fitorbe
+          POSTGRES_DB: fitorbe_pruebas
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fitorbe"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://fitorbe:fitorbe@localhost:5432/fitorbe_pruebas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalar
+        run: npx --yes pnpm@10 install --frozen-lockfile --prod=false
+      - name: Revisar tipos
+        id: tipos
+        run: |
+          set +e
+          {
+            echo "== libs"; npx pnpm@10 run typecheck:libs
+            for p in artifacts/api-server artifacts/nahofit; do
+              echo "== $p"; (cd $p && npx tsc -p tsconfig.json --noEmit)
+            done
+          } > tipos.txt 2>&1
+          n=$(grep -c "error TS" tipos.txt)
+          echo "errores=$n" >> "$GITHUB_OUTPUT"
+          echo "Errores de tipos: $n"
+      - name: Comentar resultado
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          n="${{ steps.tipos.outputs.errores }}"
+          body="Revisión de tipos: ${n} errores"$'\n\n```\n'"$(grep "error TS" tipos.txt | head -150 | cut -c1-300)"$'\n```'
+          gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" -f body="$body" > /dev/null
+      - name: Construir la app
+        run: PORT=3000 BASE_PATH=/ NODE_ENV=production npx pnpm@10 --filter @workspace/nahofit run build
+      - name: Construir el servidor
+        run: npx pnpm@10 --filter @workspace/api-server run build
+      - name: Crear tablas
+        run: npx pnpm@10 --filter @workspace/db run push
+      - name: Pruebas del servidor
+        env:
+          PORT: "8080"
+          NODE_ENV: test
+          SESSION_SECRET: prueba-session-secreto-solo-para-ci
+          BASE_URL: http://localhost:8080
+        run: |
+          node artifacts/api-server/dist/index.mjs > servidor.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8080/api/healthz && break; sleep 1; done
+          set +e
+          node --test --test-reporter=spec tests/*.test.mjs > pruebas.txt 2>&1
+          r=$?
+          cat pruebas.txt
+          if [ $r -ne 0 ]; then { echo; echo "--- servidor.log ---"; tail -40 servidor.log; } >> pruebas.txt; fi
+          exit $r
+      - name: Comentar pruebas
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -f pruebas.txt ] || exit 0
+          body="Pruebas del servidor"$'\n\n```\n'"$(grep -v '^\s*$' pruebas.txt | tail -120 | cut -c1-300)"$'\n```'
+          gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/comments" -f body="$body" > /dev/null
+      - name: Fallar si hay errores de tipos
+        if: steps.tipos.outputs.errores != '0'
+        run: |
+          echo "Hay ${{ steps.tipos.outputs.errores }} errores de tipos"
+          exit 1

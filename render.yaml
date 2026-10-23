@@ -1,0 +1,39 @@
+# Blueprint de Render: NAHOFIT.LIFE (nahofit.com).
+# La base de datos NO se crea aquí: NAHOFIT usa su propia base "nahofit"
+# (con su propio usuario) dentro del servidor de Postgres de Obrix.
+# DATABASE_URL se pega en Render al crear el Blueprint; no se guarda en el código.
+# Para llevarla a su propio servidor más adelante: pg_dump de la base "nahofit"
+# y pg_restore en el servidor nuevo; solo cambia DATABASE_URL.
+
+services:
+  - type: web
+    name: nahofit
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    # El último paso crea o actualiza las tablas en la base de datos.
+    buildCommand: >-
+      npx --yes pnpm@10 install --frozen-lockfile --prod=false
+      && PORT=3000 BASE_PATH=/ NODE_ENV=production npx pnpm@10 --filter @workspace/nahofit run build
+      && npx pnpm@10 --filter @workspace/api-server run build
+      && npx pnpm@10 --filter @workspace/db run push
+    startCommand: node --enable-source-maps artifacts/api-server/dist/index.mjs
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      # Llave de la cuenta de Anthropic para las funciones de IA (rutinas, comida, asistente).
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Cuenta de Nahomy: se crea sola la primera vez si la base está vacía.
+      - key: COACH_EMAIL
+        sync: false
+      - key: COACH_PASSWORD
+        sync: false

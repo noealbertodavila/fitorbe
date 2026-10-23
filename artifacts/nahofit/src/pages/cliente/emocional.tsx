@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { ApoyoCrisis } from "@/components/ApoyoCrisis";
 import { useCreateCheckinEmocional, useGetDiario, getGetDiarioQueryKey, useCreateEntradaDiario } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,9 +64,11 @@ export default function ClienteEmocional() {
     { query: { queryKey: getGetDiarioQueryKey(user?.id || 0, {}), enabled: !!user?.id } }
   );
 
+  const [apoyo, setApoyo] = useState(false);
   const createCheckinMutation = useCreateCheckinEmocional({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (data: unknown) => {
+        if ((data as { apoyo?: boolean })?.apoyo) setApoyo(true);
         toast({ title: "Check-in Registrado ✅", description: "Gracias por compartir cómo te sientes hoy." });
         formCheckin.reset({ estadoAnimo: 3, nivelEnergia: 3, horasSueno: 7, notas: "" });
         setSelectedFactores([]);
@@ -78,7 +81,8 @@ export default function ClienteEmocional() {
 
   const createDiarioMutation = useCreateEntradaDiario({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (data: unknown) => {
+        if ((data as { apoyo?: boolean })?.apoyo) setApoyo(true);
         toast({ title: "Diario Actualizado", description: "Tu entrada ha sido guardada." });
         formDiario.reset();
         queryClient.invalidateQueries({ queryKey: getGetDiarioQueryKey(user?.id || 0, {}) });
@@ -127,6 +131,7 @@ export default function ClienteEmocional() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      {apoyo && <ApoyoCrisis onClose={() => setApoyo(false)} />}
       <div>
         <h1 className="text-3xl font-syne font-bold text-white mb-2">Bienestar Emocional</h1>
         <p className="text-muted-foreground">Tu salud mental es tan importante como la física</p>

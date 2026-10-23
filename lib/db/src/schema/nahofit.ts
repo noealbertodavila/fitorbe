@@ -327,3 +327,27 @@ export const fraseDiaTable = pgTable("frases_dia", {
 });
 
 export type FraseDia = typeof fraseDiaTable.$inferSelect;
+
+// ─── Solicitudes de la página (personas interesadas en empezar) ─────────────
+export const solicitudesContactoTable = pgTable("solicitudes_contacto", {
+  id: serial("id").primaryKey(),
+  nombre: text("nombre").notNull(),
+  telefono: text("telefono"),
+  email: text("email"),
+  interes: text("interes"), // primera_sesion | cuerpo | cuerpo_mente | uno_a_uno | otro
+  mensaje: text("mensaje"),
+  idioma: text("idioma"),
+  atendida: boolean("atendida").notNull().default(false),
+  creadoEn: timestamp("creado_en").defaultNow().notNull(),
+});
+
+// Archivos subidos (fotos de progreso). Se guardan en la base de datos para que
+// la app no dependa del disco del servidor (Render y otros lo borran al reiniciar).
+// "ruta" es la misma que antes iba después de /uploads/, así los enlaces no cambian.
+export const archivosTable = pgTable("archivos", {
+  ruta: text("ruta").primaryKey(),
+  mime: text("mime").notNull(),
+  datos: text("datos").notNull(), // base64
+  clienteId: integer("cliente_id"),
+  creadoEn: timestamp("creado_en").defaultNow().notNull(),
+});

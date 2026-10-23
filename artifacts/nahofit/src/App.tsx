@@ -8,6 +8,8 @@ import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Login = lazy(() => import("@/pages/login"));
+const Privacidad = lazy(() => import("@/pages/Legal").then((m) => ({ default: m.Privacidad })));
+const Terminos = lazy(() => import("@/pages/Legal").then((m) => ({ default: m.Terminos })));
 import Landing from "@/pages/Landing";
 
 // Admin
@@ -26,6 +28,7 @@ const CoachEmocional = lazy(() => import("@/pages/coach/emocional"));
 const CoachMensajes = lazy(() => import("@/pages/coach/mensajes"));
 const CoachReportes = lazy(() => import("@/pages/coach/reportes"));
 const CoachPagos = lazy(() => import("@/pages/coach/pagos"));
+const CoachSolicitudes = lazy(() => import("@/pages/coach/solicitudes"));
 import { Redirect } from "wouter";
 
 // Cliente
@@ -54,6 +57,10 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/privacidad" component={Privacidad} />
+      <Route path="/privacy" component={Privacidad} />
+      <Route path="/terminos" component={Terminos} />
+      <Route path="/terms" component={Terminos} />
       
       {/* Admin Routes */}
       <Route path="/admin">
@@ -123,6 +130,11 @@ function Router() {
       <Route path="/coach/pagos">
         <ProtectedRoute allowedRoles={["coach"]}>
           <CoachPagos />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/coach/solicitudes">
+        <ProtectedRoute allowedRoles={["coach", "admin"]}>
+          <CoachSolicitudes />
         </ProtectedRoute>
       </Route>
       <Route path="/coach/planes">

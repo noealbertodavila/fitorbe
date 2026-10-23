@@ -3,6 +3,7 @@ import { Router } from "express";
 import { db, usuariosTable, rutinasTable, planesComidaTable, checkinsEmoccionalesTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
+import { detectarRiesgo, REGLAS_SEGURIDAD_IA } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 
 const router = Router();
@@ -78,7 +79,7 @@ router.post("/ai/chat", requireAuth, async (req, res) => {
       .orderBy(desc(checkinsEmoccionalesTable.fecha))
       .limit(1);
 
-    const systemPrompt = `Eres Nahomy, una coach de fitness y bienestar experta y empática.
+    const systemPrompt = `Eres el asistente con inteligencia artificial de NAHOFIT.LIFE, que apoya a los clientes de la coach Nahomy en fitness y bienestar. Eres experto y empático.
 Estás hablando con ${cliente?.nombre || "el cliente"}.
 
 PERFIL DEL CLIENTE:
@@ -94,24 +95,27 @@ ${ultimoEmocional
   : "Sin datos recientes"}
 
 INSTRUCCIONES:
-- Responde SIEMPRE en español
+- Responde en el idioma en que te escriba la persona (español o inglés)
 - Sé profesional, empática y motivadora
 - Responde preguntas sobre ejercicios, nutrición, técnica, motivación, manejo del estrés y sueño
 - Para sustituciones de comida, sugiere alternativas saludables y accesibles
 - Si el cliente reporta lesiones, modifica las recomendaciones accordingly
 - Mantén respuestas concisas pero completas (máximo 3-4 párrafos)
-- No uses emojis`;
+- No uses emojis
+${REGLAS_SEGURIDAD_IA}`;
 
     const messages: Array<{ role: "user" | "assistant"; content: string }> = [];
     
     if (historial && Array.isArray(historial)) {
       for (const msg of historial.slice(-10)) {
         if (msg.role === "user" || msg.role === "assistant") {
-          messages.push({ role: msg.role, content: msg.content });
+          messages.push({ role: msg.role, content: String(msg.content ?? "").slice(0, 4000) });
         }
       }
     }
-    messages.push({ role: "user", content: mensaje });
+    messages.push({ role: "user", content: String(mensaje ?? "").slice(0, 4000) });
+    // Si escribe algo que suena a crisis, la app le muestra de inmediato cómo pedir ayuda (988).
+    if (detectarRiesgo(mensaje)) res.write(`data: ${JSON.stringify({ apoyo: true })}\n\n`);
 
     const stream = anthropic.messages.stream({
       model: "claude-sonnet-4-6",

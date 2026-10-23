@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { MessageCircle, X, Send, Sparkles, Loader2, Minus, Maximize2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { ApoyoCrisis } from "@/components/ApoyoCrisis";
 import { AIChatBodyHistorialItem } from "@workspace/api-client-react";
 
 export default function AiCoachChat() {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [apoyo, setApoyo] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [message, setMessage] = useState("");
   const [history, setHistory] = useState<AIChatBodyHistorialItem[]>([
@@ -74,6 +76,7 @@ export default function AiCoachChat() {
           if (line.startsWith("data: ")) {
             try {
               const data = JSON.parse(line.slice(6));
+              if (data.apoyo) setApoyo(true);
               if (data.content) {
                 assistantMessage += data.content;
                 setHistory(prev => {
@@ -144,6 +147,7 @@ export default function AiCoachChat() {
 
           <CardContent className="flex-1 p-0 flex flex-col overflow-hidden">
             <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+              {apoyo && <div className="mb-3"><ApoyoCrisis onClose={() => setApoyo(false)} /></div>}
               <div className="space-y-4">
                 {history.map((msg, idx) => {
                   const isUser = msg.role === "user";

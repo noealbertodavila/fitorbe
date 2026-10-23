@@ -18,6 +18,7 @@ import aiRouter from "./ai";
 import planesRouter from "./planes";
 import calendarioRouter from "./calendario";
 import frasesRouter from "./frases";
+import contactoRouter from "./contacto";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(aiRouter);
 router.use(planesRouter);
 router.use(calendarioRouter);
 router.use(frasesRouter);
+router.use(contactoRouter);
 
 export default router;

@@ -68,13 +68,22 @@ export default function CoachEmocional() {
                   <div className="flex justify-between items-start">
                     <div>
                       <span className="font-medium text-white block">{alerta.clienteNombre}</span>
-                      <span className="text-sm text-red-400 mt-1 block">
-                        {alerta.diasBajos} días consecutivos bajos
-                      </span>
+                      {(alerta as { riesgo?: boolean }).riesgo && (
+                        <span className="text-sm font-semibold text-red-300 mt-1 block">
+                          Escribió algo que suena a crisis ({(alerta as { fechaRiesgo?: string }).fechaRiesgo}). Escríbele hoy; si crees que está en peligro, que llame al 988 o al 911.
+                        </span>
+                      )}
+                      {alerta.diasBajos > 0 && (
+                        <span className="text-sm text-red-400 mt-1 block">
+                          {alerta.diasBajos} días consecutivos bajos
+                        </span>
+                      )}
                     </div>
-                    <Badge variant="outline" className="border-red-500/50 text-red-500 bg-red-500/10">
-                      Nivel {alerta.ultimoEstado}/5
-                    </Badge>
+                    {alerta.ultimoEstado > 0 && (
+                      <Badge variant="outline" className="border-red-500/50 text-red-500 bg-red-500/10">
+                        Nivel {alerta.ultimoEstado}/5
+                      </Badge>
+                    )}
                   </div>
                   <div className="mt-4">
                     <Link href={`/coach/mensajes?userId=${alerta.clienteId}`} className="w-full">

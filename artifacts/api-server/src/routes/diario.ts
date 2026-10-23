@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, diarioMentalidadTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
+import { detectarRiesgo } from "../lib/apoyo";
 
 const router = Router();
 
@@ -25,7 +26,8 @@ router.post("/diario", requireAuth, async (req, res) => {
     .insert(diarioMentalidadTable)
     .values({ clienteId: id, fecha, contenido, gratitud })
     .returning();
-  res.status(201).json(created);
+  // apoyo: el cliente ve de inmediato dónde pedir ayuda (988) y la coach recibe una alerta.
+  res.status(201).json({ ...created, apoyo: detectarRiesgo(contenido, gratitud) });
 });
 
 export default router;

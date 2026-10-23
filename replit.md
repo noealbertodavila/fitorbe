@@ -22,6 +22,10 @@ A professional fitness coaching web app with three roles: **admin**, **coach**, 
 ### Demo Accounts
 | Role | Email | Password | Notes |
 |------|-------|----------|-------|
+| Admin | admin@nahofit.life | admin123 | |
+| Coach | coach@nahofit.life | nahofit123 | |
+| Cliente (con datos) | maria@demo.life | cliente123 | Tiene progreso, rutinas y nutrición |
+| Cliente (sin datos) | noe@gmail.com | nahofit123 | Cliente nuevo — prueba estados vacíos |
 
 ### Features
 - **Auth**: JWT tokens (SESSION_SECRET env var), bcryptjs password hashing

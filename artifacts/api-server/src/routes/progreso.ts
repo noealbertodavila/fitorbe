@@ -2,31 +2,23 @@ import { localDateStr } from "../lib/date-mt";
 import { Router } from "express";
 import multer from "multer";
 import path from "path";
-import fs from "fs";
 import crypto from "crypto";
-import { db, registrosProgresoTable } from "@workspace/db";
+import { db, registrosProgresoTable, archivosTable } from "@workspace/db";
 import { eq, desc, and } from "drizzle-orm";
 import { requireAuth, puedeVerCliente } from "../middlewares/auth";
-import { UPLOADS_DIR } from "../lib/uploads-path";
 
 const router = Router();
 
 // ─── Multer config ────────────────────────────────────────────────────────────
-const storage = multer.diskStorage({
-  destination(req, _file, cb) {
-    const me = (req as any).usuario;
-    const clienteId = me?.rol === "cliente" ? me.id : parseInt(String(req.body.clienteId)) || me?.id;
-    const now = new Date();
-    const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-    const dir = path.join(UPLOADS_DIR, "progreso", String(clienteId), yearMonth);
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename(_req, file, cb) {
-    const ext = path.extname(file.originalname).toLowerCase() || ".jpg";
-    cb(null, `${file.fieldname}_${Date.now()}_${crypto.randomBytes(12).toString("hex")}${ext}`);
-  },
-});
+// Las fotos se guardan en la base de datos (tabla archivos), no en el disco.
+const storage = multer.memoryStorage();
+
+function rutaFoto(clienteId: number, file: Express.Multer.File) {
+  const now = new Date();
+  const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const ext = path.extname(file.originalname).toLowerCase() || ".jpg";
+  return `progreso/${clienteId}/${yearMonth}/${file.fieldname}_${Date.now()}_${crypto.randomBytes(12).toString("hex")}${ext}`;
+}
 
 const upload = multer({
   storage,
@@ -97,8 +89,9 @@ router.post("/progreso", requireAuth, upload.fields(FOTO_FIELDS), async (req, re
     for (const field of Object.keys(files)) {
       const file = files[field]?.[0];
       if (file) {
-        const rel = path.relative(UPLOADS_DIR, file.path).replace(/\\/g, "/");
-        photoUrls[field] = `/uploads/${rel}`;
+        const ruta = rutaFoto(clienteId, file);
+        await db.insert(archivosTable).values({ ruta, mime: file.mimetype, datos: file.buffer.toString("base64"), clienteId });
+        photoUrls[field] = `/uploads/${ruta}`;
       }
     }
   }

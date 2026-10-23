@@ -13,7 +13,8 @@ import {
   MessageSquare, 
   DollarSign, 
   LineChart,
-  Tags
+  Tags,
+  Inbox,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { label: "Mensajes", path: "/coach/mensajes", icon: MessageSquare },
     { label: "Reportes", path: "/coach/reportes", icon: LineChart },
     { label: "Pagos", path: "/coach/pagos", icon: DollarSign },
+    { label: "Solicitudes", path: "/coach/solicitudes", icon: Inbox },
   ];
 
   const clientNav = [
