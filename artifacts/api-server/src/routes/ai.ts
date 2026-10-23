@@ -3,7 +3,7 @@ import { Router } from "express";
 import { db, usuariosTable, rutinasTable, planesComidaTable, checkinsEmoccionalesTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
-import { detectarRiesgo, REGLAS_SEGURIDAD_IA } from "../lib/apoyo";
+import { detectarRiesgo, reglasSeguridadIA, coachDelCliente } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 
 const router = Router();
@@ -79,7 +79,8 @@ router.post("/ai/chat", requireAuth, async (req, res) => {
       .orderBy(desc(checkinsEmoccionalesTable.fecha))
       .limit(1);
 
-    const systemPrompt = `Eres el asistente con inteligencia artificial de NAHOFIT.LIFE, que apoya a los clientes de la coach Nahomy en fitness y bienestar. Eres experto y empático.
+    const { coach, negocio } = await coachDelCliente(clienteId);
+    const systemPrompt = `Eres el asistente con inteligencia artificial de ${negocio}, que apoya a los clientes de ${coach} (su coach) en bienestar emocional, fitness y nutrición. Eres experto y empático.
 Estás hablando con ${cliente?.nombre || "el cliente"}.
 
 PERFIL DEL CLIENTE:
@@ -102,7 +103,7 @@ INSTRUCCIONES:
 - Si el cliente reporta lesiones, modifica las recomendaciones accordingly
 - Mantén respuestas concisas pero completas (máximo 3-4 párrafos)
 - No uses emojis
-${REGLAS_SEGURIDAD_IA}`;
+${reglasSeguridadIA(coach)}`;
 
     const messages: Array<{ role: "user" | "assistant"; content: string }> = [];
     

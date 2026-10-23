@@ -2,17 +2,19 @@ import { localDateStr } from "../lib/date-mt";
 import { Router } from "express";
 import { db, checkinsDiariosTable, pagosTable, usuariosTable } from "@workspace/db";
 import { eq, and, gte, sql, desc } from "drizzle-orm";
-import { requireAuth, requireRol } from "../middlewares/auth";
+import { requireAuth, requireRol, idsClientesDe, enLista } from "../middlewares/auth";
 
 const router = Router();
 
-router.get("/reportes/adherencia", requireAuth, requireRol("admin", "coach"), async (_req, res) => {
+router.get("/reportes/adherencia", requireAuth, requireRol("coach"), async (req, res) => {
+  const me = (req as any).usuario;
+  const misIds = await idsClientesDe(me.id);
   const clientes = await db
     .select()
     .from(usuariosTable)
-    .where(eq(usuariosTable.rol, "cliente"));
+    .where(and(eq(usuariosTable.rol, "cliente"), eq(usuariosTable.coachId, me.id)));
 
-  const todosCheckins = await db.select().from(checkinsDiariosTable);
+  const todosCheckins = await db.select().from(checkinsDiariosTable).where(enLista(checkinsDiariosTable.clienteId, misIds));
 
   const adherenciaGlobal =
     todosCheckins.length > 0
@@ -61,8 +63,9 @@ router.get("/reportes/adherencia", requireAuth, requireRol("admin", "coach"), as
   res.json({ adherenciaGlobal: Math.round(adherenciaGlobal), porCliente, porSemana });
 });
 
-router.get("/reportes/ingresos", requireAuth, requireRol("admin", "coach"), async (_req, res) => {
-  const todosPageos = await db.select().from(pagosTable);
+router.get("/reportes/ingresos", requireAuth, requireRol("coach"), async (req, res) => {
+  const misIds = await idsClientesDe((req as any).usuario.id);
+  const todosPageos = await db.select().from(pagosTable).where(enLista(pagosTable.clienteId, misIds));
   const now = new Date();
   const mesActual = now.getMonth();
   const anioActual = now.getFullYear();

@@ -1,12 +1,12 @@
 import { localDateStr } from "../lib/date-mt";
 import { Router } from "express";
-import { db, usuariosTable, checkinsDiariosTable, mensajesTable, checkinsEmoccionalesTable, pagosTable, registrosProgresoTable } from "@workspace/db";
+import { db, coachesTable, usuariosTable, checkinsDiariosTable, mensajesTable, checkinsEmoccionalesTable, pagosTable, registrosProgresoTable } from "@workspace/db";
 import { eq, and, gte, lte, sql, ne } from "drizzle-orm";
-import { requireAuth, requireRol } from "../middlewares/auth";
+import { requireAuth, requireRol, puedeVerCliente, idsClientesDe, enLista } from "../middlewares/auth";
 
 const router = Router();
 
-router.get("/dashboard/coach", requireAuth, requireRol("admin", "coach"), async (req, res) => {
+router.get("/dashboard/coach", requireAuth, requireRol("coach"), async (req, res) => {
   const me = (req as any).usuario;
   const today = (req.query.fecha as string) || localDateStr();
   const weekAgo = new Date();
@@ -25,11 +25,14 @@ router.get("/dashboard/coach", requireAuth, requireRol("admin", "coach"), async 
       )
     );
 
+  // Solo los clientes de este coach.
+  const misIds = await idsClientesDe(me.id);
+
   // Weekly adherence average
   const checkins = await db
     .select({ porcentaje: checkinsDiariosTable.porcentajeAdherencia })
     .from(checkinsDiariosTable)
-    .where(gte(checkinsDiariosTable.fecha, weekAgoStr));
+    .where(and(gte(checkinsDiariosTable.fecha, weekAgoStr), enLista(checkinsDiariosTable.clienteId, misIds)));
   const adherencia =
     checkins.length > 0
       ? checkins.reduce((s, c) => s + (c.porcentaje || 0), 0) / checkins.length
@@ -47,7 +50,7 @@ router.get("/dashboard/coach", requireAuth, requireRol("admin", "coach"), async 
   const checkinHoy = await db
     .select()
     .from(checkinsDiariosTable)
-    .where(eq(checkinsDiariosTable.fecha, today));
+    .where(and(eq(checkinsDiariosTable.fecha, today), enLista(checkinsDiariosTable.clienteId, misIds)));
   const clientesConCheckin = new Set(checkinHoy.map((c) => c.clienteId));
   const sinCheckin = clientesActivos.filter(
     (c) => !clientesConCheckin.has(c.id)
@@ -63,7 +66,8 @@ router.get("/dashboard/coach", requireAuth, requireRol("admin", "coach"), async 
     .where(
       and(
         gte(checkinsEmoccionalesTable.fecha, threeDaysAgoStr),
-        lte(checkinsEmoccionalesTable.estadoAnimo, 2)
+        lte(checkinsEmoccionalesTable.estadoAnimo, 2),
+        enLista(checkinsEmoccionalesTable.clienteId, misIds)
       )
     );
   const clientesConAlertaMap = new Map<number, number>();
@@ -78,7 +82,7 @@ router.get("/dashboard/coach", requireAuth, requireRol("admin", "coach"), async 
   const pagosVencidos = await db
     .select()
     .from(pagosTable)
-    .where(eq(pagosTable.estado, "vencido"));
+    .where(and(eq(pagosTable.estado, "vencido"), enLista(pagosTable.clienteId, misIds)));
   const clientesConPagoVencido = new Set(pagosVencidos.map((p) => p.clienteId))
     .size;
 
@@ -92,57 +96,30 @@ router.get("/dashboard/coach", requireAuth, requireRol("admin", "coach"), async 
   });
 });
 
-router.get("/dashboard/admin", requireAuth, requireRol("admin"), async (req, res) => {
-  const clientes = await db
-    .select()
+// Superadmin: totales de la plataforma (sin datos privados de los clientes).
+router.get("/dashboard/admin", requireAuth, requireRol("admin"), async (_req, res) => {
+  const [{ clientes }] = await db.select({ clientes: sql<number>`count(*)::int` }).from(usuariosTable).where(eq(usuariosTable.rol, "cliente"));
+  const [{ clientesActivos }] = await db
+    .select({ clientesActivos: sql<number>`count(*)::int` })
     .from(usuariosTable)
-    .where(eq(usuariosTable.rol, "cliente"));
-  const coaches = await db
-    .select()
-    .from(usuariosTable)
-    .where(eq(usuariosTable.rol, "coach"));
-
-  const mes = new Date();
-  mes.setDate(1);
-  const mesStr = localDateStr(mes);
-
-  const clientesActivosMes = await db
-    .select()
-    .from(checkinsDiariosTable)
-    .where(gte(checkinsDiariosTable.fecha, mesStr));
-  const uniqueClientesMes = new Set(clientesActivosMes.map((c) => c.clienteId)).size;
-
-  const pagosMes = await db
-    .select()
-    .from(pagosTable)
-    .where(
-      and(
-        gte(pagosTable.fecha, mesStr),
-        eq(pagosTable.estado, "pagado")
-      )
-    );
-  const ingresosMes = pagosMes.reduce((sum, p) => sum + (p.monto || 0), 0);
-
-  const todosCheckins = await db.select().from(checkinsDiariosTable);
-  const adherenciaGlobal =
-    todosCheckins.length > 0
-      ? todosCheckins.reduce((s, c) => s + (c.porcentajeAdherencia || 0), 0) /
-        todosCheckins.length
-      : 0;
-
+    .where(and(eq(usuariosTable.rol, "cliente"), eq(usuariosTable.activo, true)));
+  const porEstado = await db
+    .select({ estado: coachesTable.estado, n: sql<number>`count(*)::int` })
+    .from(coachesTable)
+    .groupBy(coachesTable.estado);
+  const coaches = porEstado.reduce((s, r) => s + r.n, 0);
   res.json({
-    totalClientes: clientes.length,
-    totalCoaches: coaches.length,
-    clientesActivosMes: uniqueClientesMes,
-    ingresosMes,
-    adherenciaGlobal: Math.round(adherenciaGlobal),
+    totalCoaches: coaches,
+    coachesPorEstado: Object.fromEntries(porEstado.map((r) => [r.estado, r.n])),
+    totalClientes: clientes,
+    clientesActivos,
   });
 });
 
 router.get("/dashboard/cliente/:id", requireAuth, async (req, res) => {
   const id = parseInt(String(req.params.id));
   const me = (req as any).usuario;
-  if (me.rol === "cliente" && me.id !== id) {
+  if (isNaN(id) || !(await puedeVerCliente(me, id))) {
     res.status(403).json({ error: "Acceso denegado" });
     return;
   }

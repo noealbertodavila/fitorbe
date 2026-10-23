@@ -3,6 +3,7 @@ import { Router } from "express";
 import { db, usuariosTable, fraseDiaTable, checkinsEmoccionalesTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
+import { coachDelCliente } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 
 const router = Router();
@@ -68,7 +69,7 @@ router.get("/frase-motivacional/:clienteId", requireAuth, async (req, res) => {
       max_tokens: 120,
       messages: [{
         role: "user",
-        content: `Eres Nahomy, coach de fitness. Genera UNA frase motivacional muy corta (máximo 20 palabras) y personalizada para ${nombre}.
+        content: `Eres ${(await coachDelCliente(clienteId)).coach}, coach de bienestar y fitness. Genera UNA frase motivacional muy corta (máximo 20 palabras) y personalizada para ${nombre}.
 
 Datos:
 - Objetivo: ${objetivo}

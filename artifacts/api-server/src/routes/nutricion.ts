@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, planesComidaTable, usuariosTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import { requireAuth, requireRol } from "../middlewares/auth";
+import { coachDelCliente } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 
 const router = Router();
@@ -33,7 +34,7 @@ router.get("/planes-comida/:clienteId/:semanaInicio", requireAuth, async (req, r
   res.json(rows);
 });
 
-router.post("/planes-comida", requireAuth, requireRol("admin", "coach"), async (req, res) => {
+router.post("/planes-comida", requireAuth, requireRol("coach"), async (req, res) => {
   const me = (req as any).usuario;
   const { clienteId, semanaInicio, diaSemana, comidas, caloriasTotal, aprobada, notas } = req.body;
 
@@ -91,7 +92,7 @@ function repairTruncatedJson(raw: string): string | null {
 }
 
 // Generate plan with AI — returns DRAFT (does not save to DB)
-router.post("/planes-comida/generar-ai", requireAuth, requireRol("admin", "coach"), async (req, res) => {
+router.post("/planes-comida/generar-ai", requireAuth, requireRol("coach"), async (req, res) => {
   const { clienteId, semanaInicio } = req.body;
 
   if (!clienteId) { res.status(400).json({ error: "Se requiere clienteId" }); return; }
@@ -115,7 +116,8 @@ router.post("/planes-comida/generar-ai", requireAuth, requireRol("admin", "coach
   const nombreComidas = (comidasNombres[numComidas] || comidasNombres[5]).join(", ");
 
   // Concise prompt — avoids per-ingredient macros to keep JSON small and valid
-  const prompt = `Eres Nahomy, coach de nutrición. Crea un plan de alimentación de 7 días para ${c.nombre}.
+  const { coach } = await coachDelCliente(Number(clienteId));
+  const prompt = `Eres ${coach}, coach de nutrición. Crea un plan de alimentación de 7 días para ${c.nombre}.
 
 DATOS DEL CLIENTE:
 - Sexo: ${(c as any).sexo || "No especificado"} | Edad: ${edad || "No especificada"}

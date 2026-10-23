@@ -1,9 +1,34 @@
 import { Router } from "express";
 import { db, mensajesTable, usuariosTable } from "@workspace/db";
-import { eq, and, or, desc, sql } from "drizzle-orm";
+import { eq, and, or, desc, sql, inArray } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 
 const router = Router();
+
+/** Nombres solo de los usuarios que aparecen en los mensajes. */
+async function nombres(ids: number[]) {
+  const unicos = [...new Set(ids)];
+  if (!unicos.length) return new Map<number, string>();
+  const users = await db.select({ id: usuariosTable.id, nombre: usuariosTable.nombre }).from(usuariosTable).where(inArray(usuariosTable.id, unicos));
+  return new Map(users.map((u) => [u.id, u.nombre]));
+}
+
+/**
+ * ¿Puede "me" escribirle a este usuario?
+ * - el coach, a sus clientes y al superadmin;
+ * - el cliente, solo a su coach;
+ * - el superadmin, a los coaches.
+ */
+function puedeEscribir(
+  me: { id: number; rol: string; coachId?: number | null },
+  r: { id: number; rol: string; coachId: number | null; activo: boolean },
+): boolean {
+  if (!r.activo || r.id === me.id) return false;
+  if (me.rol === "coach") return (r.rol === "cliente" && r.coachId === me.id) || r.rol === "admin";
+  if (me.rol === "cliente") return r.rol === "coach" && r.id === me.coachId;
+  if (me.rol === "admin") return r.rol === "coach";
+  return false;
+}
 
 router.get("/mensajes/conversaciones", requireAuth, async (req, res) => {
   const me = (req as any).usuario;
@@ -131,8 +156,7 @@ router.get("/mensajes/:userId", requireAuth, async (req, res) => {
     ...rows.map((m) => m.remitenteId),
     ...rows.map((m) => m.receptorId),
   ]);
-  const users = await db.select().from(usuariosTable);
-  const userMap = new Map(users.map((u) => [u.id, u.nombre]));
+  const userMap = await nombres([...allUserIds]);
 
   const enriched = rows.map((m) => ({
     ...m,
@@ -147,12 +171,11 @@ router.post("/mensajes", requireAuth, async (req, res) => {
   const me = (req as any).usuario;
   const { receptorId, contenido } = req.body;
   const [receptor] = await db
-    .select({ id: usuariosTable.id, rol: usuariosTable.rol, activo: usuariosTable.activo })
+    .select({ id: usuariosTable.id, rol: usuariosTable.rol, activo: usuariosTable.activo, coachId: usuariosTable.coachId })
     .from(usuariosTable)
     .where(eq(usuariosTable.id, parseInt(String(receptorId))))
     .limit(1);
-  // Un cliente solo le escribe a su coach o al admin, no a otros clientes.
-  if (!receptor || !receptor.activo || (me.rol === "cliente" && receptor.rol === "cliente")) {
+  if (!receptor || !puedeEscribir(me, receptor)) {
     res.status(403).json({ error: "No puedes enviar mensajes a este usuario" });
     return;
   }
@@ -162,11 +185,10 @@ router.post("/mensajes", requireAuth, async (req, res) => {
   }
   const [created] = await db
     .insert(mensajesTable)
-    .values({ remitenteId: me.id, receptorId, contenido, leido: false })
+    .values({ remitenteId: me.id, receptorId: receptor.id, contenido: String(contenido).slice(0, 5000), leido: false })
     .returning();
 
-  const users = await db.select().from(usuariosTable);
-  const userMap = new Map(users.map((u) => [u.id, u.nombre]));
+  const userMap = await nombres([created.remitenteId, created.receptorId]);
 
   res.status(201).json({
     ...created,
@@ -197,8 +219,7 @@ router.put("/mensajes/:id/leido", requireAuth, async (req, res) => {
     res.status(404).json({ error: "Mensaje no encontrado" });
     return;
   }
-  const users = await db.select().from(usuariosTable);
-  const userMap = new Map(users.map((u) => [u.id, u.nombre]));
+  const userMap = await nombres([updated.remitenteId, updated.receptorId]);
   res.json({
     ...updated,
     remitenteNombre: userMap.get(updated.remitenteId) || null,

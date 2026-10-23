@@ -38,10 +38,23 @@ export function detectarRiesgo(...textos: unknown[]): boolean {
 }
 
 /** Instrucciones de seguridad para la IA (se agregan al prompt del chat). */
-export const REGLAS_SEGURIDAD_IA = `
+export function reglasSeguridadIA(coach: string): string {
+  return `
 SEGURIDAD (obligatorio):
-- Eres un asistente con inteligencia artificial que ayuda a la coach Nahomy. No eres Nahomy ni una persona; si te preguntan, dilo con claridad.
+- Eres un asistente con inteligencia artificial que ayuda a ${coach}, su coach. No eres ${coach} ni una persona; si te preguntan, dilo con claridad.
 - No eres médico, nutriólogo clínico ni terapeuta. No diagnostiques. Ante dolor fuerte, mareos, lesiones o síntomas médicos, recomienda ver a un profesional de salud.
-- Si la persona menciona pensamientos de hacerse daño, de quitarse la vida o que está en crisis: responde con calma y empatía, no la juzgues, dile que no está sola, y pídele que llame o mande mensaje al 988 (Línea de Crisis y Suicidio, EE. UU., 24 horas, en español e inglés) o al 911 si está en peligro inmediato, y que también hable con Nahomy o con alguien de confianza. No des consejos de dieta, calorías ni ejercicio en esa respuesta.
-- Si menciona dejar de comer, vomitar a propósito, usar laxantes para bajar de peso o castigarse con ejercicio: no des cifras de calorías, metas de peso ni planes; responde con empatía y recomiéndale hablar con un profesional de salud y con Nahomy.
+- Si la persona menciona pensamientos de hacerse daño, de quitarse la vida o que está en crisis: responde con calma y empatía, no la juzgues, dile que no está sola, y pídele que llame o mande mensaje al 988 (Línea de Crisis y Suicidio, EE. UU., 24 horas, en español e inglés) o al 911 si está en peligro inmediato, y que también hable con ${coach} o con alguien de confianza. No des consejos de dieta, calorías ni ejercicio en esa respuesta.
+- Si menciona dejar de comer, vomitar a propósito, usar laxantes para bajar de peso o castigarse con ejercicio: no des cifras de calorías, metas de peso ni planes; responde con empatía y recomiéndale hablar con un profesional de salud y con ${coach}.
 - Nunca des dietas por debajo de lo saludable ni metas de pérdida de peso extremas.`;
+}
+
+/** El nombre del coach de un cliente y de su negocio (para los textos de la IA). */
+export async function coachDelCliente(clienteId: number): Promise<{ coach: string; negocio: string }> {
+  const { db, usuariosTable, coachesTable } = await import("@workspace/db");
+  const { eq } = await import("drizzle-orm");
+  const [c] = await db.select({ coachId: usuariosTable.coachId }).from(usuariosTable).where(eq(usuariosTable.id, clienteId)).limit(1);
+  if (!c?.coachId) return { coach: "tu coach", negocio: "Fitorbe" };
+  const [u] = await db.select({ nombre: usuariosTable.nombre }).from(usuariosTable).where(eq(usuariosTable.id, c.coachId)).limit(1);
+  const [f] = await db.select({ negocio: coachesTable.negocio }).from(coachesTable).where(eq(coachesTable.usuarioId, c.coachId)).limit(1);
+  return { coach: u?.nombre || "tu coach", negocio: f?.negocio || "Fitorbe" };
+}

@@ -1,39 +1,41 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db, usuariosTable } from "@workspace/db";
-import { eq, and, ne } from "drizzle-orm";
-import { requireAuth, requireRol, limpiarCambios } from "../middlewares/auth";
+import { eq, and, inArray } from "drizzle-orm";
+import { requireAuth, requireRol, limpiarCambios, puedeVerCliente } from "../middlewares/auth";
 
+/**
+ * Usuarios.
+ * - El superadmin ve y administra coaches y otros superadmins (no clientes).
+ * - El coach edita a sus clientes; cada quien se edita a sí mismo.
+ */
 const router = Router();
 
 router.get("/usuarios", requireAuth, requireRol("admin"), async (req, res) => {
   const { rol, activo } = req.query;
-  let query = db.select().from(usuariosTable);
-  const conditions = [];
-  if (rol) conditions.push(eq(usuariosTable.rol, String(rol)));
-  if (activo !== undefined)
-    conditions.push(eq(usuariosTable.activo, activo === "true"));
-  const rows =
-    conditions.length > 0
-      ? await db
-          .select()
-          .from(usuariosTable)
-          .where(and(...conditions))
-      : await db.select().from(usuariosTable);
-  const safe = rows.map(({ passwordHash: _, ...u }) => u);
-  res.json(safe);
+  const roles = rol === "coach" || rol === "admin" ? [String(rol)] : ["coach", "admin"];
+  const conds = [inArray(usuariosTable.rol, roles)];
+  if (activo !== undefined) conds.push(eq(usuariosTable.activo, activo === "true"));
+  const rows = await db.select().from(usuariosTable).where(and(...conds));
+  res.json(rows.map(({ passwordHash: _, ...u }) => u));
 });
 
+// Otro superadmin. Los coaches se crean en /superadmin/coaches.
 router.post("/usuarios", requireAuth, requireRol("admin"), async (req, res) => {
-  const { nombre, email, password, rol, ...rest } = req.body;
-  if (!nombre || !email || !password || !rol) {
-    res.status(400).json({ error: "Datos incompletos" });
+  const { nombre, email, password } = req.body ?? {};
+  if (!nombre || !email || !password || String(password).length < 8) {
+    res.status(400).json({ error: "Datos incompletos (la contraseña necesita al menos 8 caracteres)" });
     return;
   }
-  const passwordHash = await bcrypt.hash(password, 10);
+  const correo = String(email).trim().toLowerCase();
+  const [existe] = await db.select({ id: usuariosTable.id }).from(usuariosTable).where(eq(usuariosTable.email, correo)).limit(1);
+  if (existe) {
+    res.status(409).json({ error: "Ya hay una cuenta con ese correo" });
+    return;
+  }
   const [created] = await db
     .insert(usuariosTable)
-    .values({ nombre, email, passwordHash, rol, ...rest })
+    .values({ nombre: String(nombre), email: correo, passwordHash: await bcrypt.hash(String(password), 10), rol: "admin" })
     .returning();
   const { passwordHash: _, ...safe } = created;
   res.status(201).json(safe);
@@ -42,38 +44,39 @@ router.post("/usuarios", requireAuth, requireRol("admin"), async (req, res) => {
 router.put("/usuarios/:id", requireAuth, async (req, res) => {
   const id = parseInt(String(req.params.id));
   const me = (req as any).usuario;
-
-  if (me.rol === "admin") {
-    // Admin can edit anyone
-  } else if (me.rol === "coach") {
-    // Coach can edit any client
-    const [target] = await db
-      .select({ id: usuariosTable.id, rol: usuariosTable.rol })
-      .from(usuariosTable)
-      .where(eq(usuariosTable.id, id))
-      .limit(1);
-    if (!target || target.rol !== "cliente") {
-      res.status(403).json({ error: "Acceso denegado: solo puedes editar clientes" });
-      return;
-    }
-  } else {
-    // Cliente can only edit themselves
-    if (me.id !== id) {
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Usuario no válido" });
+    return;
+  }
+  if (me.id !== id) {
+    if (me.rol === "admin") {
+      const [t] = await db.select({ rol: usuariosTable.rol }).from(usuariosTable).where(eq(usuariosTable.id, id)).limit(1);
+      if (!t || t.rol === "cliente") {
+        res.status(403).json({ error: "Acceso denegado: los clientes los administra su coach" });
+        return;
+      }
+    } else if (!(me.rol === "coach" && (await puedeVerCliente(me, id)))) {
       res.status(403).json({ error: "Acceso denegado" });
       return;
     }
   }
-
-  const { password, passwordHash: _ph, ...rest } = req.body;
+  const { password, passwordHash: _ph, ...rest } = req.body ?? {};
   const updateData: any = limpiarCambios(me, rest);
+  // El superadmin no cambia roles ni mueve clientes entre coaches desde aquí.
+  delete updateData.rol;
+  delete updateData.coachId;
   if (password) {
-    updateData.passwordHash = await bcrypt.hash(password, 10);
+    if (String(password).length < 8) {
+      res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres" });
+      return;
+    }
+    updateData.passwordHash = await bcrypt.hash(String(password), 10);
   }
-  const [updated] = await db
-    .update(usuariosTable)
-    .set(updateData)
-    .where(eq(usuariosTable.id, id))
-    .returning();
+  if (Object.keys(updateData).length === 0) {
+    res.status(400).json({ error: "Nada que cambiar" });
+    return;
+  }
+  const [updated] = await db.update(usuariosTable).set(updateData).where(eq(usuariosTable.id, id)).returning();
   if (!updated) {
     res.status(404).json({ error: "Usuario no encontrado" });
     return;
@@ -82,18 +85,19 @@ router.put("/usuarios/:id", requireAuth, async (req, res) => {
   res.json(safe);
 });
 
-router.delete(
-  "/usuarios/:id",
-  requireAuth,
-  requireRol("admin"),
-  async (req, res) => {
-    const id = parseInt(String(req.params.id));
-    await db
-      .update(usuariosTable)
-      .set({ activo: false })
-      .where(eq(usuariosTable.id, id));
-    res.status(204).send();
+// El superadmin desactiva coaches u otros superadmins (no a sí mismo).
+router.delete("/usuarios/:id", requireAuth, requireRol("admin"), async (req, res) => {
+  const me = (req as any).usuario;
+  const id = parseInt(String(req.params.id));
+  if (id === me.id) {
+    res.status(400).json({ error: "No puedes desactivarte a ti mismo" });
+    return;
   }
-);
+  await db
+    .update(usuariosTable)
+    .set({ activo: false })
+    .where(and(eq(usuariosTable.id, id), inArray(usuariosTable.rol, ["coach", "admin"])));
+  res.status(204).send();
+});
 
 export default router;

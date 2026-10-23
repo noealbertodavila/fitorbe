@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, rutinasTable, usuariosTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import { requireAuth, requireRol } from "../middlewares/auth";
+import { coachDelCliente } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 
 const router = Router();
@@ -50,7 +51,7 @@ router.get("/rutina/:clienteId/:semanaInicio", requireAuth, async (req, res) => 
   res.json(rows);
 });
 
-router.post("/rutinas", requireAuth, requireRol("admin", "coach"), async (req, res) => {
+router.post("/rutinas", requireAuth, requireRol("coach"), async (req, res) => {
   const me = (req as any).usuario;
   const { clienteId, semanaInicio, diaSemana, ejercicios, aprobada, notas } = req.body;
 
@@ -65,7 +66,7 @@ router.post("/rutinas", requireAuth, requireRol("admin", "coach"), async (req, r
 });
 
 // Generate rutina with AI — returns DRAFT (does not save to DB)
-router.post("/rutinas/generar-ai", requireAuth, requireRol("admin", "coach"), async (req, res) => {
+router.post("/rutinas/generar-ai", requireAuth, requireRol("coach"), async (req, res) => {
   const { clienteId, semanaInicio, duracionDias = 7, organizacion } = req.body;
 
   if (!clienteId) {
@@ -103,7 +104,8 @@ router.post("/rutinas/generar-ai", requireAuth, requireRol("admin", "coach"), as
     return `- ${nombre}: DESCANSO`;
   }).join("\n");
 
-  const prompt = `Eres Nahomy, coach de fitness profesional certificada. Crea un plan de entrenamiento semanal para ${c.nombre}.
+  const { coach } = await coachDelCliente(Number(clienteId));
+  const prompt = `Eres ${coach}, coach de fitness profesional. Crea un plan de entrenamiento semanal para ${c.nombre}.
 
 PERFIL DEL CLIENTE:
 - Sexo: ${c.sexo || "No especificado"}

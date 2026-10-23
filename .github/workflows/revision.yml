@@ -69,6 +69,8 @@ jobs:
           PORT: "8080"
           NODE_ENV: test
           SESSION_SECRET: prueba-session-secreto-solo-para-ci
+          SUPERADMIN_EMAIL: superadmin@prueba.test
+          SUPERADMIN_PASSWORD: superadmin-clave-ci-1
           BASE_URL: http://localhost:8080
         run: |
           node artifacts/api-server/dist/index.mjs > servidor.log 2>&1 &

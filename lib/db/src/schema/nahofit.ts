@@ -275,6 +275,7 @@ export type Mensaje = typeof mensajesTable.$inferSelect;
 // ─── Planes y Precios ─────────────────────────────────────────────────────────
 export const planesPrecios = pgTable("planes_precios", {
   id: serial("id").primaryKey(),
+  coachId: integer("coach_id"), // los planes que cada coach ofrece a sus clientes
   nombre: text("nombre").notNull(),
   precioMensual: real("precio_mensual").notNull(),
   precio3meses: real("precio_3meses").notNull(),
@@ -331,6 +332,7 @@ export type FraseDia = typeof fraseDiaTable.$inferSelect;
 // ─── Solicitudes de la página (personas interesadas en empezar) ─────────────
 export const solicitudesContactoTable = pgTable("solicitudes_contacto", {
   id: serial("id").primaryKey(),
+  coachId: integer("coach_id"), // a qué coach le llegó la solicitud
   nombre: text("nombre").notNull(),
   telefono: text("telefono"),
   email: text("email"),
@@ -351,3 +353,20 @@ export const archivosTable = pgTable("archivos", {
   clienteId: integer("cliente_id"),
   creadoEn: timestamp("creado_en").defaultNow().notNull(),
 });
+
+// ─── Coaches (cada negocio que usa Fitorbe) ───────────────────────────────────
+// Un registro por cada usuario con rol "coach". Lo administra el superadmin.
+export const coachesTable = pgTable("coaches", {
+  id: serial("id").primaryKey(),
+  usuarioId: integer("usuario_id").notNull().unique(),
+  negocio: text("negocio").notNull(),      // nombre que ven sus clientes (p. ej. NAHOFIT.LIFE)
+  slug: text("slug").notNull().unique(),   // para su página: fitorbe.com/c/slug
+  estado: text("estado").notNull().default("prueba"), // prueba | activo | suspendido
+  plan: text("plan").notNull().default("inicial"),
+  pruebaHasta: date("prueba_hasta"),
+  logo: text("logo"),
+  colorPrimario: text("color_primario"),
+  notasAdmin: text("notas_admin"),
+  creadoEn: timestamp("creado_en").defaultNow().notNull(),
+});
+export type Coach = typeof coachesTable.$inferSelect;

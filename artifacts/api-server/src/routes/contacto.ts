@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { db, solicitudesContactoTable } from "@workspace/db";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { requireAuth, requireRol } from "../middlewares/auth";
+import { coachPorSlugOId } from "../lib/coaches";
 
 /**
  * Formulario "Agenda tu primera sesión" de la página: guarda a la persona
- * interesada y Nahomy la ve en su panel (Solicitudes) para escribirle.
+ * interesada y su coach la ve en su panel (Solicitudes) para escribirle.
  */
 const router = Router();
 
@@ -45,15 +46,22 @@ router.post("/contacto", async (req, res) => {
     return;
   }
   if (b.acepta !== true) {
-    res.status(400).json({ error: "Acepta que Nahomy te contacte" });
+    res.status(400).json({ error: "Acepta que te contacten" });
     return;
   }
   const ip = String(req.headers["x-forwarded-for"] ?? req.socket.remoteAddress ?? "").split(",")[0].trim();
   if (demasiadas(ip)) {
-    res.status(429).json({ error: "Ya recibimos tus datos. Nahomy te escribirá pronto." });
+    res.status(429).json({ error: "Ya recibimos tus datos. Te escribirán pronto." });
+    return;
+  }
+  // A qué coach va: por su página (slug) o por su número. Si no existe, no se guarda.
+  const coachId = await coachPorSlugOId(b.coach);
+  if (!coachId) {
+    res.status(400).json({ error: "Falta indicar a qué coach va la solicitud" });
     return;
   }
   await db.insert(solicitudesContactoTable).values({
+    coachId,
     nombre,
     telefono: telefono || null,
     email: email || null,
@@ -64,17 +72,19 @@ router.post("/contacto", async (req, res) => {
   res.status(201).json({ ok: true });
 });
 
-router.get("/contacto/solicitudes", requireAuth, requireRol("admin", "coach"), async (_req, res) => {
-  const rows = await db.select().from(solicitudesContactoTable).orderBy(desc(solicitudesContactoTable.creadoEn)).limit(300);
+router.get("/contacto/solicitudes", requireAuth, requireRol("coach"), async (req, res) => {
+  const me = (req as any).usuario;
+  const rows = await db.select().from(solicitudesContactoTable).where(eq(solicitudesContactoTable.coachId, me.id)).orderBy(desc(solicitudesContactoTable.creadoEn)).limit(300);
   res.json(rows);
 });
 
-router.patch("/contacto/solicitudes/:id", requireAuth, requireRol("admin", "coach"), async (req, res) => {
+router.patch("/contacto/solicitudes/:id", requireAuth, requireRol("coach"), async (req, res) => {
+  const me = (req as any).usuario;
   const id = parseInt(String(req.params.id));
   const [row] = await db
     .update(solicitudesContactoTable)
     .set({ atendida: req.body?.atendida === true })
-    .where(eq(solicitudesContactoTable.id, id))
+    .where(and(eq(solicitudesContactoTable.id, id), eq(solicitudesContactoTable.coachId, me.id)))
     .returning();
   if (!row) {
     res.status(404).json({ error: "No encontrada" });

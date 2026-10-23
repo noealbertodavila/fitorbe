@@ -2,12 +2,13 @@ import { localDateStr } from "../lib/date-mt";
 import { Router } from "express";
 import { db, checkinsEmoccionalesTable, usuariosTable, diarioMentalidadTable } from "@workspace/db";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
-import { requireAuth, requireRol } from "../middlewares/auth";
+import { requireAuth, requireRol, idsClientesDe, enLista } from "../middlewares/auth";
 import { detectarRiesgo } from "../lib/apoyo";
 
 const router = Router();
 
-router.get("/emocional/alertas", requireAuth, requireRol("admin", "coach"), async (_req, res) => {
+router.get("/emocional/alertas", requireAuth, requireRol("coach"), async (req, res) => {
+  const misIds = await idsClientesDe((req as any).usuario.id);
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
   const threeDaysAgoStr = localDateStr(threeDaysAgo);
@@ -18,7 +19,8 @@ router.get("/emocional/alertas", requireAuth, requireRol("admin", "coach"), asyn
     .where(
       and(
         gte(checkinsEmoccionalesTable.fecha, threeDaysAgoStr),
-        lte(checkinsEmoccionalesTable.estadoAnimo, 2)
+        lte(checkinsEmoccionalesTable.estadoAnimo, 2),
+        enLista(checkinsEmoccionalesTable.clienteId, misIds)
       )
     );
 
@@ -59,11 +61,11 @@ router.get("/emocional/alertas", requireAuth, requireRol("admin", "coach"), asyn
   const diarios = await db
     .select({ clienteId: diarioMentalidadTable.clienteId, fecha: diarioMentalidadTable.fecha, contenido: diarioMentalidadTable.contenido, gratitud: diarioMentalidadTable.gratitud })
     .from(diarioMentalidadTable)
-    .where(gte(diarioMentalidadTable.fecha, desde));
+    .where(and(gte(diarioMentalidadTable.fecha, desde), enLista(diarioMentalidadTable.clienteId, misIds)));
   const notasRecientes = await db
     .select({ clienteId: checkinsEmoccionalesTable.clienteId, fecha: checkinsEmoccionalesTable.fecha, notas: checkinsEmoccionalesTable.notas })
     .from(checkinsEmoccionalesTable)
-    .where(gte(checkinsEmoccionalesTable.fecha, desde));
+    .where(and(gte(checkinsEmoccionalesTable.fecha, desde), enLista(checkinsEmoccionalesTable.clienteId, misIds)));
   const enRiesgo = new Map<number, string>();
   for (const d of diarios) if (detectarRiesgo(d.contenido, d.gratitud)) enRiesgo.set(d.clienteId, String(d.fecha));
   for (const n of notasRecientes) if (detectarRiesgo(n.notas)) enRiesgo.set(n.clienteId, String(n.fecha));

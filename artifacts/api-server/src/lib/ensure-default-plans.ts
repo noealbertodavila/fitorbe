@@ -22,7 +22,7 @@ const DEFAULT_PLANS = [
     caracteristicasNoIncluidas: [
       "Plan de nutrición",
       "Seguimiento emocional",
-      "Sesiones 1 a 1 con Nahomy",
+      "Sesiones 1 a 1 con tu coach",
       "Fotos de progreso",
       "Reporte PDF mensual",
     ],
@@ -49,7 +49,7 @@ const DEFAULT_PLANS = [
       "Reporte PDF mensual con gráficas",
     ],
     caracteristicasNoIncluidas: [
-      "Sesiones 1 a 1 con Nahomy",
+      "Sesiones 1 a 1 con tu coach",
     ],
     activo: true,
   },
@@ -59,11 +59,11 @@ const DEFAULT_PLANS = [
     precio3meses: 672,
     precio6meses: 1254,
     descuentoPct: 10,
-    descripcion: "Experiencia completa 1 a 1 con Nahomy",
+    descripcion: "Experiencia completa 1 a 1 con tu coach",
     badge: "Todo incluido",
     caracteristicasIncluidas: [
       "Rutina 100% personalizada",
-      "Videos propios de Nahomy",
+      "Videos propios de tu coach",
       "Ajuste de rutina en tiempo real",
       "Plan de nutrición + guía de suplementos",
       "Asesoría emocional completa",
@@ -79,34 +79,19 @@ const DEFAULT_PLANS = [
   },
 ];
 
-// Plans that were created as tests and should be removed
-const PLANS_TO_DELETE = ["vacaciones", "test", "prueba"];
-
-export async function ensureDefaultPlans() {
+/**
+ * Planes de ejemplo para un coach nuevo (los puede cambiar o borrar en "Planes").
+ * Cada coach tiene sus propios planes; no hay planes compartidos.
+ */
+export async function crearPlanesIniciales(coachId: number) {
   try {
-    // Remove known test/garbage plans
-    for (const name of PLANS_TO_DELETE) {
-      const rows = await db
-        .select({ id: planesPrecios.id })
-        .from(planesPrecios)
-        .where(eq(planesPrecios.nombre, name));
-      if (rows.length > 0) {
-        await db.delete(planesPrecios).where(eq(planesPrecios.nombre, name));
-        logger.info({ name }, "Removed test plan");
-      }
-    }
-
-    // Check which official plans already exist by name
-    const existing = await db.select({ nombre: planesPrecios.nombre }).from(planesPrecios);
-    const existingNames = new Set(existing.map(p => p.nombre));
-
-    // Insert only missing official plans
-    const missing = DEFAULT_PLANS.filter(p => !existingNames.has(p.nombre));
-    if (missing.length > 0) {
-      await db.insert(planesPrecios).values(missing);
-      logger.info({ inserted: missing.map(p => p.nombre) }, "Default plans inserted");
-    }
+    const [ya] = await db.select({ id: planesPrecios.id }).from(planesPrecios).where(eq(planesPrecios.coachId, coachId)).limit(1);
+    if (ya) return;
+    await db.insert(planesPrecios).values(DEFAULT_PLANS.map((p) => ({ ...p, coachId })));
   } catch (err) {
-    logger.error({ err }, "Failed to ensure default plans");
+    logger.error({ err, coachId }, "No se pudieron crear los planes iniciales");
   }
 }
+
+/** Ya no se crean planes globales al arrancar (cada coach tiene los suyos). */
+export async function ensureDefaultPlans() {}

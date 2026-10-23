@@ -19,6 +19,7 @@ import planesRouter from "./planes";
 import calendarioRouter from "./calendario";
 import frasesRouter from "./frases";
 import contactoRouter from "./contacto";
+import superadminRouter, { registroRouter } from "./superadmin";
 
 const router: IRouter = Router();
 
@@ -42,5 +43,7 @@ router.use(planesRouter);
 router.use(calendarioRouter);
 router.use(frasesRouter);
 router.use(contactoRouter);
+router.use(superadminRouter);
+router.use(registroRouter);
 
 export default router;
