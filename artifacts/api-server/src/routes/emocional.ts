@@ -4,6 +4,7 @@ import { db, checkinsEmoccionalesTable, usuariosTable, diarioMentalidadTable } f
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { requireAuth, requireRol, idsClientesDe, enLista } from "../middlewares/auth";
 import { alertasEmocionales } from "../lib/alertas";
+import { detectarRiesgo } from "../lib/apoyo";
 
 const router = Router();
 
