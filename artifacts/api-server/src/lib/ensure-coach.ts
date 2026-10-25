@@ -1,13 +1,13 @@
 import bcrypt from "bcryptjs";
 import { db, usuariosTable, coachesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { logger } from "./logger";
 import { slugLibre } from "./coaches";
 
 /**
  * Al arrancar:
- * 1. Si no hay superadmin y están SUPERADMIN_EMAIL y SUPERADMIN_PASSWORD
- *    (se escriben en Render, nunca en el código), crea la cuenta del superadmin.
+ * 1. Con SUPERADMIN_EMAIL y SUPERADMIN_PASSWORD (se escriben en Render, nunca
+ *    en el código) crea la cuenta del superadmin o le pone esa contraseña.
  * 2. Cada usuario coach tiene su ficha en "coaches" (por si vino de antes).
  */
 export async function ensureCoach() {
@@ -15,8 +15,19 @@ export async function ensureCoach() {
   const password = process.env.SUPERADMIN_PASSWORD;
   try {
     if (email && password) {
-      const [yaHay] = await db.select({ id: usuariosTable.id }).from(usuariosTable).where(eq(usuariosTable.rol, "admin")).limit(1);
-      if (!yaHay) {
+      // La cuenta del superadmin sigue lo que diga Render: si cambias la
+      // contraseña en SUPERADMIN_PASSWORD, al reiniciar queda la nueva.
+      const [porCorreo] = await db.select().from(usuariosTable).where(sql`lower(${usuariosTable.email}) = ${email}`).limit(1);
+      if (porCorreo) {
+        const igual = await bcrypt.compare(password, porCorreo.passwordHash);
+        if (!igual || porCorreo.rol !== "admin" || !porCorreo.activo) {
+          await db
+            .update(usuariosTable)
+            .set({ passwordHash: igual ? porCorreo.passwordHash : await bcrypt.hash(password, 10), rol: "admin", activo: true })
+            .where(eq(usuariosTable.id, porCorreo.id));
+          logger.info({ email }, "Cuenta de superadmin actualizada");
+        }
+      } else {
         await db.insert(usuariosTable).values({
           nombre: process.env.SUPERADMIN_NOMBRE || "Superadmin",
           email,
@@ -25,6 +36,8 @@ export async function ensureCoach() {
         });
         logger.info({ email }, "Cuenta de superadmin creada");
       }
+    } else {
+      logger.warn("Faltan SUPERADMIN_EMAIL o SUPERADMIN_PASSWORD: no se preparó el superadmin");
     }
     const coaches = await db.select().from(usuariosTable).where(eq(usuariosTable.rol, "coach"));
     for (const c of coaches) {

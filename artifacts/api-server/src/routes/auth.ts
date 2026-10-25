@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db, usuariosTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { generateToken, requireAuth } from "../middlewares/auth";
 
 const router = Router();
@@ -16,7 +16,7 @@ router.post("/auth/login", async (req, res) => {
   const [usuario] = await db
     .select()
     .from(usuariosTable)
-    .where(eq(usuariosTable.email, email))
+    .where(sql`lower(${usuariosTable.email}) = ${String(email).trim().toLowerCase()}`)
     .limit(1);
 
   if (!usuario || !usuario.activo) {
