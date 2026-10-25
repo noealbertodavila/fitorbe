@@ -10,7 +10,6 @@ const NotFound = lazy(() => import("@/pages/not-found"));
 const Login = lazy(() => import("@/pages/login"));
 const Privacidad = lazy(() => import("@/pages/Legal").then((m) => ({ default: m.Privacidad })));
 const Terminos = lazy(() => import("@/pages/Legal").then((m) => ({ default: m.Terminos })));
-import Landing from "@/pages/Landing";
 
 // Admin
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
@@ -53,6 +52,12 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function IrAInicio() {
+  // Recarga completa para que el servidor entregue la página estática de inicio.
+  window.location.replace(import.meta.env.DEV ? "/inicio.html" : "/");
+  return null;
+}
 
 function Router() {
   return (
@@ -185,8 +190,8 @@ function Router() {
         </ProtectedRoute>
       </Route>
 
-      {/* Public landing page */}
-      <Route path="/" component={Landing} />
+      {/* La página de inicio es HTML estático que entrega el servidor (public/inicio.html). */}
+      <Route path="/" component={IrAInicio} />
       
       {/* Legacy /app redirect */}
       <Route path="/app">

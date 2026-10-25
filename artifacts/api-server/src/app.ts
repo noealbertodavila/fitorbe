@@ -70,6 +70,14 @@ if (fs.existsSync(path.join(FRONTEND_DIR, "index.html"))) {
   app.use(express.static(FRONTEND_DIR, { index: false, maxAge: "1h", setHeaders(res, file) {
     if (file.includes(`${path.sep}assets${path.sep}`)) res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
   } }));
+  // La página de inicio es HTML estático (rápida y legible para Google); el resto es la app.
+  const INICIO = path.join(FRONTEND_DIR, "inicio.html");
+  app.get(["/", "/inicio.html"], (req, res, next) => {
+    if (!fs.existsSync(INICIO)) return next();
+    if (req.path === "/inicio.html") return res.redirect(301, "/");
+    res.setHeader("Cache-Control", "no-cache");
+    res.sendFile(INICIO);
+  });
   app.get(/^\/(?!api\/|uploads\/).*/, (_req, res) => {
     res.setHeader("Cache-Control", "no-cache");
     res.sendFile(path.join(FRONTEND_DIR, "index.html"));
