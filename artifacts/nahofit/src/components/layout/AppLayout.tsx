@@ -82,13 +82,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Prueba gratis del coach: días que le quedan (se muestra abajo del menú).
   const diasPrueba = (() => {
     if (user?.rol !== "coach" || negocio?.estado !== "prueba" || !negocio?.pruebaHasta) return null;
-    const fin = new Date(String(negocio.pruebaHasta).slice(0, 10) + "T23:59:59");
-    return Math.max(0, Math.ceil((fin.getTime() - Date.now()) / 86400000));
+    const hoy = new Date();
+    const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
+    return Math.max(0, Math.round((Date.parse(String(negocio.pruebaHasta).slice(0, 10)) - Date.parse(hoyStr)) / 86400000));
   })();
   const PLAN: Record<string, string> = { inicial: "Plan Inicial", pro: "Plan Pro", estudio: "Plan Estudio" };
 
   const NavLinks = () => (
-    <nav className="flex flex-col mt-6" aria-label="Menú">
+    <nav className="flex flex-col mt-2" aria-label="Menú">
       {navItems.map((item, i) => {
         const Icon = item.icon;
         // El inicio de cada panel (/admin, /coach, /cliente) solo se marca cuando estás justo ahí.
@@ -99,11 +100,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         return (
           <div key={item.path}>
             {nuevoGrupo && (
-              <p className="px-4 pt-5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">{item.grupo}</p>
+              <p className="px-4 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">{item.grupo}</p>
             )}
             <Link href={item.path}>
               <div
-                className={`flex items-center space-x-3 px-4 min-h-[42px] my-0.5 rounded-md transition-all cursor-pointer relative ${
+                className={`flex items-center space-x-3 px-4 min-h-[40px] rounded-md transition-all cursor-pointer relative ${
                   isActive
                     ? "bg-primary/10 text-primary font-semibold"
                     : "text-muted-foreground hover:bg-white/5 hover:text-white"
@@ -132,12 +133,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const AvisoPlan = () =>
     user?.rol !== "coach" || !negocio ? null : (
       <Link href="/coach/negocio">
-        <div className="mx-1 px-3 py-2.5 rounded-lg border border-primary/25 bg-primary/5 text-xs cursor-pointer hover:border-primary/50" onClick={() => setIsMobileMenuOpen(false)}>
+        <div className="px-3 py-2 rounded-lg border border-primary/25 bg-primary/5 text-xs cursor-pointer hover:border-primary/50" onClick={() => setIsMobileMenuOpen(false)}>
           {diasPrueba !== null ? (
-            <>
-              <p className="text-white font-semibold">Prueba gratis</p>
-              <p className="text-muted-foreground mt-0.5">{diasPrueba === 1 ? "Te queda 1 día" : `Te quedan ${diasPrueba} días`}</p>
-            </>
+            <p><span className="text-white font-semibold">Prueba gratis</span><span className="text-muted-foreground"> · {diasPrueba === 1 ? "queda 1 día" : `quedan ${diasPrueba} días`}</span></p>
           ) : (
             <p className="text-white font-semibold">{PLAN[negocio.plan ?? ""] ?? "Tu plan"}</p>
           )}
