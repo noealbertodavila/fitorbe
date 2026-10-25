@@ -20,6 +20,7 @@ import calendarioRouter from "./calendario";
 import frasesRouter from "./frases";
 import contactoRouter from "./contacto";
 import superadminRouter, { registroRouter } from "./superadmin";
+import interesadosRouter from "./interesados";
 
 const router: IRouter = Router();
 
@@ -45,5 +46,6 @@ router.use(frasesRouter);
 router.use(contactoRouter);
 router.use(superadminRouter);
 router.use(registroRouter);
+router.use(interesadosRouter);
 
 export default router;

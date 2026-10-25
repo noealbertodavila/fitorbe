@@ -68,5 +68,30 @@
     bloques.forEach(function (el) { el.classList.add("visible"); });
   }
 
+  // Formulario de contacto → llega al correo del equipo de Fitorbe
+  var form = $("#form-contacto");
+  if (form) {
+    var err = $("#c-error"), boton = $("#c-boton");
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var v = function (id) { return $(id).value.trim(); };
+      var nombre = v("#c-nombre"), email = v("#c-email"), tel = v("#c-tel");
+      err.textContent = "";
+      if (!nombre) { err.textContent = "Escribe tu nombre."; $("#c-nombre").focus(); return; }
+      if (!email && !tel) { err.textContent = "Déjanos tu correo o tu WhatsApp para responderte."; $("#c-email").focus(); return; }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = "Ese correo no parece válido."; $("#c-email").focus(); return; }
+      boton.disabled = true; boton.textContent = "Enviando…";
+      fetch("/api/interesados", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: nombre, email: email, telefono: tel, negocio: v("#c-negocio"), clientes: v("#c-clientes"), plan: $("#c-plan").value, mensaje: v("#c-msg"), empresa: $("#c-empresa").value }),
+      })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || ""); }); })
+        .then(function () { form.hidden = true; var g = $("#c-gracias"); g.hidden = false; g.focus(); })
+        .catch(function (ex) { err.textContent = (ex && ex.message) || "No se pudo enviar. Intenta de nuevo o escríbenos por WhatsApp."; })
+        .then(function () { boton.disabled = false; boton.textContent = "Enviar"; });
+    });
+  }
+
   var anio = $("#anio"); if (anio) anio.textContent = String(new Date().getFullYear());
 })();

@@ -34,3 +34,10 @@ services:
         sync: false
       - key: SUPERADMIN_PASSWORD
         sync: false
+      # Correos (formulario de fitorbe.com): la llave de Resend se pega en Render.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        value: "Fitorbe <admin@nexuvoltsolutions.com>"
+      - key: ADMIN_NOTIFY_EMAIL
+        value: admin@nexuvoltsolutions.com

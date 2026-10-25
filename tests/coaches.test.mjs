@@ -160,3 +160,22 @@ test("planes y solicitudes son de cada coach", async () => {
   assert.ok(!sB.data.some((s) => s.nombre === "Interesada"));
   assert.equal((await call("PATCH", `/contacto/solicitudes/${sA.data[0].id}`, { token: B, body: { atendida: true } })).status, 404);
 });
+
+test("coaches interesados: el formulario guarda y solo el superadmin los ve", async () => {
+  assert.equal((await call("POST", "/interesados", { body: { nombre: "" } })).status, 400);
+  assert.equal((await call("POST", "/interesados", { body: { nombre: "Laura" } })).status, 400);
+  assert.equal((await call("POST", "/interesados", { body: { nombre: "Laura", email: "malo" } })).status, 400);
+  const ok = await call("POST", "/interesados", { body: { nombre: "Laura " + uniq, email: `laura-${uniq}@prueba.test`, negocio: "Fit Laura", clientes: "11-40", plan: "pro", mensaje: "¿Tienen app en inglés?" } });
+  assert.equal(ok.status, 201, JSON.stringify(ok.data));
+  // Robot (campo trampa lleno): responde bien pero no se guarda
+  assert.equal((await call("POST", "/interesados", { body: { nombre: "Robot " + uniq, email: "r@r.test", empresa: "spam" } })).status, 201);
+  const lista = await call("GET", "/superadmin/interesados", { token: SA });
+  assert.equal(lista.status, 200);
+  const laura = lista.data.find((x) => x.nombre === "Laura " + uniq);
+  assert.ok(laura);
+  assert.equal(laura.plan, "pro");
+  assert.ok(!lista.data.some((x) => x.nombre === "Robot " + uniq));
+  assert.equal((await call("PATCH", `/superadmin/interesados/${laura.id}`, { token: SA, body: { atendido: true } })).data.atendido, true);
+  // Un coach no los ve
+  assert.equal((await call("GET", "/superadmin/interesados", { token: A })).status, 403);
+});

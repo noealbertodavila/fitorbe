@@ -343,6 +343,21 @@ export const solicitudesContactoTable = pgTable("solicitudes_contacto", {
   creadoEn: timestamp("creado_en").defaultNow().notNull(),
 });
 
+// Coaches interesados en Fitorbe (formulario de fitorbe.com). Los ve el superadmin.
+export const interesadosTable = pgTable("interesados", {
+  id: serial("id").primaryKey(),
+  nombre: text("nombre").notNull(),
+  email: text("email"),
+  telefono: text("telefono"),
+  negocio: text("negocio"),
+  clientes: text("clientes"), // cuántos clientes tiene, aproximado
+  plan: text("plan"),
+  mensaje: text("mensaje"),
+  correoEnviado: boolean("correo_enviado").notNull().default(false),
+  atendido: boolean("atendido").notNull().default(false),
+  creadoEn: timestamp("creado_en").defaultNow().notNull(),
+});
+
 // Archivos subidos (fotos de progreso). Se guardan en la base de datos para que
 // la app no dependa del disco del servidor (Render y otros lo borran al reiniciar).
 // "ruta" es la misma que antes iba después de /uploads/, así los enlaces no cambian.
