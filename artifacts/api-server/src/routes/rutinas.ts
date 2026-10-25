@@ -13,7 +13,7 @@ router.get("/rutinas/semanas/:clienteId", requireAuth, async (req, res) => {
   const rows = await db
     .select({ semanaInicio: rutinasTable.semanaInicio, aprobada: rutinasTable.aprobada })
     .from(rutinasTable)
-    .where(eq(rutinasTable.clienteId, clienteId))
+    .where(and(eq(rutinasTable.clienteId, clienteId), (req as any).usuario?.rol === "cliente" ? eq(rutinasTable.aprobada, true) : undefined))
     .orderBy(desc(rutinasTable.semanaInicio));
 
   const seen = new Set<string>();
@@ -34,7 +34,7 @@ router.get("/rutinas/:clienteId/:semanaInicio", requireAuth, async (req, res) =>
   const rows = await db
     .select()
     .from(rutinasTable)
-    .where(and(eq(rutinasTable.clienteId, clienteId), eq(rutinasTable.semanaInicio, semanaInicio)))
+    .where(and(eq(rutinasTable.clienteId, clienteId), eq(rutinasTable.semanaInicio, semanaInicio), (req as any).usuario?.rol === "cliente" ? eq(rutinasTable.aprobada, true) : undefined))
     .orderBy(rutinasTable.diaSemana);
   res.json(rows);
 });
@@ -46,7 +46,7 @@ router.get("/rutina/:clienteId/:semanaInicio", requireAuth, async (req, res) => 
   const rows = await db
     .select()
     .from(rutinasTable)
-    .where(and(eq(rutinasTable.clienteId, clienteId), eq(rutinasTable.semanaInicio, semanaInicio)))
+    .where(and(eq(rutinasTable.clienteId, clienteId), eq(rutinasTable.semanaInicio, semanaInicio), (req as any).usuario?.rol === "cliente" ? eq(rutinasTable.aprobada, true) : undefined))
     .orderBy(rutinasTable.diaSemana);
   res.json(rows);
 });

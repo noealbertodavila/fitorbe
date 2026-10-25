@@ -4,6 +4,7 @@ import { Users, TrendingUp, MessageSquare, AlertCircle, Calendar, CreditCard } f
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { PrimerosPasos } from "@/components/PrimerosPasos";
 
 export default function CoachDashboard() {
   const { data: dashboard, isLoading } = useGetDashboardCoach();
@@ -23,9 +24,11 @@ export default function CoachDashboard() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-syne font-bold text-white mb-2">Panel de Coach</h1>
-        <p className="text-muted-foreground">Resumen de actividad y alertas de tus clientes</p>
+        <h1 className="text-3xl font-syne font-bold text-white mb-2">Inicio</h1>
+        <p className="text-muted-foreground">Cómo van tus clientes hoy y quién necesita tu atención</p>
       </div>
+
+      <PrimerosPasos />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="bg-card border-border/50 hover-elevate">

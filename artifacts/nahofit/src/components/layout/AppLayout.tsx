@@ -42,76 +42,108 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [mensajesNoLeidos, marca]);
 
-  const adminNav = [
-    { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
+  type Item = { label: string; path: string; icon: any; grupo?: string };
+  const adminNav: Item[] = [
+    { label: "Inicio", path: "/admin", icon: LayoutDashboard },
     { label: "Coaches", path: "/admin/coaches", icon: Briefcase },
   ];
 
-  const coachNav = [
-    { label: "Dashboard", path: "/coach", icon: LayoutDashboard },
+  // Menú agrupado (como en Obrix): lo del día a día arriba, el negocio abajo.
+  const coachNav: Item[] = [
+    { label: "Inicio", path: "/coach", icon: LayoutDashboard },
     { label: "Clientes", path: "/coach/clientes", icon: Users },
-    { label: "Rutinas", path: "/coach/rutinas", icon: Dumbbell },
-    { label: "Nutrición", path: "/coach/nutricion", icon: Utensils },
-    { label: "Emocional", path: "/coach/emocional", icon: HeartPulse },
     { label: "Mensajes", path: "/coach/mensajes", icon: MessageSquare },
-    { label: "Reportes", path: "/coach/reportes", icon: LineChart },
-    { label: "Pagos", path: "/coach/pagos", icon: DollarSign },
-    { label: "Solicitudes", path: "/coach/solicitudes", icon: Inbox },
-    { label: "Planes y precios", path: "/coach/planes", icon: Tags },
-    { label: "Mi negocio", path: "/coach/negocio", icon: Store },
+    { label: "Rutinas", path: "/coach/rutinas", icon: Dumbbell, grupo: "Planes de tus clientes" },
+    { label: "Nutrición", path: "/coach/nutricion", icon: Utensils, grupo: "Planes de tus clientes" },
+    { label: "Emocional", path: "/coach/emocional", icon: HeartPulse, grupo: "Planes de tus clientes" },
+    { label: "Solicitudes", path: "/coach/solicitudes", icon: Inbox, grupo: "Tu negocio" },
+    { label: "Pagos", path: "/coach/pagos", icon: DollarSign, grupo: "Tu negocio" },
+    { label: "Reportes", path: "/coach/reportes", icon: LineChart, grupo: "Tu negocio" },
+    { label: "Planes y precios", path: "/coach/planes", icon: Tags, grupo: "Tu negocio" },
+    { label: "Mi negocio", path: "/coach/negocio", icon: Store, grupo: "Tu negocio" },
   ];
 
-  const clientNav = [
-    { label: "Dashboard", path: "/cliente", icon: LayoutDashboard },
-    { label: "Mi Rutina", path: "/cliente/rutina", icon: Dumbbell },
-    { label: "Mi Nutrición", path: "/cliente/nutricion", icon: Utensils },
-    { label: "Calendario", path: "/cliente/calendario", icon: Calendar },
-    { label: "Mi Progreso", path: "/cliente/progreso", icon: LineChart },
-    { label: "Emocional", path: "/cliente/emocional", icon: HeartPulse },
-    { label: "Mensajes", path: "/cliente/mensajes", icon: MessageSquare },
-    { label: "Pagos", path: "/cliente/pagos", icon: DollarSign },
+  const clientNav: Item[] = [
+    { label: "Inicio", path: "/cliente", icon: LayoutDashboard },
+    { label: "Mi rutina", path: "/cliente/rutina", icon: Dumbbell, grupo: "Mi plan" },
+    { label: "Mi nutrición", path: "/cliente/nutricion", icon: Utensils, grupo: "Mi plan" },
+    { label: "Calendario", path: "/cliente/calendario", icon: Calendar, grupo: "Mi plan" },
+    { label: "Mi progreso", path: "/cliente/progreso", icon: LineChart, grupo: "Cómo voy" },
+    { label: "Emocional", path: "/cliente/emocional", icon: HeartPulse, grupo: "Cómo voy" },
+    { label: "Mensajes", path: "/cliente/mensajes", icon: MessageSquare, grupo: "Mi coach" },
+    { label: "Pagos", path: "/cliente/pagos", icon: DollarSign, grupo: "Mi coach" },
   ];
 
-  let navItems: any[] = [];
+  let navItems: Item[] = [];
   if (user?.rol === "admin") navItems = adminNav;
   else if (user?.rol === "coach") navItems = coachNav;
   else if (user?.rol === "cliente") navItems = clientNav;
 
+  // Prueba gratis del coach: días que le quedan (se muestra abajo del menú).
+  const diasPrueba = (() => {
+    if (user?.rol !== "coach" || negocio?.estado !== "prueba" || !negocio?.pruebaHasta) return null;
+    const fin = new Date(String(negocio.pruebaHasta).slice(0, 10) + "T23:59:59");
+    return Math.max(0, Math.ceil((fin.getTime() - Date.now()) / 86400000));
+  })();
+  const PLAN: Record<string, string> = { inicial: "Plan Inicial", pro: "Plan Pro", estudio: "Plan Estudio" };
+
   const NavLinks = () => (
-    <div className="flex flex-col space-y-1 mt-8">
-      {navItems.map((item) => {
+    <nav className="flex flex-col mt-6" aria-label="Menú">
+      {navItems.map((item, i) => {
         const Icon = item.icon;
         // El inicio de cada panel (/admin, /coach, /cliente) solo se marca cuando estás justo ahí.
         const esInicio = item.path.split("/").length === 2;
         const isActive = location === item.path || (!esInicio && location.startsWith(item.path + "/"));
-        const isMensajes = item.label === "Mensajes";
-        const showBadge = isMensajes && mensajesNoLeidos > 0;
+        const showBadge = item.label === "Mensajes" && mensajesNoLeidos > 0;
+        const nuevoGrupo = item.grupo && item.grupo !== navItems[i - 1]?.grupo;
         return (
-          <Link key={item.path} href={item.path}>
-            <div
-              className={`flex items-center space-x-3 px-4 py-2.5 rounded-md transition-all cursor-pointer relative ${
-                isActive
-                  ? "bg-primary/10 text-primary font-semibold"
-                  : "text-muted-foreground hover:bg-white/5 hover:text-white"
-              }`}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {isActive && (
-                <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-primary rounded-r-full" />
-              )}
-              <Icon className={`h-[18px] w-[18px] flex-shrink-0 ${isActive ? "text-primary" : ""}`} />
-              <span className="flex-1 text-sm">{item.label}</span>
-              {showBadge && (
-                <span className="bg-primary text-black text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center leading-none px-1">
-                  {mensajesNoLeidos > 9 ? "9+" : mensajesNoLeidos}
-                </span>
-              )}
-            </div>
-          </Link>
+          <div key={item.path}>
+            {nuevoGrupo && (
+              <p className="px-4 pt-5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">{item.grupo}</p>
+            )}
+            <Link href={item.path}>
+              <div
+                className={`flex items-center space-x-3 px-4 min-h-[42px] my-0.5 rounded-md transition-all cursor-pointer relative ${
+                  isActive
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                }`}
+                aria-current={isActive ? "page" : undefined}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {isActive && (
+                  <span className="absolute left-0 top-1 bottom-1 w-0.5 bg-primary rounded-r-full" />
+                )}
+                <Icon className={`h-[18px] w-[18px] flex-shrink-0 ${isActive ? "text-primary" : ""}`} />
+                <span className="flex-1 text-sm">{item.label}</span>
+                {showBadge && (
+                  <span className="bg-primary text-black text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center leading-none px-1">
+                    {mensajesNoLeidos > 9 ? "9+" : mensajesNoLeidos}
+                  </span>
+                )}
+              </div>
+            </Link>
+          </div>
         );
       })}
-    </div>
+    </nav>
   );
+
+  const AvisoPlan = () =>
+    user?.rol !== "coach" || !negocio ? null : (
+      <Link href="/coach/negocio">
+        <div className="mx-1 px-3 py-2.5 rounded-lg border border-primary/25 bg-primary/5 text-xs cursor-pointer hover:border-primary/50" onClick={() => setIsMobileMenuOpen(false)}>
+          {diasPrueba !== null ? (
+            <>
+              <p className="text-white font-semibold">Prueba gratis</p>
+              <p className="text-muted-foreground mt-0.5">{diasPrueba === 1 ? "Te queda 1 día" : `Te quedan ${diasPrueba} días`}</p>
+            </>
+          ) : (
+            <p className="text-white font-semibold">{PLAN[negocio.plan ?? ""] ?? "Tu plan"}</p>
+          )}
+        </div>
+      </Link>
+    );
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -137,6 +169,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         
         <div className="p-4 border-t border-border/50 flex-shrink-0 space-y-3">
+          <AvisoPlan />
           <div className="flex items-center gap-3 px-2 py-2 rounded-lg bg-white/[0.03]">
             <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-base flex-shrink-0">
               {user?.nombre.charAt(0).toUpperCase()}
@@ -163,11 +196,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 border-b border-border/50 bg-card sticky top-0 z-20">
           <h2 className="text-xl font-syne font-bold text-white tracking-tight truncate max-w-[70%]">
-            {marca}
+            {negocio?.logo ? <img src={negocio.logo} alt={marca} className="max-h-8 max-w-[160px] object-contain" /> : marca}
           </h2>
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white">
+              <Button variant="ghost" size="icon" className="text-white" aria-label="Abrir menú">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
@@ -185,7 +218,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <div className="flex-1 overflow-y-auto py-2 px-3">
                 <NavLinks />
               </div>
-              <div className="p-4 border-t border-border/50">
+              <div className="p-4 border-t border-border/50 space-y-3">
+                <AvisoPlan />
                 <Button 
                   variant="ghost" 
                   className="w-full justify-start text-muted-foreground hover:text-white"

@@ -80,12 +80,12 @@ export default function ClienteMensajes() {
     <div className="h-[calc(100vh-10rem)] animate-in fade-in duration-500 max-w-4xl mx-auto">
       <Card className="bg-card border-border/50 flex flex-col h-full overflow-hidden shadow-xl">
         <div className="p-4 border-b border-border/50 flex items-center space-x-3 bg-background/30">
-          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold shadow-[0_0_10px_rgba(127,255,79,0.2)]">
-            N
+          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold shadow-[0_0_10px_rgba(127,255,79,0.2)]" aria-hidden="true">
+            {(coachNombre || "C").trim().charAt(0).toUpperCase()}
           </div>
           <div>
             <h3 className="font-syne font-bold text-lg text-white">{coachNombre}</h3>
-            <p className="text-xs text-primary font-medium tracking-wider uppercase">Coach Principal</p>
+            <p className="text-xs text-primary font-medium tracking-wider uppercase">Tu coach</p>
           </div>
         </div>
 

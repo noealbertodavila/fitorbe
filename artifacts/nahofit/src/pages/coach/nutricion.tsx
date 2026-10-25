@@ -261,7 +261,7 @@ export default function CoachNutricion() {
         data: { clienteId, semanaInicio, diaSemana: dia.diaSemana, comidas: dia.comidas, caloriasTotal: totales.calorias, aprobada, notas: "" }
       });
     }
-    toast({ title: aprobada ? "¡Plan publicado!" : "Plan guardado como borrador" });
+    toast({ title: aprobada ? "¡Plan publicado!" : "Plan guardado como borrador", description: aprobada ? "Tu cliente ya puede verlo." : "Tu cliente lo verá cuando lo publiques." });
     setPageMode("view");
     queryClient.invalidateQueries({ queryKey: [`/api/planes-comida/${clienteId}/${semanaInicio}`] });
   };

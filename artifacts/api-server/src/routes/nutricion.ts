@@ -12,7 +12,7 @@ router.get("/planes-comida/semanas/:clienteId", requireAuth, async (req, res) =>
   const rows = await db
     .select({ semanaInicio: planesComidaTable.semanaInicio, aprobada: planesComidaTable.aprobada })
     .from(planesComidaTable)
-    .where(eq(planesComidaTable.clienteId, clienteId))
+    .where(and(eq(planesComidaTable.clienteId, clienteId), (req as any).usuario?.rol === "cliente" ? eq(planesComidaTable.aprobada, true) : undefined))
     .orderBy(desc(planesComidaTable.semanaInicio));
 
   const seen = new Set<string>();
@@ -29,7 +29,7 @@ router.get("/planes-comida/:clienteId/:semanaInicio", requireAuth, async (req, r
   const clienteId = parseInt(String(req.params.clienteId));
   const semanaInicio = String(req.params.semanaInicio);
   const rows = await db.select().from(planesComidaTable)
-    .where(and(eq(planesComidaTable.clienteId, clienteId), eq(planesComidaTable.semanaInicio, semanaInicio)))
+    .where(and(eq(planesComidaTable.clienteId, clienteId), eq(planesComidaTable.semanaInicio, semanaInicio), (req as any).usuario?.rol === "cliente" ? eq(planesComidaTable.aprobada, true) : undefined))
     .orderBy(planesComidaTable.diaSemana);
   res.json(rows);
 });

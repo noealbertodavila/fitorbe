@@ -3,82 +3,12 @@ import { Router } from "express";
 import { db, checkinsEmoccionalesTable, usuariosTable, diarioMentalidadTable } from "@workspace/db";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { requireAuth, requireRol, idsClientesDe, enLista } from "../middlewares/auth";
-import { detectarRiesgo } from "../lib/apoyo";
+import { alertasEmocionales } from "../lib/alertas";
 
 const router = Router();
 
 router.get("/emocional/alertas", requireAuth, requireRol("coach"), async (req, res) => {
-  const misIds = await idsClientesDe((req as any).usuario.id);
-  const threeDaysAgo = new Date();
-  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-  const threeDaysAgoStr = localDateStr(threeDaysAgo);
-
-  const checkins = await db
-    .select()
-    .from(checkinsEmoccionalesTable)
-    .where(
-      and(
-        gte(checkinsEmoccionalesTable.fecha, threeDaysAgoStr),
-        lte(checkinsEmoccionalesTable.estadoAnimo, 2),
-        enLista(checkinsEmoccionalesTable.clienteId, misIds)
-      )
-    );
-
-  const countMap = new Map<number, { count: number; last: number }>();
-  checkins.forEach((c) => {
-    const existing = countMap.get(c.clienteId);
-    if (existing) {
-      existing.count++;
-      if (c.fecha > String(existing.last)) existing.last = c.estadoAnimo;
-    } else {
-      countMap.set(c.clienteId, { count: 1, last: c.estadoAnimo });
-    }
-  });
-
-  const alertas: Array<{ clienteId: number; clienteNombre: string; diasBajos: number; ultimoEstado: number; riesgo?: boolean; fechaRiesgo?: string }> = [];
-  for (const [clienteId, { count, last }] of countMap.entries()) {
-    if (count >= 2) {
-      const [cliente] = await db
-        .select()
-        .from(usuariosTable)
-        .where(eq(usuariosTable.id, clienteId))
-        .limit(1);
-      if (cliente) {
-        alertas.push({
-          clienteId,
-          clienteNombre: cliente.nombre,
-          diasBajos: count,
-          ultimoEstado: last,
-        });
-      }
-    }
-  }
-
-  // Lo que escribió en el diario o en las notas del ánimo (últimos 7 días) con señales de crisis.
-  const sieteDias = new Date();
-  sieteDias.setDate(sieteDias.getDate() - 7);
-  const desde = localDateStr(sieteDias);
-  const diarios = await db
-    .select({ clienteId: diarioMentalidadTable.clienteId, fecha: diarioMentalidadTable.fecha, contenido: diarioMentalidadTable.contenido, gratitud: diarioMentalidadTable.gratitud })
-    .from(diarioMentalidadTable)
-    .where(and(gte(diarioMentalidadTable.fecha, desde), enLista(diarioMentalidadTable.clienteId, misIds)));
-  const notasRecientes = await db
-    .select({ clienteId: checkinsEmoccionalesTable.clienteId, fecha: checkinsEmoccionalesTable.fecha, notas: checkinsEmoccionalesTable.notas })
-    .from(checkinsEmoccionalesTable)
-    .where(and(gte(checkinsEmoccionalesTable.fecha, desde), enLista(checkinsEmoccionalesTable.clienteId, misIds)));
-  const enRiesgo = new Map<number, string>();
-  for (const d of diarios) if (detectarRiesgo(d.contenido, d.gratitud)) enRiesgo.set(d.clienteId, String(d.fecha));
-  for (const n of notasRecientes) if (detectarRiesgo(n.notas)) enRiesgo.set(n.clienteId, String(n.fecha));
-  for (const [clienteId, fecha] of enRiesgo) {
-    const [cliente] = await db.select().from(usuariosTable).where(eq(usuariosTable.id, clienteId)).limit(1);
-    if (!cliente) continue;
-    const previa = alertas.find((a) => a.clienteId === clienteId);
-    if (previa) Object.assign(previa, { riesgo: true, fechaRiesgo: fecha });
-    else alertas.push({ clienteId, clienteNombre: cliente.nombre, diasBajos: 0, ultimoEstado: 0, riesgo: true, fechaRiesgo: fecha } as never);
-  }
-  alertas.sort((a, b) => Number(!!(b as { riesgo?: boolean }).riesgo) - Number(!!(a as { riesgo?: boolean }).riesgo));
-
-  res.json(alertas);
+  res.json(await alertasEmocionales((req as any).usuario.id));
 });
 
 router.get("/emocional/:clienteId", requireAuth, async (req, res) => {

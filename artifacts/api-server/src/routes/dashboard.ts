@@ -1,8 +1,9 @@
 import { localDateStr } from "../lib/date-mt";
 import { Router } from "express";
-import { db, coachesTable, usuariosTable, checkinsDiariosTable, mensajesTable, checkinsEmoccionalesTable, pagosTable, registrosProgresoTable } from "@workspace/db";
+import { db, coachesTable, usuariosTable, checkinsDiariosTable, mensajesTable, checkinsEmoccionalesTable, pagosTable, registrosProgresoTable, rutinasTable, planesComidaTable } from "@workspace/db";
 import { eq, and, gte, lte, sql, ne } from "drizzle-orm";
 import { requireAuth, requireRol, puedeVerCliente, idsClientesDe, enLista } from "../middlewares/auth";
+import { alertasEmocionales } from "../lib/alertas";
 
 const router = Router();
 
@@ -56,27 +57,8 @@ router.get("/dashboard/coach", requireAuth, requireRol("coach"), async (req, res
     (c) => !clientesConCheckin.has(c.id)
   );
 
-  // Emotional alerts (3 consecutive low mood days)
-  const threeDaysAgo = new Date();
-  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-  const threeDaysAgoStr = localDateStr(threeDaysAgo);
-  const checkinsMalos = await db
-    .select()
-    .from(checkinsEmoccionalesTable)
-    .where(
-      and(
-        gte(checkinsEmoccionalesTable.fecha, threeDaysAgoStr),
-        lte(checkinsEmoccionalesTable.estadoAnimo, 2),
-        enLista(checkinsEmoccionalesTable.clienteId, misIds)
-      )
-    );
-  const clientesConAlertaMap = new Map<number, number>();
-  checkinsMalos.forEach((c) => {
-    clientesConAlertaMap.set(c.clienteId, (clientesConAlertaMap.get(c.clienteId) || 0) + 1);
-  });
-  const clientesConAlertaEmocional = [...clientesConAlertaMap.values()].filter(
-    (count) => count >= 3
-  ).length;
+  // Alertas emocionales: la misma regla que la página Emocional.
+  const clientesConAlertaEmocional = (await alertasEmocionales(me.id)).length;
 
   // Overdue payments
   const pagosVencidos = await db
@@ -165,10 +147,29 @@ router.get("/dashboard/cliente/:id", requireAuth, async (req, res) => {
     .orderBy(sql`${registrosProgresoTable.fecha} DESC`)
     .limit(1);
 
+  // Rutina y plan de comida de hoy (semana que empieza el lunes; 0 = lunes).
+  const diaJs = baseDate.getUTCDay();
+  const diaSemana = (diaJs + 6) % 7;
+  const lunesDate = new Date(baseDate);
+  lunesDate.setUTCDate(baseDate.getUTCDate() - diaSemana);
+  const lunes = localDateStr(lunesDate);
+  const [rutinaHoy] = await db
+    .select()
+    .from(rutinasTable)
+    .where(and(eq(rutinasTable.clienteId, id), eq(rutinasTable.semanaInicio, lunes), eq(rutinasTable.diaSemana, diaSemana), eq(rutinasTable.aprobada, true)))
+    .limit(1);
+  const [planComidaHoy] = await db
+    .select()
+    .from(planesComidaTable)
+    .where(and(eq(planesComidaTable.clienteId, id), eq(planesComidaTable.semanaInicio, lunes), eq(planesComidaTable.diaSemana, diaSemana), eq(planesComidaTable.aprobada, true)))
+    .limit(1);
+
   res.json({
     saludo,
     rachaCheckin: racha,
     ultimoPeso: lastWeight?.pesoKg || null,
+    rutinaHoy: rutinaHoy ?? null,
+    planComidaHoy: planComidaHoy ?? null,
     fraseMotivacional: null,
   });
 });

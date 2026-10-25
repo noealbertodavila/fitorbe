@@ -179,3 +179,21 @@ test("coaches interesados: el formulario guarda y solo el superadmin los ve", as
   // Un coach no los ve
   assert.equal((await call("GET", "/superadmin/interesados", { token: A })).status, 403);
 });
+
+test("el cliente solo ve rutinas y planes publicados, y su panel muestra los de hoy", async () => {
+  const d = new Date(); const dia = (d.getDay() + 6) % 7; const l = new Date(d); l.setDate(d.getDate() - dia);
+  const lunes = l.toISOString().slice(0, 10); const hoyLocal = d.toISOString().slice(0, 10);
+  const ej = [{ nombre: "Sentadilla", series: 3, repeticiones: "12", descanso: "60 s", instrucciones: "" }];
+  // Borrador: el cliente no lo ve
+  assert.equal((await call("POST", "/rutinas", { token: A, body: { clienteId: a1, semanaInicio: lunes, diaSemana: dia, ejercicios: ej, aprobada: false } })).status, 201);
+  assert.equal((await call("GET", `/rutinas/${a1}/${lunes}`, { token: tA1 })).data.length, 0);
+  assert.equal((await call("GET", `/rutinas/${a1}/${lunes}`, { token: A })).data.length, 1);
+  // Publicado: sí, y aparece en su panel de hoy
+  await call("POST", "/rutinas", { token: A, body: { clienteId: a1, semanaInicio: lunes, diaSemana: dia, ejercicios: ej, aprobada: true } });
+  await call("POST", "/planes-comida", { token: A, body: { clienteId: a1, semanaInicio: lunes, diaSemana: dia, comidas: [{ nombre: "Desayuno", descripcion: "Avena", calorias: 300, proteinas: 10, carbohidratos: 50, grasas: 5 }], caloriasTotal: 300, aprobada: true } });
+  assert.equal((await call("GET", `/rutinas/${a1}/${lunes}`, { token: tA1 })).data.length, 1);
+  const panel = await call("GET", `/dashboard/cliente/${a1}?fecha=${hoyLocal}`, { token: tA1 });
+  assert.equal(panel.status, 200);
+  assert.ok(panel.data.rutinaHoy, "rutina de hoy");
+  assert.equal(panel.data.planComidaHoy?.caloriasTotal, 300);
+});

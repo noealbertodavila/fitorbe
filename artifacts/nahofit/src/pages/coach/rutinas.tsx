@@ -258,7 +258,7 @@ export default function CoachRutinas() {
         data: { clienteId, semanaInicio, diaSemana: dia.diaSemana, ejercicios: dia.ejercicios, aprobada, notas: "" }
       });
     }
-    toast({ title: aprobada ? "¡Rutina publicada!" : "Rutina guardada como borrador", description: `${clienteSeleccionado?.nombre} ya puede verla.` });
+    toast({ title: aprobada ? "¡Rutina publicada!" : "Rutina guardada como borrador", description: aprobada ? `${clienteSeleccionado?.nombre} ya puede verla.` : `${clienteSeleccionado?.nombre} la verá cuando la publiques.` });
     setPageMode("view");
     queryClient.invalidateQueries({ queryKey: [`/api/rutinas/${clienteId}/${semanaInicio}`] });
   };

@@ -89,13 +89,15 @@ router.get("/calendario/semana/:clienteId", requireAuth, async (req, res) => {
     db.select().from(rutinasTable).where(
       and(
         eq(rutinasTable.clienteId, clienteId),
-        eq(rutinasTable.semanaInicio, semanaInicio)
+        eq(rutinasTable.semanaInicio, semanaInicio),
+        (req as any).usuario?.rol === "cliente" ? eq(rutinasTable.aprobada, true) : undefined
       )
     ),
     db.select().from(planesComidaTable).where(
       and(
         eq(planesComidaTable.clienteId, clienteId),
-        eq(planesComidaTable.semanaInicio, semanaInicio)
+        eq(planesComidaTable.semanaInicio, semanaInicio),
+        (req as any).usuario?.rol === "cliente" ? eq(planesComidaTable.aprobada, true) : undefined
       )
     ),
     db.select().from(checkinsDiariosTable).where(
@@ -181,10 +183,10 @@ router.get("/calendario/mes/:clienteId", requireAuth, async (req, res) => {
 
   const [rutinas, planes, checkins, emocionales] = await Promise.all([
     db.select().from(rutinasTable).where(
-      and(eq(rutinasTable.clienteId, clienteId), inArray(rutinasTable.semanaInicio, semanasArr))
+      and(eq(rutinasTable.clienteId, clienteId), inArray(rutinasTable.semanaInicio, semanasArr), (req as any).usuario?.rol === "cliente" ? eq(rutinasTable.aprobada, true) : undefined)
     ),
     db.select().from(planesComidaTable).where(
-      and(eq(planesComidaTable.clienteId, clienteId), inArray(planesComidaTable.semanaInicio, semanasArr))
+      and(eq(planesComidaTable.clienteId, clienteId), inArray(planesComidaTable.semanaInicio, semanasArr), (req as any).usuario?.rol === "cliente" ? eq(planesComidaTable.aprobada, true) : undefined)
     ),
     db.select().from(checkinsDiariosTable).where(
       and(
@@ -261,14 +263,16 @@ router.get("/calendario/dia/:clienteId", requireAuth, async (req, res) => {
       and(
         eq(rutinasTable.clienteId, clienteId),
         eq(rutinasTable.semanaInicio, semana),
-        eq(rutinasTable.diaSemana, diaSemana)
+        eq(rutinasTable.diaSemana, diaSemana),
+        (req as any).usuario?.rol === "cliente" ? eq(rutinasTable.aprobada, true) : undefined
       )
     ).limit(1),
     db.select().from(planesComidaTable).where(
       and(
         eq(planesComidaTable.clienteId, clienteId),
         eq(planesComidaTable.semanaInicio, semana),
-        eq(planesComidaTable.diaSemana, diaSemana)
+        eq(planesComidaTable.diaSemana, diaSemana),
+        (req as any).usuario?.rol === "cliente" ? eq(planesComidaTable.aprobada, true) : undefined
       )
     ).limit(1),
     db.select().from(checkinsDiariosTable).where(
