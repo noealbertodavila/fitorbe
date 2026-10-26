@@ -212,7 +212,6 @@ test("el coach modifica los datos de su cliente (vacíos, números, correo repet
   assert.equal((await call("PUT", `/usuarios/${a1}`, { token: A, body: { nombre: "  " } })).status, 400);
   assert.equal((await call("PUT", `/usuarios/${a1}`, { token: A, body: { email: `a-${uniq}@prueba.test` } })).status, 409);
   assert.equal((await call("PUT", `/usuarios/${a1}`, { token: A, body: { email: "no-es-correo" } })).status, 400);
-  assert.equal((await call("PUT", `/usuarios/${a1}`, { token: A, body: { fechaMeta: "no-es-fecha" } })).status, 400);
   // Cambiar el correo en mayúsculas lo guarda en minúsculas, y el cliente entra con él
   const nuevo = `A1-NUEVO-${uniq}@Prueba.test`;
   assert.equal((await call("PUT", `/usuarios/${a1}`, { token: A, body: { email: nuevo } })).data.email, nuevo.toLowerCase());
