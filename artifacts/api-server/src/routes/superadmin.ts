@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { clientIp } from "../lib/hardening";
 import { db, coachesTable, usuariosTable } from "@workspace/db";
 import { and, eq, sql } from "drizzle-orm";
 import { requireAuth, requireRol, generateToken } from "../middlewares/auth";
@@ -86,7 +87,7 @@ export default router;
 export const registroRouter = Router();
 const intentos = new Map<string, number[]>();
 registroRouter.post("/auth/registro-coach", async (req, res) => {
-  const ip = String(req.headers["x-forwarded-for"] ?? req.socket.remoteAddress ?? "").split(",")[0].trim();
+  const ip = clientIp(req);
   const ahora = Date.now();
   const lista = (intentos.get(ip) ?? []).filter((t) => ahora - t < 60 * 60 * 1000);
   lista.push(ahora);

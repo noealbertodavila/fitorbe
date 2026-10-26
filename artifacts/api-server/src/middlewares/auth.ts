@@ -3,7 +3,14 @@ import jwt from "jsonwebtoken";
 import { db, usuariosTable, coachesTable } from "@workspace/db";
 import { eq, and, inArray, sql, type SQL, type AnyColumn } from "drizzle-orm";
 
-const JWT_SECRET = process.env.SESSION_SECRET || "nahofit_secret_key";
+// La clave que firma las sesiones. En producción es obligatoria: sin ella
+// cualquiera podría fabricar una sesión (antes había un valor fijo público).
+const JWT_SECRET =
+  process.env.SESSION_SECRET ||
+  (process.env.NODE_ENV === "production" ? "" : "fitorbe-solo-desarrollo");
+if (!JWT_SECRET) {
+  throw new Error("Falta SESSION_SECRET: ponla en las variables de Render antes de arrancar.");
+}
 
 export function generateToken(userId: number, rol: string): string {
   return jwt.sign({ userId, rol }, JWT_SECRET, { expiresIn: "7d" });

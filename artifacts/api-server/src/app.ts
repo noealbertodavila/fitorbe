@@ -9,7 +9,16 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { UPLOADS_DIR } from "./lib/uploads-path";
 
+import { allowedOrigins, corsOrigin, rateLimit, securityHeaders } from "./lib/hardening";
+
 const app: Express = express();
+
+// No anunciar con qué está hecho el servidor.
+app.disable("x-powered-by");
+
+// Cabeceras de seguridad (la CSP va en modo "solo reportar" hasta poner
+// CSP_ENFORCE=true en Render).
+app.use(securityHeaders({ permissions: "camera=(self), geolocation=(), microphone=(), payment=(), usb=()" }));
 
 app.use(
   pinoHttp({
@@ -31,9 +40,17 @@ app.use(
   }),
 );
 
+// Solo estos sitios pueden llamar a la API desde otro dominio. nahofit.life
+// manda su formulario de contacto a /api/contacto.
+const ORIGENES = allowedOrigins([
+  "https://fitorbe.com",
+  "https://www.fitorbe.com",
+  "https://nahofit.life",
+  "https://www.nahofit.life",
+]);
 app.use(
   cors({
-    origin: true,
+    origin: corsOrigin(ORIGENES),
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -41,6 +58,9 @@ app.use(
 );
 
 app.use(express.json({ limit: "10mb" }));
+
+// Límite de intentos de inicio de sesión por IP.
+app.use("/api/auth/login", rateLimit("login", 20, 15 * 60 * 1000, "Demasiados intentos. Espera 15 minutos e inténtalo de nuevo."));
 app.use(express.urlencoded({ extended: true }));
 
 // Fotos de progreso: primero se buscan en la base de datos (tabla archivos);

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { clientIp } from "../lib/hardening";
 import { db, solicitudesContactoTable } from "@workspace/db";
 import { and, desc, eq } from "drizzle-orm";
 import { requireAuth, requireRol } from "../middlewares/auth";
@@ -49,7 +50,7 @@ router.post("/contacto", async (req, res) => {
     res.status(400).json({ error: "Acepta que te contacten" });
     return;
   }
-  const ip = String(req.headers["x-forwarded-for"] ?? req.socket.remoteAddress ?? "").split(",")[0].trim();
+  const ip = clientIp(req);
   if (demasiadas(ip)) {
     res.status(429).json({ error: "Ya recibimos tus datos. Te escribirán pronto." });
     return;
