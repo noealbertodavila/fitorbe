@@ -1,5 +1,6 @@
 import { localDateStr } from "../lib/date-mt";
 import { Router } from "express";
+import { prepararCambios, guardarCambios } from "../lib/cambios-usuario";
 import { db, usuariosTable, registrosProgresoTable, checkinsDiariosTable } from "@workspace/db";
 import { eq, and, like, gte, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -151,11 +152,16 @@ router.put("/clientes/:id", requireAuth, async (req, res) => {
     res.status(400).json({ error: "Nada que cambiar" });
     return;
   }
-  const [updated] = await db
-    .update(usuariosTable)
-    .set(rest)
-    .where(and(eq(usuariosTable.id, id), eq(usuariosTable.rol, "cliente")))
-    .returning();
+  const problema = await prepararCambios(id, rest);
+  if (problema) {
+    res.status(problema.status).json({ error: problema.error });
+    return;
+  }
+  const { u: updated, error } = await guardarCambios(id, rest, true);
+  if (error) {
+    res.status(400).json({ error });
+    return;
+  }
   if (!updated) {
     res.status(404).json({ error: "Cliente no encontrado" });
     return;

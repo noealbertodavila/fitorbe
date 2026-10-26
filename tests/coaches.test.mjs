@@ -197,3 +197,26 @@ test("el cliente solo ve rutinas y planes publicados, y su panel muestra los de 
   assert.ok(panel.data.rutinaHoy, "rutina de hoy");
   assert.equal(panel.data.planComidaHoy?.caloriasTotal, 300);
 });
+
+test("el coach modifica los datos de su cliente (vacíos, números, correo repetido)", async () => {
+  const base = { nombre: "Cliente A1 editado", telefono: "8015550111", peso: 70.5, altura: 165, fechaNacimiento: "", fechaMeta: "", pesoMeta: null, lesiones: "", notasCoach: "Va muy bien" };
+  const r = await call("PUT", `/usuarios/${a1}`, { token: A, body: base });
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  assert.equal(r.data.nombre, "Cliente A1 editado");
+  assert.equal(r.data.peso, 70.5);
+  assert.equal(r.data.fechaNacimiento, null);
+  assert.equal(r.data.lesiones, null);
+  // Fecha válida
+  assert.equal((await call("PUT", `/usuarios/${a1}`, { token: A, body: { fechaNacimiento: "1990-05-20" } })).status, 200);
+  // Nombre vacío o correo de otra cuenta: error claro, no 500
+  assert.equal((await call("PUT", `/usuarios/${a1}`, { token: A, body: { nombre: "  " } })).status, 400);
+  assert.equal((await call("PUT", `/usuarios/${a1}`, { token: A, body: { email: `a-${uniq}@prueba.test` } })).status, 409);
+  assert.equal((await call("PUT", `/usuarios/${a1}`, { token: A, body: { email: "no-es-correo" } })).status, 400);
+  assert.equal((await call("PUT", `/usuarios/${a1}`, { token: A, body: { fechaMeta: "no-es-fecha" } })).status, 400);
+  // Cambiar el correo en mayúsculas lo guarda en minúsculas, y el cliente entra con él
+  const nuevo = `A1-NUEVO-${uniq}@Prueba.test`;
+  assert.equal((await call("PUT", `/usuarios/${a1}`, { token: A, body: { email: nuevo } })).data.email, nuevo.toLowerCase());
+  assert.equal((await call("POST", "/auth/login", { body: { email: nuevo, password: "clave-cliente-1" } })).status, 200);
+  // Otro coach no puede
+  assert.equal((await call("PUT", `/usuarios/${a1}`, { token: B, body: { nombre: "X" } })).status, 403);
+});

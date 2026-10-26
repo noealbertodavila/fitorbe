@@ -46,7 +46,7 @@ jobs:
         run: |
           PORT=8080 NODE_ENV=production node artifacts/api-server/dist/index.mjs > servidor.log 2>&1 &
           for i in $(seq 1 30); do curl -sf http://localhost:8080/api/healthz && break; sleep 1; done
-          cp scripts/capturas/producto.mjs /tmp/pw/
+          cp scripts/capturas/*.mjs /tmp/pw/
           (cd /tmp/pw && OUT="$GITHUB_WORKSPACE/producto" node producto.mjs) || (tail -50 servidor.log; exit 1)
       - name: Guardar en la rama capturas
         run: |

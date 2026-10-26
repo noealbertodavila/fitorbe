@@ -194,9 +194,10 @@ function NuevoRegistroModal({
 
   const M = ({ label, field, placeholder = "" }: { label: string; field: keyof typeof medidas; placeholder?: string }) => (
     <div>
-      <label className="text-xs text-muted-foreground block mb-1">{label}</label>
+      <label htmlFor={`med-${String(field)}`} className="text-xs text-muted-foreground block mb-1">{label}</label>
       <Input
-        type="number" step="0.1" placeholder={placeholder}
+        id={`med-${String(field)}`}
+        type="number" step="0.1" inputMode="decimal" placeholder={placeholder}
         value={medidas[field]}
         onChange={e => setMedidas(p => ({ ...p, [field]: e.target.value }))}
         className="bg-background text-sm h-9 border-border/50"
@@ -265,8 +266,8 @@ function NuevoRegistroModal({
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-3">Básicas</p>
               <div className="grid grid-cols-3 gap-3">
-                <M label="Peso (kg) *" field="pesoKg" placeholder="65.5" />
-                <M label="% Grasa corporal" field="grasaCorporal" placeholder="20" />
+                {M({ label: "Peso (kg) *", field: "pesoKg", placeholder: "65.5" })}
+                {M({ label: "% Grasa corporal", field: "grasaCorporal", placeholder: "20" })}
                 <div>
                   <label className="text-xs text-muted-foreground block mb-1">IMC (auto)</label>
                   <Input value={imcCalc() || "—"} readOnly className="bg-background/30 text-sm h-9 border-border/50 text-muted-foreground" />
@@ -276,26 +277,26 @@ function NuevoRegistroModal({
             <div className="border-t border-border/50 pt-3">
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-3">Circunferencias (cm)</p>
               <div className="grid grid-cols-3 gap-3">
-                <M label="Cuello" field="cuelloCm" placeholder="37" />
-                <M label="Pecho/Busto" field="pechoCm" placeholder="90" />
-                <M label="Cintura" field="cinturaCm" placeholder="78" />
-                <M label="Cadera" field="caderaCm" placeholder="95" />
-                <M label="Brazo der." field="brazoDerCm" placeholder="32" />
-                <M label="Brazo izq." field="brazoIzqCm" placeholder="31" />
-                <M label="Muslo der." field="musloDerCm" placeholder="55" />
-                <M label="Muslo izq." field="musloIzqCm" placeholder="54" />
-                <M label="Pantorrilla der." field="pantorrillaDerCm" placeholder="36" />
-                <M label="Pantorrilla izq." field="pantorrillaIzqCm" placeholder="35" />
+                {M({ label: "Cuello", field: "cuelloCm", placeholder: "37" })}
+                {M({ label: "Pecho/Busto", field: "pechoCm", placeholder: "90" })}
+                {M({ label: "Cintura", field: "cinturaCm", placeholder: "78" })}
+                {M({ label: "Cadera", field: "caderaCm", placeholder: "95" })}
+                {M({ label: "Brazo der.", field: "brazoDerCm", placeholder: "32" })}
+                {M({ label: "Brazo izq.", field: "brazoIzqCm", placeholder: "31" })}
+                {M({ label: "Muslo der.", field: "musloDerCm", placeholder: "55" })}
+                {M({ label: "Muslo izq.", field: "musloIzqCm", placeholder: "54" })}
+                {M({ label: "Pantorrilla der.", field: "pantorrillaDerCm", placeholder: "36" })}
+                {M({ label: "Pantorrilla izq.", field: "pantorrillaIzqCm", placeholder: "35" })}
               </div>
             </div>
             <div className="border-t border-border/50 pt-3">
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-3">Bioimpedancia (opcional)</p>
               <div className="grid grid-cols-3 gap-3">
-                <M label="Masa muscular (kg)" field="masaMuscular" placeholder="28" />
-                <M label="Masa grasa (kg)" field="masaGrasaKg" placeholder="12" />
-                <M label="Agua corporal (%)" field="aguaCorporal" placeholder="55" />
-                <M label="Met. basal (kcal)" field="metabolismoBasal" placeholder="1500" />
-                <M label="Edad metabólica" field="edadMetabolica" placeholder="28" />
+                {M({ label: "Masa muscular (kg)", field: "masaMuscular", placeholder: "28" })}
+                {M({ label: "Masa grasa (kg)", field: "masaGrasaKg", placeholder: "12" })}
+                {M({ label: "Agua corporal (%)", field: "aguaCorporal", placeholder: "55" })}
+                {M({ label: "Met. basal (kcal)", field: "metabolismoBasal", placeholder: "1500" })}
+                {M({ label: "Edad metabólica", field: "edadMetabolica", placeholder: "28" })}
               </div>
             </div>
             <div className="flex gap-3">

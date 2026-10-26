@@ -1,0 +1,58 @@
+# Revisión completa: abre todas las pantallas y prueba los flujos; deja reporte y fotos en la rama "revision".
+name: Revisión completa
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["fase*"]
+
+jobs:
+  capturas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: fitorbe
+          POSTGRES_PASSWORD: fitorbe
+          POSTGRES_DB: fitorbe_capturas
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fitorbe"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://fitorbe:fitorbe@localhost:5432/fitorbe_capturas
+      SUPERADMIN_EMAIL: superadmin@demo.test
+      SUPERADMIN_PASSWORD: superadmin-demo-123
+      SESSION_SECRET: capturas-solo-para-ci
+      BASE_URL: http://localhost:8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx --yes pnpm@10 install --frozen-lockfile --prod=false
+      - run: PORT=3000 BASE_PATH=/ NODE_ENV=production npx pnpm@10 --filter @workspace/nahofit run build
+      - run: npx pnpm@10 --filter @workspace/api-server run build
+      - run: npx pnpm@10 --filter @workspace/db run push
+      - name: Playwright
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null && npm i playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+      - name: Fotos
+        run: |
+          PORT=8080 NODE_ENV=production node artifacts/api-server/dist/index.mjs > servidor.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8080/api/healthz && break; sleep 1; done
+          cp scripts/capturas/*.mjs /tmp/pw/
+          (cd /tmp/pw && OUT="$GITHUB_WORKSPACE/revision" node revision.mjs) || (tail -50 servidor.log; exit 1)
+      - name: Guardar en la rama capturas
+        run: |
+          cd revision
+          git init -q -b revision
+          git config user.name "capturas"
+          git config user.email "capturas@users.noreply.github.com"
+          git add -A && git commit -qm "Revisión de ${GITHUB_SHA::7}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" revision

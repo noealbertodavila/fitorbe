@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { prepararCambios, guardarCambios } from "../lib/cambios-usuario";
 import bcrypt from "bcryptjs";
 import { db, usuariosTable } from "@workspace/db";
 import { eq, and, inArray } from "drizzle-orm";
@@ -76,7 +77,16 @@ router.put("/usuarios/:id", requireAuth, async (req, res) => {
     res.status(400).json({ error: "Nada que cambiar" });
     return;
   }
-  const [updated] = await db.update(usuariosTable).set(updateData).where(eq(usuariosTable.id, id)).returning();
+  const problema = await prepararCambios(id, updateData);
+  if (problema) {
+    res.status(problema.status).json({ error: problema.error });
+    return;
+  }
+  const { u: updated, error } = await guardarCambios(id, updateData);
+  if (error) {
+    res.status(400).json({ error });
+    return;
+  }
   if (!updated) {
     res.status(404).json({ error: "Usuario no encontrado" });
     return;

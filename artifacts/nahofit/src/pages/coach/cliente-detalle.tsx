@@ -245,11 +245,12 @@ function EditarClienteDialog({ cliente, open, onClose }: { cliente: ClienteCompl
 
   const F = ({ label, field, type = "text", placeholder = "" }: { label: string; field: keyof ClienteCompleto; type?: string; placeholder?: string }) => (
     <div>
-      <label className="text-xs text-muted-foreground block mb-1">{label}</label>
+      <label htmlFor={`ed-${String(field)}`} className="text-xs text-muted-foreground block mb-1">{label}</label>
       <Input
+        id={`ed-${String(field)}`}
         type={type}
         value={(form[field] as string | number) ?? ""}
-        onChange={e => set(field, type === "number" ? (parseFloat(e.target.value) || undefined) : e.target.value)}
+        onChange={e => set(field, type === "number" ? (e.target.value === "" ? null : Number(e.target.value)) : e.target.value)}
         placeholder={placeholder}
         className="bg-background text-sm h-9 border-border/50"
       />
@@ -258,9 +259,9 @@ function EditarClienteDialog({ cliente, open, onClose }: { cliente: ClienteCompl
 
   const S = ({ label, field, options }: { label: string; field: keyof ClienteCompleto; options: { value: string; label: string }[] }) => (
     <div>
-      <label className="text-xs text-muted-foreground block mb-1">{label}</label>
+      <label htmlFor={`ed-${String(field)}`} className="text-xs text-muted-foreground block mb-1">{label}</label>
       <Select value={String(form[field] ?? "")} onValueChange={v => set(field, v)}>
-        <SelectTrigger className="bg-background h-9 border-border/50 text-sm">
+        <SelectTrigger id={`ed-${String(field)}`} className="bg-background h-9 border-border/50 text-sm">
           <SelectValue placeholder="Seleccionar..." />
         </SelectTrigger>
         <SelectContent>
@@ -272,8 +273,9 @@ function EditarClienteDialog({ cliente, open, onClose }: { cliente: ClienteCompl
 
   const T = ({ label, field, placeholder = "" }: { label: string; field: keyof ClienteCompleto; placeholder?: string }) => (
     <div>
-      <label className="text-xs text-muted-foreground block mb-1">{label}</label>
+      <label htmlFor={`ed-${String(field)}`} className="text-xs text-muted-foreground block mb-1">{label}</label>
       <Textarea
+        id={`ed-${String(field)}`}
         value={(form[field] as string) || ""}
         onChange={e => set(field, e.target.value)}
         placeholder={placeholder}
@@ -306,23 +308,23 @@ function EditarClienteDialog({ cliente, open, onClose }: { cliente: ClienteCompl
           {/* TAB 1: Datos personales */}
           <TabsContent value="personal" className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <F label="Nombre completo" field="nombre" placeholder="María García" />
-              <F label="Email" field="email" type="email" placeholder="maria@email.com" />
-              <F label="Teléfono" field="telefono" placeholder="+58 412-000-0000" />
+              {F({ label: "Nombre completo", field: "nombre", placeholder: "María García" })}
+              {F({ label: "Email", field: "email", type: "email", placeholder: "maria@email.com" })}
+              {F({ label: "Teléfono", field: "telefono", placeholder: "+58 412-000-0000" })}
               <DateField label="Fecha de nacimiento" value={form.fechaNacimiento} onChange={v => set("fechaNacimiento", v)} minYear={1940} maxYear={2010} />
-              <S label="Sexo" field="sexo" options={opts(["Masculino", "Femenino"])} />
-              <F label="País" field="pais" placeholder="Venezuela" />
-              <F label="Ciudad" field="ciudad" placeholder="Caracas" />
+              {S({ label: "Sexo", field: "sexo", options: opts(["Masculino", "Femenino"]) })}
+              {F({ label: "País", field: "pais", placeholder: "Venezuela" })}
+              {F({ label: "Ciudad", field: "ciudad", placeholder: "Caracas" })}
             </div>
           </TabsContent>
 
           {/* TAB 2: Datos físicos + objetivos */}
           <TabsContent value="fisico" className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <F label="Peso actual (kg)" field="peso" type="number" placeholder="65" />
-              <F label="Altura (cm)" field="altura" type="number" placeholder="165" />
-              <F label="% Grasa corporal" field="grasaCorporalPct" type="number" placeholder="22" />
-              <S label="Complexión corporal" field="complexion" options={opts(["Ectomorfo", "Mesomorfo", "Endomorfo"])} />
+              {F({ label: "Peso actual (kg)", field: "peso", type: "number", placeholder: "65" })}
+              {F({ label: "Altura (cm)", field: "altura", type: "number", placeholder: "165" })}
+              {F({ label: "% Grasa corporal", field: "grasaCorporalPct", type: "number", placeholder: "22" })}
+              {S({ label: "Complexión corporal", field: "complexion", options: opts(["Ectomorfo", "Mesomorfo", "Endomorfo"]) })}
             </div>
             {imcDisplay() && (
               <div className="px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg text-sm text-primary font-medium">
@@ -333,9 +335,9 @@ function EditarClienteDialog({ cliente, open, onClose }: { cliente: ClienteCompl
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-3">Objetivos</p>
               <div className="grid grid-cols-2 gap-3">
                 <ObjetivosField value={form.objetivoPrincipal} onChange={v => set("objetivoPrincipal", v)} />
-                <F label="Peso meta (kg)" field="pesoMeta" type="number" placeholder="58" />
+                {F({ label: "Peso meta (kg)", field: "pesoMeta", type: "number", placeholder: "58" })}
                 <DateField label="Fecha meta" value={form.fechaMeta} onChange={v => set("fechaMeta", v)} minYear={2024} maxYear={2030} />
-                <S label="Nivel de urgencia" field="nivelUrgencia" options={opts(["Tranquilo", "Moderado", "Intensivo"])} />
+                {S({ label: "Nivel de urgencia", field: "nivelUrgencia", options: opts(["Tranquilo", "Moderado", "Intensivo"]) })}
               </div>
             </div>
           </TabsContent>
@@ -343,21 +345,21 @@ function EditarClienteDialog({ cliente, open, onClose }: { cliente: ClienteCompl
           {/* TAB 3: Fitness + Salud */}
           <TabsContent value="fitness" className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <S label="Nivel de experiencia" field="nivelFitness" options={opts(["Principiante", "Intermedio", "Avanzado"])} />
-              <F label="Días disponibles/semana" field="diasDisponibles" type="number" placeholder="5" />
-              <S label="Duración máxima por sesión" field="duracionSesion" options={opts(["30min", "45min", "60min", "90min"])} />
-              <S label="Horario preferido" field="horarioPreferido" options={opts(["Mañana", "Tarde", "Noche", "Flexible"])} />
-              <S label="Lugar de entrenamiento" field="lugarEntrenamiento" options={opts(["Gym", "Casa", "Al aire libre", "Híbrido"])} />
+              {S({ label: "Nivel de experiencia", field: "nivelFitness", options: opts(["Principiante", "Intermedio", "Avanzado"]) })}
+              {F({ label: "Días disponibles/semana", field: "diasDisponibles", type: "number", placeholder: "5" })}
+              {S({ label: "Duración máxima por sesión", field: "duracionSesion", options: opts(["30min", "45min", "60min", "90min"]) })}
+              {S({ label: "Horario preferido", field: "horarioPreferido", options: opts(["Mañana", "Tarde", "Noche", "Flexible"]) })}
+              {S({ label: "Lugar de entrenamiento", field: "lugarEntrenamiento", options: opts(["Gym", "Casa", "Al aire libre", "Híbrido"]) })}
             </div>
-            <T label="Equipamiento disponible (si entrena en casa)" field="equipamiento" placeholder="Mancuernas, bandas de resistencia, barra..." />
+            {T({ label: "Equipamiento disponible (si entrena en casa)", field: "equipamiento", placeholder: "Mancuernas, bandas de resistencia, barra..." })}
             <div className="border-t border-border/50 pt-3">
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-3">Salud y restricciones</p>
               <div className="grid grid-cols-1 gap-3">
-                <T label="Lesiones actuales o pasadas" field="lesiones" placeholder="Rodilla derecha, lumbar..." />
-                <T label="Condiciones médicas relevantes" field="condicionesMedicas" placeholder="Diabetes, hipertensión..." />
-                <F label="Medicamentos que toma" field="medicamentos" placeholder="Metformina 500mg..." />
-                <T label="Zonas del cuerpo a evitar o cuidar" field="zonasEvitar" placeholder="Evitar impacto en rodilla derecha..." />
-                <S label="¿Tiene autorización médica?" field="autorizacionMedica" options={opts(["Sí", "No", "No aplica"])} />
+                {T({ label: "Lesiones actuales o pasadas", field: "lesiones", placeholder: "Rodilla derecha, lumbar..." })}
+                {T({ label: "Condiciones médicas relevantes", field: "condicionesMedicas", placeholder: "Diabetes, hipertensión..." })}
+                {F({ label: "Medicamentos que toma", field: "medicamentos", placeholder: "Metformina 500mg..." })}
+                {T({ label: "Zonas del cuerpo a evitar o cuidar", field: "zonasEvitar", placeholder: "Evitar impacto en rodilla derecha..." })}
+                {S({ label: "¿Tiene autorización médica?", field: "autorizacionMedica", options: opts(["Sí", "No", "No aplica"]) })}
               </div>
             </div>
           </TabsContent>
@@ -365,7 +367,7 @@ function EditarClienteDialog({ cliente, open, onClose }: { cliente: ClienteCompl
           {/* TAB 4: Nutrición + Estilo de vida */}
           <TabsContent value="nutricion" className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <S label="Tipo de alimentación" field="tipoAlimentacion" options={opts(["Omnívoro", "Vegetariano", "Vegano", "Keto", "Paleo", "Otro"])} />
+              {S({ label: "Tipo de alimentación", field: "tipoAlimentacion", options: opts(["Omnívoro", "Vegetariano", "Vegano", "Keto", "Paleo", "Otro"]) })}
               <div>
                 <label className="text-xs text-muted-foreground block mb-1">Comidas al día</label>
                 <Select
@@ -380,19 +382,19 @@ function EditarClienteDialog({ cliente, open, onClose }: { cliente: ClienteCompl
                   </SelectContent>
                 </Select>
               </div>
-              <S label="¿Cocina en casa?" field="cocinaEnCasa" options={opts(["Casa", "Fuera", "Mixto"])} />
-              <S label="Presupuesto alimentación" field="presupuestoAlimentacion" options={opts(["Básico", "Moderado", "Sin restricción"])} />
-              <F label="Agua diaria (litros)" field="aguaDiaria" type="number" placeholder="2.5" />
+              {S({ label: "¿Cocina en casa?", field: "cocinaEnCasa", options: opts(["Casa", "Fuera", "Mixto"]) })}
+              {S({ label: "Presupuesto alimentación", field: "presupuestoAlimentacion", options: opts(["Básico", "Moderado", "Sin restricción"]) })}
+              {F({ label: "Agua diaria (litros)", field: "aguaDiaria", type: "number", placeholder: "2.5" })}
             </div>
-            <T label="Alergias alimentarias" field="alergiasAlimentarias" placeholder="Gluten, lactosa, mariscos..." />
-            <T label="Alimentos que no consume" field="alimentosNoConsume" placeholder="Cerdo, mariscos (por religión)..." />
-            <T label="Suplementos que toma actualmente" field="suplementosActuales" placeholder="Proteína whey, creatina..." />
+            {T({ label: "Alergias alimentarias", field: "alergiasAlimentarias", placeholder: "Gluten, lactosa, mariscos..." })}
+            {T({ label: "Alimentos que no consume", field: "alimentosNoConsume", placeholder: "Cerdo, mariscos (por religión)..." })}
+            {T({ label: "Suplementos que toma actualmente", field: "suplementosActuales", placeholder: "Proteína whey, creatina..." })}
             <div className="border-t border-border/50 pt-3">
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-3">Estilo de vida</p>
               <div className="grid grid-cols-2 gap-3">
-                <F label="Ocupación / trabajo" field="ocupacion" placeholder="Oficinista, maestro..." />
-                <F label="Horas de sueño/noche" field="horasSueno" type="number" placeholder="7" />
-                <S label="Nivel de estrés" field="nivelEstres" options={opts(["Bajo", "Moderado", "Alto", "Muy alto"])} />
+                {F({ label: "Ocupación / trabajo", field: "ocupacion", placeholder: "Oficinista, maestro..." })}
+                {F({ label: "Horas de sueño/noche", field: "horasSueno", type: "number", placeholder: "7" })}
+                {S({ label: "Nivel de estrés", field: "nivelEstres", options: opts(["Bajo", "Moderado", "Alto", "Muy alto"]) })}
               </div>
             </div>
           </TabsContent>
@@ -419,12 +421,12 @@ function EditarClienteDialog({ cliente, open, onClose }: { cliente: ClienteCompl
                   </SelectContent>
                 </Select>
               </div>
-              <S label="Modalidad de entrenamiento" field="modalidad" options={opts(["Online", "Presencial", "Híbrido"])} />
+              {S({ label: "Modalidad de entrenamiento", field: "modalidad", options: opts(["Online", "Presencial", "Híbrido"]) })}
               <DateField label="Fecha de inicio" value={form.fechaInicio} onChange={v => set("fechaInicio", v)} minYear={2020} maxYear={2030} />
             </div>
-            <T label="Observaciones iniciales del coach" field="notasCoach" placeholder="Primera impresión del cliente, actitud, motivación..." />
-            <T label="Estrategia de entrenamiento propuesta" field="estrategiaEntrenamiento" placeholder="Fase 1: adaptación (4 semanas), foco en técnica..." />
-            <T label="Prioridades del primer mes" field="prioridadesPrimerMes" placeholder="1. Establecer hábito de entrenamiento, 2. Corregir postura..." />
+            {T({ label: "Observaciones iniciales del coach", field: "notasCoach", placeholder: "Primera impresión del cliente, actitud, motivación..." })}
+            {T({ label: "Estrategia de entrenamiento propuesta", field: "estrategiaEntrenamiento", placeholder: "Fase 1: adaptación (4 semanas), foco en técnica..." })}
+            {T({ label: "Prioridades del primer mes", field: "prioridadesPrimerMes", placeholder: "1. Establecer hábito de entrenamiento, 2. Corregir postura..." })}
           </TabsContent>
         </Tabs>
 
