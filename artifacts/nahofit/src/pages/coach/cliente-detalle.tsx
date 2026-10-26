@@ -231,9 +231,12 @@ function EditarClienteDialog({ cliente, open, onClose }: { cliente: ClienteCompl
         method: "PUT",
         body: JSON.stringify(payload),
       });
+      // Refresca todo lo que muestra a este cliente (su ficha usa la clave ["/api/clientes/", id]).
+      qc.invalidateQueries({ queryKey: ["/api/clientes/", cliente.id] });
       qc.invalidateQueries({ queryKey: [`/api/usuarios/${cliente.id}`] });
       qc.invalidateQueries({ queryKey: ["/api/usuarios"] });
       qc.invalidateQueries({ queryKey: ["/api/clientes"] });
+      qc.invalidateQueries({ predicate: (q) => JSON.stringify(q.queryKey).includes("/api/clientes") });
       toast({ title: "✓ Perfil guardado correctamente", description: `Los datos de ${form.nombre} han sido actualizados.` });
       onClose();
     } catch (err: any) {

@@ -87,6 +87,8 @@ for (const [n, r] of admin) { await revisar(n, r, sa?.token); await revisar(n + 
     if (resp.status() !== 200) anotar(donde, `guardar respondió ${resp.status()}: ${(await resp.text()).slice(0, 200)}`);
     await page.waitForTimeout(800);
     await page.screenshot({ path: `${OUT}/flujo-editar-cliente.png` });
+    const titulo = (await page.locator("h1").first().innerText()).trim();
+    if (!titulo.includes("María López Ruiz")) anotar(donde, `se guardó, pero la ficha sigue mostrando el dato viejo ("${titulo}") hasta recargar`);
     const guardado = await api("GET", `/clientes/${mariaId}`, T);
     if (guardado?.nombre !== "María López Ruiz" || guardado?.telefono !== "8015559999") anotar(donde, `no se guardó: ${guardado?.nombre} / ${guardado?.telefono}`);
   } catch (e) { anotar(donde, "no se pudo completar: " + e.message.split("\n")[0]); await page.screenshot({ path: `${OUT}/flujo-editar-cliente-error.png` }); }
