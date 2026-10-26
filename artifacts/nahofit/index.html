@@ -16,7 +16,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..800;1,9..40,400..700&family=Syne:wght@600..800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <style>
       body { margin: 0; background: #0A0F0D; }
       #app-loading {
@@ -25,7 +25,7 @@
         justify-content: center;
         min-height: 100vh;
         background: #0A0F0D;
-        font-family: 'DM Sans', system-ui, sans-serif;
+        font-family: 'Inter', system-ui, sans-serif;
         text-align: center;
       }
       #app-loading h1 { color: #fff; font-size: 1.6rem; margin-bottom: 6px; letter-spacing: 1px; }
@@ -61,7 +61,7 @@
       window.onerror = function(msg, src, line, col, err) {
         var el = document.getElementById('root');
         if (el) {
-          el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0A0F0D;font-family:\'DM Sans\',system-ui,sans-serif;text-align:center;padding:20px"><div><h2 style="color:#fff;margin-bottom:8px">Fit<span style="color:#10B981">orbe</span></h2><p style="color:#4B7A5E;margin-bottom:20px">Ocurrió un error al cargar la aplicación.</p><button onclick="location.reload()" style="background:#10B981;color:#fff;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;margin-right:10px">Recargar</button><button onclick="localStorage.removeItem(\'nahofit_auth_token\');location.href=\'/\'" style="background:transparent;color:#4B7A5E;border:1px solid #1A2E20;padding:10px 24px;border-radius:6px;cursor:pointer">Ir al login</button></div></div>';
+          el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0A0F0D;font-family:\'Inter\',system-ui,sans-serif;text-align:center;padding:20px"><div><h2 style="color:#fff;margin-bottom:8px">Fit<span style="color:#10B981">orbe</span></h2><p style="color:#A8B3AE;margin-bottom:20px">Ocurrió un error al cargar la aplicación.</p><button onclick="location.reload()" style="background:#10B981;color:#04130D;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;margin-right:10px">Recargar</button><button onclick="localStorage.removeItem(\'nahofit_auth_token\');location.href=\'/\'" style="background:transparent;color:#4B7A5E;border:1px solid #1A2E20;padding:10px 24px;border-radius:6px;cursor:pointer">Ir al login</button></div></div>';
         }
         return false;
       };

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { errorIA } from "../lib/error-ia";
 import { db, rutinasTable, usuariosTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import { requireAuth, requireRol } from "../middlewares/auth";
@@ -190,7 +191,7 @@ REGLAS ESTRICTAS:
     res.json({ dias: rutina.dias, semanaInicio });
   } catch (error: any) {
     req.log?.error({ error: error?.message }, "Error generando rutina con AI");
-    res.status(500).json({ error: `Error al generar rutina: ${error?.message || "Error desconocido"}` });
+    { const e = errorIA(error, "la rutina"); res.status(e.status).json({ error: e.error }); }
   }
 });
 

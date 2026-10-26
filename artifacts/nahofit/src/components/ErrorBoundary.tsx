@@ -93,7 +93,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <h2 style={{ fontSize: "1.5rem", marginBottom: "8px" }}>
               Fitorbe
             </h2>
-            <p style={{ color: "#6B9E80", marginBottom: "20px", fontSize: "0.9rem" }}>
+            <p style={{ color: "#A8B3AE", marginBottom: "20px", fontSize: "0.9rem" }}>
               Ocurrió un error al cargar la aplicación.
             </p>
             <button
@@ -118,8 +118,8 @@ export class ErrorBoundary extends Component<Props, State> {
               }}
               style={{
                 background: "transparent",
-                color: "#6B9E80",
-                border: "1px solid #1A2E20",
+                color: "#A8B3AE",
+                border: "1px solid #2B3632",
                 padding: "10px 24px",
                 borderRadius: "6px",
                 cursor: "pointer",

@@ -69,7 +69,7 @@ export default function ClienteDashboard() {
       {/* Frase motivacional del día */}
       {fraseDia && (
         <div style={{ borderLeft: "3px solid #10B981", padding: "10px 16px", marginBottom: "0", background: "#10B98108", borderRadius: "0 8px 8px 0" }}>
-          <div style={{ fontSize: "11px", color: "#4B7A5E", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+          <div style={{ fontSize: "11px", color: "#A8B3AE", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
             ✨ Frase del día
           </div>
           <div style={{ fontSize: "14px", color: "#ECFDF5", fontStyle: "italic", lineHeight: "1.5" }}>

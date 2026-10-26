@@ -228,7 +228,7 @@ function NuevoRegistroModal({
               className={cn(
                 "flex-1 py-2 rounded-lg text-sm font-medium transition-colors border",
                 step === s.n
-                  ? "bg-primary text-white border-primary"
+                  ? "bg-primary text-primary-foreground border-primary"
                   : step > s.n
                     ? "bg-primary/10 text-primary border-primary/30"
                     : "bg-background text-muted-foreground border-border/50"
@@ -779,10 +779,10 @@ export default function ClienteProgreso() {
                   <div className="h-48">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1A2E20" vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2B3632" vertical={false} />
                         <XAxis dataKey="label" stroke="#888" fontSize={11} tickLine={false} axisLine={false} />
                         <YAxis stroke="#888" fontSize={11} tickLine={false} axisLine={false} domain={["auto", "auto"]} tickFormatter={v => `${v}kg`} />
-                        <RechartsTooltip contentStyle={{ background: "#0F1A14", border: "1px solid #1A2E20", color: "#fff" }} itemStyle={{ color: "#10B981" }} formatter={(v) => [`${v}kg`, "Peso"]} />
+                        <RechartsTooltip contentStyle={{ background: "#161D1A", border: "1px solid #2B3632", color: "#fff" }} itemStyle={{ color: "#10B981" }} formatter={(v) => [`${v}kg`, "Peso"]} />
                         <Line type="monotone" dataKey="peso" name="Peso" stroke="#10B981" strokeWidth={3} dot={{ r: 4, fill: "#10B981" }} activeDot={{ r: 6 }} connectNulls />
                       </LineChart>
                     </ResponsiveContainer>
@@ -800,10 +800,10 @@ export default function ClienteProgreso() {
                     <div className="h-48">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#1A2E20" vertical={false} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="#2B3632" vertical={false} />
                           <XAxis dataKey="label" stroke="#888" fontSize={11} tickLine={false} axisLine={false} />
                           <YAxis stroke="#888" fontSize={11} tickLine={false} axisLine={false} domain={["auto", "auto"]} />
-                          <RechartsTooltip contentStyle={{ background: "#0F1A14", border: "1px solid #1A2E20", color: "#fff" }} />
+                          <RechartsTooltip contentStyle={{ background: "#161D1A", border: "1px solid #2B3632", color: "#fff" }} />
                           <Legend iconType="line" />
                           <Line type="monotone" dataKey="grasa" name="Grasa %" stroke="#EF4444" strokeWidth={2} dot={{ r: 3 }} connectNulls />
                           <Line type="monotone" dataKey="muscular" name="Músculo kg" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} connectNulls />
@@ -824,10 +824,10 @@ export default function ClienteProgreso() {
                     <div className="h-48">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#1A2E20" vertical={false} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="#2B3632" vertical={false} />
                           <XAxis dataKey="label" stroke="#888" fontSize={11} tickLine={false} axisLine={false} />
                           <YAxis stroke="#888" fontSize={11} tickLine={false} axisLine={false} domain={["auto", "auto"]} tickFormatter={v => `${v}cm`} />
-                          <RechartsTooltip contentStyle={{ background: "#0F1A14", border: "1px solid #1A2E20", color: "#fff" }} formatter={(v, n) => [`${v}cm`, n]} />
+                          <RechartsTooltip contentStyle={{ background: "#161D1A", border: "1px solid #2B3632", color: "#fff" }} formatter={(v, n) => [`${v}cm`, n]} />
                           <Legend iconType="line" />
                           <Line type="monotone" dataKey="cintura" name="Cintura" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} connectNulls />
                           <Line type="monotone" dataKey="cadera" name="Cadera" stroke="#60A5FA" strokeWidth={2} dot={{ r: 3 }} connectNulls />

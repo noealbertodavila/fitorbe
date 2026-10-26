@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { errorIA } from "../lib/error-ia";
 import { db, planesComidaTable, usuariosTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import { requireAuth, requireRol } from "../middlewares/auth";
@@ -199,7 +200,7 @@ REGLAS:
     res.json({ dias: plan.dias, semanaInicio });
   } catch (error: any) {
     req.log?.error({ error: error?.message }, "Error generando plan de comidas con AI");
-    res.status(500).json({ error: `Error al generar plan: ${error?.message || "Error desconocido"}` });
+    { const e = errorIA(error, "el plan de comida"); res.status(e.status).json({ error: e.error }); }
   }
 });
 

@@ -1,4 +1,4 @@
-/* Fuentes: se cargan en index.html (DM Sans y Syne) */
+/* Fuentes: se cargan en index.html (Inter para textos, Manrope para títulos, Syne solo en el logo de Fitorbe) */
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -70,57 +70,57 @@
 }
 
 :root {
-  --background: 156 20% 5%; /* #0A0F0D */
-  --foreground: 152 82% 96%; /* #ECFDF5 */
-  --border: 138 28% 14%; /* #1A2E20 */
+  --background: 160 18% 6%; /* #0C1311 fondo casi negro, menos verde */
+  --foreground: 150 10% 96%; /* #F3F6F5 */
+  --border: 160 9% 20%; /* bordes visibles */
   
-  --card: 147 27% 8%; /* #0F1A14 */
-  --card-foreground: 152 82% 96%;
-  --card-border: 138 28% 14%;
+  --card: 160 13% 10%; /* #161D1A */
+  --card-foreground: 150 10% 96%;
+  --card-border: 160 9% 20%;
   
-  --sidebar: 147 30% 7%; /* #0F1A14 slightly darker */
-  --sidebar-foreground: 152 82% 96%;
-  --sidebar-border: 138 28% 14%;
-  --sidebar-primary: 160 84% 39%; /* #10B981 emerald */
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 147 27% 12%;
-  --sidebar-accent-foreground: 152 82% 96%;
+  --sidebar: 160 15% 8%;
+  --sidebar-foreground: 150 10% 96%;
+  --sidebar-border: 160 9% 18%;
+  --sidebar-primary: 160 84% 39%; /* #10B981 esmeralda */
+  --sidebar-primary-foreground: 158 70% 5%;
+  --sidebar-accent: 160 10% 15%;
+  --sidebar-accent-foreground: 150 10% 96%;
   --sidebar-ring: 160 84% 39%;
 
-  --popover: 147 27% 8%;
-  --popover-foreground: 152 82% 96%;
-  --popover-border: 138 28% 14%;
+  --popover: 160 13% 11%;
+  --popover-foreground: 150 10% 96%;
+  --popover-border: 160 9% 22%;
 
-  --primary: 160 84% 39%; /* #10B981 emerald */
-  --primary-foreground: 0 0% 100%; /* white text on emerald */
+  --primary: 160 84% 39%; /* #10B981 esmeralda */
+  --primary-foreground: 158 70% 5%; /* texto oscuro sobre verde: se lee mucho mejor */
 
-  --secondary: 147 27% 12%;
-  --secondary-foreground: 152 82% 96%;
+  --secondary: 160 10% 15%;
+  --secondary-foreground: 150 10% 96%;
 
-  --muted: 147 27% 12%;
-  --muted-foreground: 148 22% 48%;
+  --muted: 160 10% 15%;
+  --muted-foreground: 155 8% 70%; /* gris claro legible (antes verde apagado) */
 
   --accent: 160 84% 39%;
-  --accent-foreground: 0 0% 100%;
+  --accent-foreground: 158 70% 5%;
 
-  --destructive: 0 84% 60%;
+  --destructive: 0 74% 52%;
   --destructive-foreground: 0 0% 98%;
 
-  --input: 147 27% 12%;
+  --input: 160 10% 24%;
   --ring: 160 84% 39%;
   
   --chart-1: 160 84% 39%; /* #10B981 emerald */
-  --chart-2: 148 22% 48%;
-  --chart-3: 138 28% 25%;
-  --chart-4: 160 60% 55%;
-  --chart-5: 152 40% 75%;
+  --chart-2: 199 89% 60%;
+  --chart-3: 38 92% 55%;
+  --chart-4: 262 83% 70%;
+  --chart-5: 340 82% 66%;
 
-  --app-font-sans: 'DM Sans', sans-serif;
+  --app-font-sans: 'Inter', system-ui, sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
-  --app-font-syne: 'Syne', sans-serif;
+  --app-font-syne: 'Manrope', 'Inter', sans-serif;
   
-  --radius: 0.25rem; 
+  --radius: 0.5rem;
 
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);

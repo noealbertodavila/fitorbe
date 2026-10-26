@@ -49,7 +49,7 @@ export default function Login() {
     <div
       style={{
         minHeight: "100svh",
-        background: "#0A0F0D",
+        background: "#0C1311",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -57,7 +57,7 @@ export default function Login() {
         padding: "20px",
         paddingTop: "48px",
         paddingBottom: "32px",
-        fontFamily: "'DM Sans', system-ui, sans-serif",
+        fontFamily: "'Inter', system-ui, sans-serif",
         WebkitTapHighlightColor: "transparent",
       }}
     >
@@ -81,7 +81,7 @@ export default function Login() {
       {/* Card */}
       <div
         style={{
-          background: "#0F1A14",
+          background: "#161D1A",
           border: "0.5px solid #1A2E20",
           borderRadius: "16px",
           padding: "clamp(20px, 5vw, 32px) clamp(18px, 5vw, 28px)",
@@ -120,7 +120,7 @@ export default function Login() {
               placeholder="tu@email.com"
               style={{
                 width: "100%",
-                background: "#0A0F0D",
+                background: "#0C1311",
                 border: `0.5px solid ${emailError ? "#EF4444" : "#1A2E20"}`,
                 borderRadius: "10px",
                 padding: "14px 16px",
@@ -149,7 +149,7 @@ export default function Login() {
                 placeholder="••••••••"
                 style={{
                   width: "100%",
-                  background: "#0A0F0D",
+                  background: "#0C1311",
                   border: `0.5px solid ${passError ? "#EF4444" : "#1A2E20"}`,
                   borderRadius: "10px",
                   padding: "14px 46px 14px 16px",

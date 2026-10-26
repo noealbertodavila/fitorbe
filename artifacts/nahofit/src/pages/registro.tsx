@@ -34,17 +34,17 @@ export default function Registro() {
     }
   }
 
-  const campo = { width: "100%", minHeight: 48, padding: "10px 14px", borderRadius: 10, border: "1px solid #1F3A2B", background: "#0F1A14", color: "#ECFDF5", fontSize: 16, fontFamily: "inherit" } as const;
-  const etiqueta = { display: "block", fontSize: 13, fontWeight: 600, color: "#86B49B", marginBottom: 6 } as const;
+  const campo = { width: "100%", minHeight: 48, padding: "10px 14px", borderRadius: 10, border: "1px solid #2F3B37", background: "#161D1A", color: "#ECFDF5", fontSize: 16, fontFamily: "inherit" } as const;
+  const etiqueta = { display: "block", fontSize: 13, fontWeight: 600, color: "#B7C2BD", marginBottom: 6 } as const;
   return (
-    <div style={{ minHeight: "100vh", background: "#0A0F0D", color: "#ECFDF5", fontFamily: "'DM Sans', system-ui, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 16px" }}>
+    <div style={{ minHeight: "100vh", background: "#0C1311", color: "#ECFDF5", fontFamily: "'Inter', system-ui, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 16px" }}>
       <main style={{ width: "100%", maxWidth: 460 }}>
         <a href="/" style={{ display: "block", textAlign: "center", textDecoration: "none", fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 36, marginBottom: 8 }}>
           <span style={{ color: "#ECFDF5" }}>Fit</span><span style={{ color: "#10B981" }}>orbe</span>
         </a>
         <h1 style={{ textAlign: "center", fontSize: 22, fontWeight: 700, margin: "0 0 6px" }}>Crea tu cuenta de coach</h1>
-        <p style={{ textAlign: "center", color: "#86B49B", margin: "0 0 24px" }}>14 días gratis. Sin tarjeta.</p>
-        <form onSubmit={enviar} noValidate style={{ background: "#0F1A14", border: "1px solid #1F3A2B", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+        <p style={{ textAlign: "center", color: "#B7C2BD", margin: "0 0 24px" }}>14 días gratis. Sin tarjeta.</p>
+        <form onSubmit={enviar} noValidate style={{ background: "#161D1A", border: "1px solid #2F3B37", borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
           <div><label htmlFor="r-nombre" style={etiqueta}>Tu nombre</label><input id="r-nombre" required autoComplete="name" style={campo} value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} /></div>
           <div><label htmlFor="r-negocio" style={etiqueta}>Nombre de tu negocio (lo verán tus clientes)</label><input id="r-negocio" autoComplete="organization" placeholder="Ej.: Coaching con Ana" style={campo} value={f.negocio} onChange={(e) => setF({ ...f, negocio: e.target.value })} /></div>
           <div><label htmlFor="r-email" style={etiqueta}>Correo</label><input id="r-email" type="email" required autoComplete="email" style={campo} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
@@ -63,7 +63,7 @@ export default function Registro() {
             {enviando ? "Creando tu cuenta…" : "Empezar gratis"}
           </button>
         </form>
-        <p style={{ textAlign: "center", marginTop: 20, color: "#86B49B" }}>¿Ya tienes cuenta? <a href="/login" style={{ color: "#10B981", fontWeight: 700 }}>Inicia sesión</a></p>
+        <p style={{ textAlign: "center", marginTop: 20, color: "#B7C2BD" }}>¿Ya tienes cuenta? <a href="/login" style={{ color: "#10B981", fontWeight: 700 }}>Inicia sesión</a></p>
       </main>
     </div>
   );

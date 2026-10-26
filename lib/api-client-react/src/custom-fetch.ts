@@ -170,11 +170,13 @@ function buildErrorMessage(response: Response, data: unknown): string {
     getStringField(data, "error_description") ??
     getStringField(data, "error");
 
-  if (title && detail) return `${prefix}: ${title} — ${detail}`;
-  if (detail) return `${prefix}: ${detail}`;
-  if (message) return `${prefix}: ${message}`;
-  if (title) return `${prefix}: ${title}`;
+  // Los mensajes del servidor de Fitorbe ya están escritos para la persona: se muestran tal cual.
+  if (message) return message;
+  if (title && detail) return `${title} — ${detail}`;
+  if (detail) return detail;
+  if (title) return title;
 
+  if (response.status >= 500) return `Algo salió mal en el servidor (${response.status}). Intenta de nuevo en un momento.`;
   return prefix;
 }
 

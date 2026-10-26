@@ -320,14 +320,14 @@ export default function ClienteCalendario() {
 
                         {/* Rutina name */}
                         {dia.rutinaNombre && (
-                          <p className="text-[8px] sm:text-[9px] text-center leading-tight text-[#4B7A5E] font-medium w-full truncate px-0.5">
+                          <p className="text-[8px] sm:text-[9px] text-center leading-tight text-[#A8B3AE] font-medium w-full truncate px-0.5">
                             💪 {dia.rutinaNombre}
                           </p>
                         )}
 
                         {/* Calories */}
                         {dia.caloriasTotal && (
-                          <p className="text-[8px] sm:text-[9px] text-center leading-tight text-[#4B7A5E] font-medium">
+                          <p className="text-[8px] sm:text-[9px] text-center leading-tight text-[#A8B3AE] font-medium">
                             🥗 {dia.caloriasTotal.toLocaleString()} kcal
                           </p>
                         )}
