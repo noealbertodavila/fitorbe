@@ -1,0 +1,49 @@
+# Vigilancia: revisa que fitorbe.com responda. Si un sitio no responde, abre un
+# "issue" en GitHub (GitHub te avisa por correo). Cuando vuelve, lo cierra solo.
+name: Vigilancia
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+concurrency:
+  group: vigilancia
+  cancel-in-progress: false
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Revisar y avisar
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          # nombre|dirección (los servidores gratis de Render pueden tardar ~1 min en despertar)
+          sitios=(
+            "Fitorbe|https://fitorbe.com/"
+            "API de Fitorbe|https://fitorbe.com/api/healthz"
+          )
+          for s in "${sitios[@]}"; do
+            nombre="${s%%|*}"; url="${s#*|}"
+            ok=0
+            for i in 1 2 3; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" -L --max-time 70 "$url" || true)
+              echo "$nombre intento $i: $code"
+              if [ "$code" = "200" ]; then ok=1; break; fi
+              sleep 20
+            done
+            titulo="$nombre no responde"
+            abierto=$(gh issue list -R "$REPO" --state open --search "in:title \"$titulo\"" --json number --jq '.[0].number // empty')
+            if [ "$ok" = "1" ]; then
+              [ -n "$abierto" ] && gh issue close "$abierto" -R "$REPO" --comment "Volvió a responder ($(date -u '+%Y-%m-%d %H:%M UTC'))."
+            else
+              [ -z "$abierto" ] && gh issue create -R "$REPO" --title "$titulo" --body "$url no respondió (código $code) a las $(date -u '+%Y-%m-%d %H:%M UTC'). Revisa Render (https://dashboard.render.com) o GitHub Pages."
+            fi
+          done
+          true

@@ -1,0 +1,82 @@
+# Prueba de restauración (el día 1 de cada mes): baja la última copia REAL del
+# respaldo semanal, la descifra, la carga en una base de datos vacía y revisa que
+# esté completa y que no tenga más de 9 días. Si algo falla, abre un "issue"
+# (GitHub te avisa por correo). Así se sabe que los respaldos sirven de verdad.
+name: Prueba de restauración
+
+on:
+  schedule:
+    - cron: "23 10 1 * *"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+jobs:
+  restaurar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: fitorbe
+          POSTGRES_PASSWORD: fitorbe
+          POSTGRES_DB: restaurada
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fitorbe"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://fitorbe:fitorbe@localhost:5432/restaurada
+      PGPASSWORD: fitorbe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalar
+        run: npx --yes pnpm@10 install --frozen-lockfile --prod=false
+      - name: Bajar y descifrar la última copia
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+        run: |
+          set -euo pipefail
+          id=$(gh run list -R "${{ github.repository }}" -w Respaldo --status success -L 1 --json databaseId -q '.[0].databaseId')
+          [ -n "$id" ] || { echo "::error::No hay ninguna copia del respaldo semanal"; exit 1; }
+          gh run download "$id" -R "${{ github.repository }}" -D copias
+          f=$(find copias -name 'fitorbe-*.json.gz.gpg' | sort | tail -1)
+          [ -n "$f" ] || { echo "::error::La copia no está en el respaldo $id"; exit 1; }
+          echo "copia: $f"
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$CLAVE" -d -o copia.json.gz "$f"
+          gzip -t copia.json.gz
+      - name: Cargar en una base vacía y comparar
+        run: |
+          set -euo pipefail
+          npx pnpm@10 --filter @workspace/db run push-force
+          node lib/db/restaurar.mjs copia.json.gz
+          node -e '
+            const z = require("zlib"), f = require("fs");
+            const d = JSON.parse(z.gunzipSync(f.readFileSync("copia.json.gz")));
+            const dias = (Date.now() - new Date(d.fecha)) / 864e5;
+            console.log("copia del " + d.fecha + " (" + dias.toFixed(1) + " días)");
+            if (dias > 9) { console.log("::error::La última copia tiene más de 9 días: el respaldo semanal no está corriendo"); process.exit(1); }
+            f.writeFileSync("esperado.txt", Object.keys(d.tablas).sort().map(t => t + " " + d.tablas[t].length).join("\n") + "\n");
+          '
+          mal=0
+          while read -r t n; do
+            r=$(psql -h localhost -U fitorbe -d restaurada -tAc "SELECT count(*) FROM public.\"$t\"")
+            [ "$r" = "$n" ] || { echo "::error::$t: copia $n filas, restaurada $r"; mal=1; }
+          done < esperado.txt
+          [ "$mal" = "0" ]
+          echo "La copia se restauró completa: $(wc -l < esperado.txt) tablas."
+      - name: Avisar si falló
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create -R "${{ github.repository }}" --title "La prueba de restauración del respaldo falló" \
+            --body "La prueba mensual no pudo restaurar la última copia ($(date -u '+%Y-%m-%d')). Revisa: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

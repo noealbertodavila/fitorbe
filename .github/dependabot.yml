@@ -1,0 +1,19 @@
+# Avisos y correcciones automáticas de librerías (Dependabot). Una vez al mes
+# propone UN cambio con todas las actualizaciones menores; las de seguridad
+# llegan aparte en cuanto se publican. Las pruebas automáticas corren en cada
+# propuesta: si salen en verde, se puede aceptar.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    groups:
+      menores:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
