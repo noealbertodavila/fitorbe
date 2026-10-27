@@ -69,6 +69,7 @@ jobs:
           PORT: "8080"
           NODE_ENV: test
           SESSION_SECRET: prueba-session-secreto-solo-para-ci
+          RESPALDO_SECRET: prueba-respaldo-solo-para-ci-123
           SUPERADMIN_EMAIL: superadmin@prueba.test
           SUPERADMIN_PASSWORD: superadmin-clave-ci-1
           BASE_URL: http://localhost:8080
@@ -81,6 +82,29 @@ jobs:
           cat pruebas.txt
           if [ $r -ne 0 ]; then { echo; echo "--- servidor.log ---"; tail -40 servidor.log; } >> pruebas.txt; fi
           exit $r
+      - name: Probar que el respaldo se puede restaurar
+        env:
+          PORT: "8081"
+          NODE_ENV: test
+          SESSION_SECRET: prueba-session-secreto-solo-para-ci
+          RESPALDO_SECRET: prueba-respaldo-solo-para-ci-123
+          SUPERADMIN_EMAIL: superadmin@prueba.test
+          SUPERADMIN_PASSWORD: superadmin-clave-ci-1
+        run: |
+          set -e
+          node artifacts/api-server/dist/index.mjs > servidor-respaldo.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8081/api/healthz && break; sleep 1; done
+          curl -sf -H "x-respaldo-secret: prueba-respaldo-solo-para-ci-123" http://localhost:8081/api/respaldo -o respaldo.json.gz
+          gzip -t respaldo.json.gz
+          PGPASSWORD=fitorbe psql -h localhost -U fitorbe -d fitorbe_pruebas -c "CREATE DATABASE fitorbe_restaurada"
+          export DATABASE_URL=postgres://fitorbe:fitorbe@localhost:5432/fitorbe_restaurada
+          npx pnpm@10 --filter @workspace/db run push-force
+          node lib/db/restaurar.mjs respaldo.json.gz
+          q="SELECT string_agg(table_name || '=' || (xpath('/row/n/text()', query_to_xml('SELECT count(*) AS n FROM public.' || quote_ident(table_name), false, true, '')))[1]::text, ',' ORDER BY table_name) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'"
+          b=$(PGPASSWORD=fitorbe psql -h localhost -U fitorbe -d fitorbe_restaurada -tAc "$q")
+          node -e 'const z=require("zlib"),f=require("fs");const d=JSON.parse(z.gunzipSync(f.readFileSync("respaldo.json.gz")));console.log(Object.keys(d.tablas).sort().map(t=>t+"="+d.tablas[t].length).join(","))' > esperado.txt
+          echo "restaurada: $b"; echo "respaldo:   $(cat esperado.txt)"
+          [ "$b" = "$(cat esperado.txt)" ] || { echo "::error::La base restaurada no coincide con el respaldo"; exit 1; }
       - name: Comentar pruebas
         if: always()
         env:

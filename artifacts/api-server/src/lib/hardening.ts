@@ -105,14 +105,15 @@ interface Bucket {
  * Permite `max` peticiones por IP cada `windowMs`. Solo cuenta POST/PUT/PATCH/DELETE.
  * Guarda en memoria: se reinicia si el servidor se reinicia (suficiente contra robots).
  */
-export function rateLimit(name: string, max: number, windowMs: number, message?: string) {
+export function rateLimit(name: string, max: number, windowMs: number, message?: string, countGets = false) {
   const buckets = new Map<string, Bucket>();
   let lastSweep = Date.now();
   // Las pruebas automáticas (NODE_ENV=test) hacen muchas peticiones seguidas.
   const off = process.env.NODE_ENV === "test" || process.env.RATE_LIMIT_OFF === "true";
   return (req: Request, res: Response, next: NextFunction): void => {
     if (off) return next();
-    if (req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS") return next();
+    if (req.method === "OPTIONS") return next();
+    if (!countGets && (req.method === "GET" || req.method === "HEAD")) return next();
     const now = Date.now();
     if (now - lastSweep > windowMs) {
       for (const [k, b] of buckets) if (now - b.start > windowMs) buckets.delete(k);
@@ -135,4 +136,9 @@ export function rateLimit(name: string, max: number, windowMs: number, message?:
     }
     next();
   };
+}
+
+/** Igual que rateLimit pero también cuenta las peticiones GET. */
+export function rateLimitGet(name: string, max: number, windowMs: number, message?: string) {
+  return rateLimit(name, max, windowMs, message, true);
 }

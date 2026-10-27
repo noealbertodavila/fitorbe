@@ -1,0 +1,77 @@
+# Respaldo semanal de la base de datos de Fitorbe FUERA de Render.
+# La base sigue cerrada a internet: la copia la entrega el propio servidor de
+# Fitorbe en /api/respaldo, solo con el secreto. Se cifra y se guarda 90 días
+# como "artifact" del repositorio (Actions > Respaldo). Este repositorio es
+# público: la copia va cifrada con AES-256 y solo se abre con RESPALDO_CLAVE.
+#
+# Secretos en GitHub (Settings > Secrets and variables > Actions):
+#   RESPALDO_SECRET  = el mismo valor de RESPALDO_SECRET en Render (fitorbe > Environment)
+#   RESPALDO_CLAVE   = una contraseña larga para cifrar las copias (guárdala bien)
+#
+# Para restaurar: descargar el artifact y
+#   gpg -d fitorbe-AAAA-MM-DD.json.gz.gpg > fitorbe.json.gz
+#   DATABASE_URL="postgres://...base-nueva..." npx pnpm@10 --filter @workspace/db run push
+#   DATABASE_URL="postgres://...base-nueva..." node lib/db/restaurar.mjs fitorbe.json.gz
+name: Respaldo
+
+on:
+  schedule:
+    - cron: "37 9 * * 0" # domingos 3:37 a. m. hora de Utah
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Pedir, revisar y cifrar la copia
+        env:
+          SECRETO: ${{ secrets.RESPALDO_SECRET }}
+          CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+          URL: https://fitorbe.com/api/respaldo
+        run: |
+          set -euo pipefail
+          if [ -z "${SECRETO}" ] || [ -z "${CLAVE}" ]; then
+            echo "::error::Faltan los secretos RESPALDO_SECRET y RESPALDO_CLAVE (ver arriba en este archivo)."
+            exit 1
+          fi
+          mkdir -p copias
+          fecha=$(date -u +%F)
+          # El servidor gratis puede estar dormido: se despierta y se reintenta.
+          curl -s -o /dev/null --max-time 90 https://fitorbe.com/api/healthz || true
+          ok=0
+          for i in 1 2 3; do
+            code=$(curl -s -w "%{http_code}" --max-time 300 -H "x-respaldo-secret: ${SECRETO}" "$URL" -o fitorbe.json.gz || echo 000)
+            echo "intento $i: $code"
+            if [ "$code" = "200" ] && gzip -t fitorbe.json.gz 2>/dev/null; then ok=1; break; fi
+            sleep 20
+          done
+          if [ "$ok" != "1" ]; then
+            if [ "$code" = "404" ]; then
+              echo "::error::El servidor respondió 404: RESPALDO_SECRET de GitHub no coincide con el de Render (o falta publicar la versión con /api/respaldo)."
+            else
+              echo "::error::No se pudo descargar la copia (código $code)."
+            fi
+            exit 1
+          fi
+          python3 - <<'PY'
+          import gzip, json
+          d = json.load(gzip.open("fitorbe.json.gz"))
+          assert d.get("formato") == "fitorbe-respaldo-1", "formato desconocido"
+          t = d["tablas"]
+          print("tablas:", len(t), "| filas:", sum(len(v) for v in t.values()), "| fecha:", d["fecha"])
+          assert len(t) >= 5, "muy pocas tablas"
+          PY
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$CLAVE" \
+              --symmetric --cipher-algo AES256 -o "copias/fitorbe-$fecha.json.gz.gpg" fitorbe.json.gz
+          rm fitorbe.json.gz
+          echo "copia: $(du -h copias/fitorbe-$fecha.json.gz.gpg | cut -f1)"
+      - name: Guardar
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-${{ github.run_number }}
+          path: copias/
+          retention-days: 90

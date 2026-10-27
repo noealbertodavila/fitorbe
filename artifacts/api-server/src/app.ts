@@ -9,7 +9,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { UPLOADS_DIR } from "./lib/uploads-path";
 
-import { allowedOrigins, corsOrigin, rateLimit, securityHeaders } from "./lib/hardening";
+import { allowedOrigins, corsOrigin, rateLimit, rateLimitGet, securityHeaders } from "./lib/hardening";
 
 const app: Express = express();
 
@@ -61,6 +61,7 @@ app.use(express.json({ limit: "10mb" }));
 
 // Límite de intentos de inicio de sesión por IP.
 app.use("/api/auth/login", rateLimit("login", 20, 15 * 60 * 1000, "Demasiados intentos. Espera 15 minutos e inténtalo de nuevo."));
+app.use("/api/respaldo", rateLimitGet("respaldo", 6, 60 * 60 * 1000));
 app.use(express.urlencoded({ extended: true }));
 
 // Fotos de progreso: primero se buscan en la base de datos (tabla archivos);
