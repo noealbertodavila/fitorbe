@@ -16,8 +16,8 @@ const app: Express = express();
 // No anunciar con qué está hecho el servidor.
 app.disable("x-powered-by");
 
-// Cabeceras de seguridad (la CSP va en modo "solo reportar" hasta poner
-// CSP_ENFORCE=true en Render).
+// Cabeceras de seguridad. La CSP bloquea; con CSP_ENFORCE=false en Render
+// pasa a "solo reportar".
 app.use(securityHeaders({ permissions: "camera=(self), geolocation=(), microphone=(), payment=(), usb=()" }));
 
 app.use(

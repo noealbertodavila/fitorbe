@@ -6,8 +6,8 @@ import type { Request, Response, NextFunction } from "express";
  *  - Lista fija de sitios que pueden llamar a la API desde otro dominio (CORS).
  *  - Límite de peticiones por IP para rutas públicas sensibles.
  *
- * La CSP se manda en modo "solo reportar" mientras CSP_ENFORCE no sea "true":
- * el navegador avisa en la consola lo que bloquearía, sin romper nada.
+ * La CSP se aplica (bloquea). Si algo se rompe en producción, poner
+ * CSP_ENFORCE=false en Render la deja en modo "solo reportar" sin publicar código.
  */
 
 // IP real del visitante. Render va detrás de Cloudflare, que pone
@@ -79,9 +79,9 @@ export function buildCsp(opts: HeaderOptions = {}): string {
 export function securityHeaders(opts: HeaderOptions = {}) {
   const csp = buildCsp(opts);
   const cspHeader =
-    process.env.CSP_ENFORCE === "true"
-      ? "Content-Security-Policy"
-      : "Content-Security-Policy-Report-Only";
+    process.env.CSP_ENFORCE === "false"
+      ? "Content-Security-Policy-Report-Only"
+      : "Content-Security-Policy";
   const permissions =
     opts.permissions ?? "camera=(self), geolocation=(self), microphone=(), payment=(), usb=()";
   return (_req: Request, res: Response, next: NextFunction): void => {

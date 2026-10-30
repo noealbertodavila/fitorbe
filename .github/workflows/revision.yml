@@ -105,6 +105,20 @@ jobs:
           node -e 'const z=require("zlib"),f=require("fs");const d=JSON.parse(z.gunzipSync(f.readFileSync("respaldo.json.gz")));console.log(Object.keys(d.tablas).sort().map(t=>t+"="+d.tablas[t].length).join(","))' > esperado.txt
           echo "restaurada: $b"; echo "respaldo:   $(cat esperado.txt)"
           [ "$b" = "$(cat esperado.txt)" ] || { echo "::error::La base restaurada no coincide con el respaldo"; exit 1; }
+      - name: Revisar la CSP en el navegador
+        env:
+          PORT: "8082"
+          NODE_ENV: test
+          SESSION_SECRET: prueba-session-secreto-solo-para-ci
+          SUPERADMIN_EMAIL: superadmin@prueba.test
+          SUPERADMIN_PASSWORD: superadmin-clave-ci-1
+        run: |
+          mkdir -p /tmp/pw && (cd /tmp/pw && npm init -y >/dev/null && npm i playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null)
+          node artifacts/api-server/dist/index.mjs > servidor-csp.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8082/api/healthz && break; sleep 1; done
+          curl -sI http://localhost:8082/login | grep -i "^content-security-policy" || { echo "::error::La CSP no está activa"; exit 1; }
+          cp scripts/revisar-csp.mjs /tmp/pw/
+          (cd /tmp/pw && BASE_URL=http://localhost:8082 APP=fitorbe node revisar-csp.mjs) || { tail -30 servidor-csp.log; exit 1; }
       - name: Comentar pruebas
         if: always()
         env:
