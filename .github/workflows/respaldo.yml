@@ -70,7 +70,7 @@ jobs:
           rm fitorbe.json.gz
           echo "copia: $(du -h copias/fitorbe-$fecha.json.gz.gpg | cut -f1)"
       - name: Guardar
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: respaldo-${{ github.run_number }}
           path: copias/
