@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { ListaComprasDialog } from "@/components/ListaComprasDialog";
 import { AvisoSemanaTerminada, CopiarSemanaDialog } from "@/components/SemanasPlan";
+import { UsoIA, AnalisisIA, CLAVE_USO_IA } from "@/components/IaPanel";
 import { getSemanaParaPlanear, lunesDe } from "@/lib/date-mt";
 import { usePdfExport } from "@/hooks/use-pdf-export";
 import { PrintablePlan } from "@/components/PrintablePlan";
@@ -103,6 +104,7 @@ export default function CoachNutricion() {
   // Los domingos se propone la semana siguiente (la actual termina ese día).
   const [semanaInicio, setSemanaInicio] = useState(getSemanaParaPlanear);
   const [showCopiar, setShowCopiar] = useState(false);
+  const [analisisIA, setAnalisisIA] = useState<string[] | null>(null);
   const [showLista, setShowLista] = useState(false);
 
   // Modal
@@ -188,6 +190,8 @@ export default function CoachNutricion() {
         body: JSON.stringify({ clienteId, semanaInicio: semanasAGenerar[0] }),
       });
       if (resultado?.error) throw new Error(resultado.error);
+      setAnalisisIA(resultado?.analisis?.resumen ?? null);
+      queryClient.invalidateQueries({ queryKey: CLAVE_USO_IA });
 
       const dias: DiaComida[] = (resultado.dias || []).map((d: any) => ({
         diaSemana: d.diaSemana,
@@ -216,6 +220,8 @@ export default function CoachNutricion() {
         body: JSON.stringify({ clienteId, semanaInicio }),
       });
       if (resultado?.error) throw new Error(resultado.error);
+      setAnalisisIA(resultado?.analisis?.resumen ?? null);
+      queryClient.invalidateQueries({ queryKey: CLAVE_USO_IA });
       const dias: DiaComida[] = (resultado.dias || []).map((d: any) => ({ diaSemana: d.diaSemana, comidas: d.comidas || [] }));
       for (let i = 0; i < 7; i++) { if (!dias.find(d => d.diaSemana === i)) dias.push({ diaSemana: i, comidas: [] }); }
       dias.sort((a, b) => a.diaSemana - b.diaSemana);
@@ -234,9 +240,11 @@ export default function CoachNutricion() {
     try {
       const resultado = await customFetch<any>("/api/planes-comida/generar-ai", {
         method: "POST",
-        body: JSON.stringify({ clienteId, semanaInicio }),
+        // Solo ese día: cuesta mucho menos que regenerar la semana.
+        body: JSON.stringify({ clienteId, semanaInicio, soloDia: diaIdx }),
       });
       if (resultado?.error) throw new Error(resultado.error);
+      queryClient.invalidateQueries({ queryKey: CLAVE_USO_IA });
       const diaGenerado = (resultado.dias || []).find((d: any) => d.diaSemana === diaIdx);
       if (!diaGenerado) throw new Error("El AI no generó ese día");
       setDraftDias(prev => prev.map(d => d.diaSemana === diaIdx ? { ...d, comidas: diaGenerado.comidas || [], guardado: false } : d));
@@ -413,6 +421,7 @@ export default function CoachNutricion() {
         </CardContent>
       </Card>
 
+      {clienteId > 0 && <UsoIA />}
       {clienteId > 0 && (
         <AvisoSemanaTerminada semana={semanaInicio} onCambiar={(l) => { setSemanaInicio(l); setPageMode("view"); }} />
       )}
@@ -454,6 +463,7 @@ export default function CoachNutricion() {
       {/* DRAFT / MANUAL MODE */}
       {!isGenerating && (pageMode === "draft" || pageMode === "manual") && (
         <div className="space-y-4">
+          {pageMode === "draft" && <AnalisisIA resumen={analisisIA} />}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-syne font-bold text-white flex items-center gap-2">

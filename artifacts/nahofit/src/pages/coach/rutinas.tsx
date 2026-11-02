@@ -12,6 +12,7 @@ import {
   RefreshCw, History, Eye, CheckCircle2, PenLine, Download, Copy
 } from "lucide-react";
 import { AvisoSemanaTerminada, CopiarSemanaDialog } from "@/components/SemanasPlan";
+import { UsoIA, AnalisisIA, CLAVE_USO_IA } from "@/components/IaPanel";
 import { getSemanaParaPlanear, lunesDe } from "@/lib/date-mt";
 import { usePdfExport } from "@/hooks/use-pdf-export";
 import { PrintablePlan } from "@/components/PrintablePlan";
@@ -80,6 +81,7 @@ export default function CoachRutinas() {
   // Los domingos se propone la semana siguiente (la actual termina ese día).
   const [semanaInicio, setSemanaInicio] = useState(getSemanaParaPlanear);
   const [showCopiar, setShowCopiar] = useState(false);
+  const [analisisIA, setAnalisisIA] = useState<string[] | null>(null);
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -173,6 +175,8 @@ export default function CoachRutinas() {
         method: "POST",
         body: JSON.stringify({ clienteId, semanaInicio: semanasAGenerar[0], organizacion }),
       });
+      setAnalisisIA(resultado?.analisis?.resumen ?? null);
+      queryClient.invalidateQueries({ queryKey: CLAVE_USO_IA });
       if (resultado?.error) throw new Error(resultado.error);
 
       const dias: DiaRutina[] = (resultado.dias || []).map((d: any) => ({
@@ -208,6 +212,8 @@ export default function CoachRutinas() {
         body: JSON.stringify({ clienteId, semanaInicio }),
       });
       if (resultado?.error) throw new Error(resultado.error);
+      setAnalisisIA(resultado?.analisis?.resumen ?? null);
+      queryClient.invalidateQueries({ queryKey: CLAVE_USO_IA });
       const dias: DiaRutina[] = (resultado.dias || []).map((d: any) => ({
         diaSemana: d.diaSemana,
         ejercicios: d.ejercicios || [],
@@ -231,9 +237,11 @@ export default function CoachRutinas() {
     try {
       const resultado = await customFetch<any>("/api/rutinas/generar-ai", {
         method: "POST",
-        body: JSON.stringify({ clienteId, semanaInicio }),
+        // Solo ese día: cuesta mucho menos que regenerar la semana.
+        body: JSON.stringify({ clienteId, semanaInicio, soloDia: diaIdx }),
       });
       if (resultado?.error) throw new Error(resultado.error);
+      queryClient.invalidateQueries({ queryKey: CLAVE_USO_IA });
       const diaGenerado = (resultado.dias || []).find((d: any) => d.diaSemana === diaIdx);
       if (!diaGenerado) throw new Error("El AI no generó ese día");
       setDraftDias(prev => prev.map(d => d.diaSemana === diaIdx ? { ...d, ejercicios: diaGenerado.ejercicios || [], guardado: false } : d));
@@ -399,6 +407,7 @@ export default function CoachRutinas() {
         </CardContent>
       </Card>
 
+      {clienteId > 0 && <UsoIA />}
       {clienteId > 0 && (
         <AvisoSemanaTerminada semana={semanaInicio} onCambiar={(l) => { setSemanaInicio(l); setPageMode("view"); }} />
       )}
@@ -441,6 +450,7 @@ export default function CoachRutinas() {
       {/* DRAFT / MANUAL MODE */}
       {!isGenerating && (pageMode === "draft" || pageMode === "manual") && (
         <div className="space-y-4">
+          {pageMode === "draft" && <AnalisisIA resumen={analisisIA} />}
           {/* Draft header */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>

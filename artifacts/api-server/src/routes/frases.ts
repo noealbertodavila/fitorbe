@@ -6,6 +6,7 @@ import { requireAuth } from "../middlewares/auth";
 import { coachDelCliente } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 import { textoDeRespuesta } from "../lib/texto-ia";
+import { MODELO_IA, limiteDelCoach } from "../lib/ia-uso";
 
 const router = Router();
 
@@ -64,9 +65,18 @@ router.get("/frase-motivacional/:clienteId", requireAuth, async (req, res) => {
   const diaSemana = DIAS_SEMANA[new Date().getDay()];
   const nombre = cliente.nombre?.split(" ")[0] || "campeón";
 
+  // Si el plan del coach no incluye IA, se usa una frase de la lista (sin costo).
+  const conIA = cliente.coachId ? (await limiteDelCoach(cliente.coachId)).limite > 0 : false;
+  if (!conIA) {
+    const frase = FRASES_FALLBACK[Math.floor(Math.random() * FRASES_FALLBACK.length)];
+    await db.insert(fraseDiaTable).values({ clienteId, fecha: hoy, frase }).onConflictDoNothing();
+    res.json({ frase });
+    return;
+  }
+
   try {
     const message = await anthropic.messages.create({
-      model: "claude-haiku-4-5",
+      model: MODELO_IA,
       max_tokens: 120,
       messages: [{
         role: "user",

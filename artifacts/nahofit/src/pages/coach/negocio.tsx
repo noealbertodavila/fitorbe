@@ -14,13 +14,31 @@ export default function CoachNegocio() {
   const [nombre, setNombre] = useState("");
   const [logo, setLogo] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [reglasNutricion, setReglasNutricion] = useState("");
+  const [reglasEntrenamiento, setReglasEntrenamiento] = useState("");
+  const [guardandoReglas, setGuardandoReglas] = useState(false);
 
   useEffect(() => {
     if (negocio) {
       setNombre(negocio.negocio);
       setLogo(negocio.logo);
+      setReglasNutricion(negocio.reglasNutricion ?? "");
+      setReglasEntrenamiento(negocio.reglasEntrenamiento ?? "");
     }
   }, [negocio]);
+
+  async function guardarReglas() {
+    setGuardandoReglas(true);
+    try {
+      await customFetch("/api/mi-negocio", { method: "PUT", body: JSON.stringify({ reglasNutricion, reglasEntrenamiento }) });
+      await qc.invalidateQueries({ queryKey: ["/api/mi-negocio"] });
+      toast({ title: "Reglas guardadas", description: "La IA las usará en los próximos planes y rutinas." });
+    } catch (err: any) {
+      toast({ title: "No se guardó", description: err?.message ?? "Intenta de nuevo.", variant: "destructive" });
+    } finally {
+      setGuardandoReglas(false);
+    }
+  }
 
   function elegirLogo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -87,6 +105,32 @@ export default function CoachNegocio() {
             <p className="text-xs text-muted-foreground mt-2">PNG, JPG o WEBP, máximo 500 KB.</p>
           </div>
           <Button onClick={guardar} disabled={guardando || !nombre.trim()} className="min-h-[44px] font-bold">{guardando ? "Guardando…" : "Guardar"}</Button>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-card border-border/50">
+        <CardContent className="p-6 space-y-4">
+          <div>
+            <h2 className="font-bold text-white">Tus reglas para la IA</h2>
+            <p className="text-sm text-muted-foreground">Tu método. La IA las respeta siempre al proponer planes y rutinas (una por línea).</p>
+          </div>
+          <div>
+            <label htmlFor="reglas-nut" className="block text-sm font-semibold text-muted-foreground mb-1">Nutrición</label>
+            <textarea id="reglas-nut" rows={4} maxLength={1500} disabled={isLoading}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-white"
+              placeholder={"Ej.: Un solo carbohidrato por comida\nSin pan ni pasta\nHuevo en todos los desayunos\nPesos en cocido"}
+              value={reglasNutricion} onChange={(e) => setReglasNutricion(e.target.value)} />
+          </div>
+          <div>
+            <label htmlFor="reglas-ent" className="block text-sm font-semibold text-muted-foreground mb-1">Entrenamiento</label>
+            <textarea id="reglas-ent" rows={3} maxLength={1500} disabled={isLoading}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-white"
+              placeholder={"Ej.: Siempre incluir trabajo de core\nNada de saltos para principiantes"}
+              value={reglasEntrenamiento} onChange={(e) => setReglasEntrenamiento(e.target.value)} />
+          </div>
+          <Button onClick={guardarReglas} disabled={guardandoReglas || isLoading} className="min-h-[44px] font-bold">
+            {guardandoReglas ? "Guardando…" : "Guardar reglas"}
+          </Button>
         </CardContent>
       </Card>
 

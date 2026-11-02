@@ -137,7 +137,11 @@ registroRouter.get("/mi-negocio", requireAuth, async (req, res) => {
   }
   const [cu] = await db.select({ nombre: usuariosTable.nombre }).from(usuariosTable).where(eq(usuariosTable.id, coachId)).limit(1);
   const publico = { negocio: f.negocio, slug: f.slug, logo: f.logo, colorPrimario: f.colorPrimario, coachId, coachNombre: cu?.nombre ?? "" };
-  res.json(me.rol === "coach" ? { ...publico, estado: f.estado, plan: f.plan, pruebaHasta: f.pruebaHasta } : publico);
+  res.json(
+    me.rol === "coach"
+      ? { ...publico, estado: f.estado, plan: f.plan, pruebaHasta: f.pruebaHasta, reglasNutricion: f.reglasNutricion ?? "", reglasEntrenamiento: f.reglasEntrenamiento ?? "" }
+      : publico,
+  );
 });
 
 registroRouter.put("/mi-negocio", requireAuth, requireRol("coach"), async (req, res) => {
@@ -148,10 +152,14 @@ registroRouter.put("/mi-negocio", requireAuth, requireRol("coach"), async (req, 
   if (typeof b.colorPrimario === "string" && /^#[0-9a-fA-F]{6}$/.test(b.colorPrimario)) cambios.colorPrimario = b.colorPrimario;
   if (b.logo === null) cambios.logo = null;
   else if (typeof b.logo === "string" && /^data:image\/(png|jpeg|webp);base64,/.test(b.logo) && b.logo.length < 700_000) cambios.logo = b.logo;
+  // Reglas propias del coach para la IA (texto corto; vacío = sin reglas).
+  for (const k of ["reglasNutricion", "reglasEntrenamiento"] as const) {
+    if (typeof b[k] === "string") cambios[k] = b[k].trim().slice(0, 1500) || null;
+  }
   if (!Object.keys(cambios).length) {
     res.status(400).json({ error: "Nada que cambiar" });
     return;
   }
   const [f] = await db.update(coachesTable).set(cambios).where(and(eq(coachesTable.usuarioId, me.id))).returning();
-  res.json({ negocio: f.negocio, slug: f.slug, logo: f.logo, colorPrimario: f.colorPrimario });
+  res.json({ negocio: f.negocio, slug: f.slug, logo: f.logo, colorPrimario: f.colorPrimario, reglasNutricion: f.reglasNutricion ?? "", reglasEntrenamiento: f.reglasEntrenamiento ?? "" });
 });

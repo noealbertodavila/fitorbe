@@ -13,6 +13,8 @@ export type Negocio = {
   estado?: string;
   plan?: string;
   pruebaHasta?: string | null;
+  reglasNutricion?: string;
+  reglasEntrenamiento?: string;
 };
 
 export function useNegocio() {

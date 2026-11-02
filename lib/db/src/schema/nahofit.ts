@@ -8,6 +8,7 @@ import {
   timestamp,
   jsonb,
   date,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -382,6 +383,25 @@ export const coachesTable = pgTable("coaches", {
   logo: text("logo"),
   colorPrimario: text("color_primario"),
   notasAdmin: text("notas_admin"),
+  // Reglas propias del coach que la IA respeta al armar planes y rutinas.
+  reglasNutricion: text("reglas_nutricion"),
+  reglasEntrenamiento: text("reglas_entrenamiento"),
   creadoEn: timestamp("creado_en").defaultNow().notNull(),
 });
 export type Coach = typeof coachesTable.$inferSelect;
+
+/**
+ * Uso de la IA por día: "generacion" (planes y rutinas, del coach) y "chat" (asistente, del cliente).
+ * Sirve para los límites de cada plan y para ver cuánto se usa.
+ */
+export const usoIaTable = pgTable(
+  "uso_ia",
+  {
+    id: serial("id").primaryKey(),
+    usuarioId: integer("usuario_id").notNull(),
+    tipo: text("tipo").notNull(), // generacion | chat
+    fecha: date("fecha").notNull(),
+    cantidad: integer("cantidad").notNull().default(0),
+  },
+  (t) => [uniqueIndex("uso_ia_usuario_tipo_fecha").on(t.usuarioId, t.tipo, t.fecha)],
+);

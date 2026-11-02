@@ -6,6 +6,8 @@ import { requireAuth, requireRol } from "../middlewares/auth";
 import { coachDelCliente } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 import { textoDeRespuesta } from "../lib/texto-ia";
+import { MODELO_IA, puedeGenerar, registrarUso } from "../lib/ia-uso";
+import { analizarNutricion, ajustarAMetas, clienteCompleto, edadDe } from "../lib/evaluacion-ia";
 import { esLunes, sinMarcas } from "../lib/semanas";
 
 const router = Router();
@@ -125,112 +127,87 @@ function repairTruncatedJson(raw: string): string | null {
   return null;
 }
 
-// Generate plan with AI — returns DRAFT (does not save to DB)
+// Plan de comida con IA — devuelve un BORRADOR (no se guarda hasta que el coach lo publica).
+// La app evalúa al cliente y calcula las metas; la IA solo arma el menú. Cuenta 1 generación del mes.
+// Con soloDia (0-6) genera un solo día (mucho más barato que la semana completa).
 router.post("/planes-comida/generar-ai", requireAuth, requireRol("coach"), async (req, res) => {
-  const { clienteId, semanaInicio } = req.body;
+  const me = (req as any).usuario;
+  const { clienteId, semanaInicio } = req.body ?? {};
+  const soloDia = Number.isInteger(req.body?.soloDia) && req.body.soloDia >= 0 && req.body.soloDia <= 6 ? (req.body.soloDia as number) : null;
 
   if (!clienteId) { res.status(400).json({ error: "Se requiere clienteId" }); return; }
-
-  const [c] = await db.select().from(usuariosTable).where(eq(usuariosTable.id, clienteId)).limit(1);
+  const c = await clienteCompleto(Number(clienteId));
   if (!c) { res.status(404).json({ error: "Cliente no encontrado" }); return; }
 
-  let edad = "";
-  if (c.fechaNacimiento) {
-    const diff = Date.now() - new Date(c.fechaNacimiento).getTime();
-    edad = `${Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25))} años`;
-  }
+  const permiso = await puedeGenerar(me.id);
+  if (!permiso.ok) { res.status(permiso.status).json({ error: permiso.error }); return; }
 
-  const numComidas = (c as any).comidasAlDia || 5;
+  const edad = edadDe(c);
+  const numComidas = c.comidasAlDia && c.comidasAlDia >= 3 && c.comidasAlDia <= 6 ? c.comidasAlDia : 5;
   const comidasNombres: Record<number, string[]> = {
     3: ["Desayuno", "Almuerzo", "Cena"],
     4: ["Desayuno", "Almuerzo", "Merienda", "Cena"],
     5: ["Desayuno", "Media Mañana", "Almuerzo", "Merienda", "Cena"],
     6: ["Desayuno", "Media Mañana", "Almuerzo", "Merienda", "Cena", "Post-Entreno"],
   };
-  const nombreComidas = (comidasNombres[numComidas] || comidasNombres[5]).join(", ");
+  const nombreComidas = comidasNombres[numComidas]!.join(", ");
+  const analisis = await analizarNutricion(c, String(semanaInicio ?? ""));
+  const DIAS_N = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+  const salud = [c.condicionesMedicas, c.medicamentos ? `medicamentos: ${c.medicamentos}` : ""].filter((x) => x && String(x).trim()).join("; ");
 
-  // Concise prompt — avoids per-ingredient macros to keep JSON small and valid
-  const { coach } = await coachDelCliente(Number(clienteId));
-  const prompt = `Eres ${coach}, coach de nutrición. Crea un plan de alimentación de 7 días para ${c.nombre}.
+  const prompt = `Eres nutricionista deportivo. Arma ${soloDia === null ? "el menú de 7 días" : `el menú del ${DIAS_N[soloDia]}`} para ${c.nombre}.
 
-DATOS DEL CLIENTE:
-- Sexo: ${(c as any).sexo || "No especificado"} | Edad: ${edad || "No especificada"}
-- Peso: ${(c as any).peso ? `${(c as any).peso}kg` : "?"} | Altura: ${(c as any).altura ? `${(c as any).altura}cm` : "?"}
-- Objetivo: ${(c as any).objetivoPrincipal || c.objetivo || "salud general"}
-- Nivel: ${c.nivelFitness || "intermedio"}
-- Tipo alimentación: ${(c as any).tipoAlimentacion || "Omnívoro"}
-- Alergias: ${(c as any).alergiasAlimentarias || "ninguna"}
-- No consume: ${(c as any).alimentosNoConsume || "nada"}
-- Comidas/día: ${numComidas} (${nombreComidas})
-- Cocina: ${(c as any).cocinaEnCasa || "En casa"}
-- Presupuesto: ${(c as any).presupuestoAlimentacion || "Moderado"}
+${analisis.bloquePrompt}
 
-RESPONDE ÚNICAMENTE con JSON válido. Sin texto, sin markdown, sin backticks.
+CLIENTE: ${c.sexo || "sexo no indicado"}, ${edad ? `${edad} años` : "edad no indicada"}, ${c.peso ? `${c.peso} kg` : "peso ?"}, ${c.altura ? `${c.altura} cm` : "altura ?"}. Objetivo: ${c.objetivoPrincipal || c.objetivo || "salud general"}. Entrena ${c.diasDisponibles ?? "?"} días/semana.${c.pesoMeta ? ` Peso meta: ${c.pesoMeta} kg.` : ""}
+Alimentación: ${c.tipoAlimentacion || "Omnívoro"}. Alergias: ${c.alergiasAlimentarias || "ninguna"}. No come: ${c.alimentosNoConsume || "nada"}. Cocina: ${c.cocinaEnCasa || "en casa"}. Presupuesto: ${c.presupuestoAlimentacion || "moderado"}.
+Comidas por día: ${numComidas} (${nombreComidas}).
+${salud ? `SALUD: ${salud}. Adapta el menú de forma conservadora (p. ej. carbohidratos de bajo índice glucémico con diabetes, poca sal con presión alta). No sustituye la indicación de su médico.` : ""}
+${analisis.reglasCoach ? `REGLAS DEL COACH (obligatorias; si contradicen algo de abajo, mandan estas):\n${analisis.reglasCoach}` : ""}
 
-Estructura exacta (no agregues campos extra):
-{"dias":[{"diaSemana":0,"comidas":[{"nombre":"Desayuno","hora":"7:00 AM","descripcion":"Avena con frutas y leche","ingredientes":[{"nombre":"Avena","gramos":80},{"nombre":"Leche","gramos":200},{"nombre":"Banano","gramos":100}],"calorias":420,"proteinas":18,"carbohidratos":65,"grasas":9,"completada":false}],"caloriasTotal":1900}]}
+RESPONDE SOLO con JSON válido, sin texto ni markdown:
+{"dias":[{"diaSemana":${soloDia ?? 0},"comidas":[{"nombre":"Desayuno","hora":"7:00 AM","descripcion":"Avena con plátano","ingredientes":[{"nombre":"Avena","gramos":60},{"nombre":"Leche","gramos":200}],"calorias":420,"proteinas":18,"carbohidratos":65,"grasas":9,"completada":false}]}]}
 
 REGLAS:
-- diaSemana: 0=Lunes … 6=Domingo. Exactamente 7 días
-- Exactamente ${numComidas} comidas/día: ${nombreComidas}
-- Máximo 4 ingredientes por comida (solo nombre y gramos, sin macros por ingrediente)
-- Descripción máximo 8 palabras
-- caloriasTotal = suma de calorías de todas las comidas del día
-- Ajusta calorías al objetivo del cliente
-- Alimentos latinoamericanos de fácil acceso
-- Varía los alimentos cada día
-- Respeta restricciones alimenticias`;
+- ${soloDia === null ? "Exactamente 7 días, diaSemana 0=Lunes … 6=Domingo" : `Solo 1 día, diaSemana ${soloDia}`}; exactamente ${numComidas} comidas por día
+- Máximo 4 ingredientes por comida, con gramos (carnes y granos en peso cocido)
+- Calorías y macros de cada comida coherentes con sus gramos; la suma del día debe dar las metas
+- Descripción de máximo 6 palabras
+- Alimentos latinoamericanos de fácil acceso; varía entre días; respeta alergias y lo que no come`;
 
   try {
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-5-5", // Sonnet 4.5 se retira el 30 de noviembre de 2026
-      max_tokens: 8000,
+      model: MODELO_IA,
+      max_tokens: soloDia === null ? 8000 : 1800,
       messages: [{ role: "user", content: prompt }],
     });
 
     const texto = textoDeRespuesta(message);
     if (!texto) { res.status(502).json({ error: "La IA no devolvió texto. Intenta de nuevo." }); return; }
 
-    // Clean response
-    let raw = texto.trim()
-      .replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "").trim();
-
-    // Extract JSON object
+    const raw = texto.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "").trim();
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       req.log?.error({ raw: raw.slice(0, 300) }, "AI no devolvió JSON para nutrición");
-      res.status(500).json({ error: "El AI no devolvió JSON válido. Intenta de nuevo." });
+      res.status(502).json({ error: "La IA no devolvió un plan válido. Intenta de nuevo." });
       return;
     }
-
-    let jsonStr = jsonMatch[0];
-
-    // Parse with repair fallback
     let plan: any;
     try {
-      plan = JSON.parse(jsonStr);
-    } catch (parseError: any) {
-      req.log?.warn({ pos: parseError?.message, preview: jsonStr.slice(0, 400) }, "JSON truncado, intentando reparar");
-      const repaired = repairTruncatedJson(jsonStr);
-      if (!repaired) {
-        res.status(500).json({ error: "El plan generado está incompleto. Intenta de nuevo." });
-        return;
-      }
-      try {
-        plan = JSON.parse(repaired);
-        req.log?.info({ diasRecuperados: plan?.dias?.length }, "JSON reparado exitosamente");
-      } catch {
-        res.status(500).json({ error: "No se pudo procesar el plan. Intenta de nuevo." });
-        return;
-      }
+      plan = JSON.parse(jsonMatch[0]);
+    } catch {
+      const repaired = repairTruncatedJson(jsonMatch[0]);
+      try { plan = repaired ? JSON.parse(repaired) : null; } catch { plan = null; }
     }
-
-    if (!plan.dias || !Array.isArray(plan.dias)) {
-      res.status(500).json({ error: "Formato de plan inválido. Intenta de nuevo." });
+    if (!plan?.dias || !Array.isArray(plan.dias)) {
+      res.status(502).json({ error: "El plan generado está incompleto. Intenta de nuevo." });
       return;
     }
 
-    res.json({ dias: plan.dias, semanaInicio });
+    await registrarUso(me.id, "generacion");
+    // La app ajusta las porciones a la meta de calorías y recalcula los totales (sin IA).
+    const dias = ajustarAMetas(plan.dias, analisis.metas);
+    res.json({ dias, semanaInicio, analisis: { resumen: analisis.resumen, metas: analisis.metas } });
   } catch (error: any) {
     req.log?.error({ error: error?.message }, "Error generando plan de comidas con AI");
     { const e = errorIA(error, "el plan de comida"); res.status(e.status).json({ error: e.error }); }

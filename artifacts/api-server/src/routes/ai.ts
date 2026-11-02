@@ -7,6 +7,7 @@ import { detectarRiesgo, reglasSeguridadIA, coachDelCliente } from "../lib/apoyo
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 import { textoDeRespuesta } from "../lib/texto-ia";
 import { errorIA } from "../lib/error-ia";
+import { MODELO_IA, puedeChatear, registrarUso } from "../lib/ia-uso";
 
 const router = Router();
 
@@ -40,7 +41,7 @@ Responde SOLO con la frase, sin comillas ni explicaciones.`;
 
   try {
     const message = await anthropic.messages.create({
-      model: "claude-haiku-4-5",
+      model: MODELO_IA,
       max_tokens: 200,
       messages: [{ role: "user", content: prompt }],
     });
@@ -54,7 +55,19 @@ Responde SOLO con la frase, sin comillas ni explicaciones.`;
 });
 
 router.post("/ai/chat", requireAuth, async (req, res) => {
+  const me = (req as any).usuario;
   const { clienteId, mensaje, historial } = req.body;
+  // Límite diario por cliente y solo si el plan de su coach incluye IA.
+  if (me.rol === "cliente") {
+    const permiso = await puedeChatear(me.id);
+    if (!permiso.ok) {
+      res.setHeader("Content-Type", "text/event-stream");
+      res.write(`data: ${JSON.stringify({ error: permiso.error })}\n\n`);
+      res.end();
+      return;
+    }
+    await registrarUso(me.id, "chat");
+  }
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
@@ -121,8 +134,8 @@ ${reglasSeguridadIA(coach)}`;
     if (detectarRiesgo(mensaje)) res.write(`data: ${JSON.stringify({ apoyo: true })}\n\n`);
 
     const stream = anthropic.messages.stream({
-      model: "claude-sonnet-4-6",
-      max_tokens: 8192,
+      model: MODELO_IA,
+      max_tokens: 1024,
       system: systemPrompt,
       messages,
     });
