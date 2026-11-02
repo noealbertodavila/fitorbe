@@ -10,7 +10,8 @@ import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { getLunesMT } from "@/lib/date-mt";
+import { useSemanaPublicada } from "@/hooks/use-semana-publicada";
+import { AvisoSemanaAnterior } from "@/components/AvisoSemanaAnterior";
 
 const MiniBar = ({ value, color }: { value: number; color: string }) => (
   <div className="h-1.5 bg-border/50 rounded-full overflow-hidden">
@@ -23,11 +24,14 @@ export default function ClienteNutricion() {
   const { toast } = useToast();
   
   const hoy = new Date();
-  const semanaInicio = getLunesMT();
+  // La semana actual o, si aún no hay plan publicado, la última publicada.
+  const { semana: semanaInicio, anterior, cargando: cargandoSemana } = useSemanaPublicada("planes-comida", user?.id || 0);
+  const avisoSemana = anterior ? <AvisoSemanaAnterior semana={semanaInicio} que="plan de alimentación" /> : null;
 
-  const { data: planes, isLoading, error } = useGetPlanComida(user?.id || 0, semanaInicio, {
-    query: { queryKey: getGetPlanComidaQueryKey(user?.id || 0, semanaInicio), enabled: !!user?.id }
+  const { data: planes, isLoading: cargandoPlan, error } = useGetPlanComida(user?.id || 0, semanaInicio, {
+    query: { queryKey: getGetPlanComidaQueryKey(user?.id || 0, semanaInicio), enabled: !!user?.id && !cargandoSemana }
   });
+  const isLoading = cargandoSemana || cargandoPlan;
 
   // Today's plan from the weekly array
   const diaJs = hoy.getDay();
@@ -123,6 +127,7 @@ export default function ClienteNutricion() {
           <h1 className="text-3xl font-syne font-bold text-white mb-2">Mi Nutrición</h1>
           <p className="text-muted-foreground">{format(hoy, "EEEE, d 'de' MMMM", { locale: es })}</p>
         </div>
+        {avisoSemana}
         <div className="text-center py-16 bg-card border border-border/50 rounded-lg">
           <Utensils className="w-12 h-12 text-primary mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-medium text-white mb-2">Día Libre</h3>
@@ -141,6 +146,7 @@ export default function ClienteNutricion() {
         <h1 className="text-3xl font-syne font-bold text-white mb-2">Mi Nutrición</h1>
         <p className="text-muted-foreground capitalize">{format(hoy, "EEEE, d 'de' MMMM", { locale: es })}</p>
       </div>
+      {avisoSemana}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-card border-border/50 md:col-span-2">

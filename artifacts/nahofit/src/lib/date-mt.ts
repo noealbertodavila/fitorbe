@@ -50,3 +50,29 @@ export function formatearFecha(fechaStr: string): string {
     year: "numeric",
   });
 }
+
+const aTexto = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/** El lunes de la semana de una fecha "YYYY-MM-DD" (los planes se guardan por semana, empezando el lunes). */
+export function lunesDe(fecha: string): string {
+  const d = new Date(fecha + "T12:00:00");
+  if (Number.isNaN(d.getTime())) return fecha;
+  const dia = d.getDay();
+  d.setDate(d.getDate() + (dia === 0 ? -6 : 1 - dia));
+  return aTexto(d);
+}
+
+/** Semana para armar planes: la actual, o la siguiente si hoy es domingo (la actual termina hoy). */
+export function getSemanaParaPlanear(): string {
+  const hoy = new Date();
+  if (hoy.getDay() === 0) hoy.setDate(hoy.getDate() + 1);
+  return lunesDe(aTexto(hoy));
+}
+
+/** ¿La semana que empieza en este lunes ya terminó o termina hoy (su domingo es hoy o antes)? */
+export function semanaTerminaHoyOAntes(lunes: string): boolean {
+  const domingo = new Date(lunes + "T12:00:00");
+  domingo.setDate(domingo.getDate() + 6);
+  return aTexto(domingo) <= getFechaHoy();
+}

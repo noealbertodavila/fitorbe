@@ -6,6 +6,7 @@ import { requireAuth, requireRol } from "../middlewares/auth";
 import { coachDelCliente } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 import { textoDeRespuesta } from "../lib/texto-ia";
+import { esLunes, sinMarcas } from "../lib/semanas";
 
 const router = Router();
 
@@ -48,6 +49,37 @@ router.post("/planes-comida", requireAuth, requireRol("coach"), async (req, res)
     clienteId, coachId: me.id, semanaInicio, diaSemana, comidas, caloriasTotal: caloriasTotal || 0, aprobada: aprobada ?? false, notas,
   }).returning();
   res.status(201).json(created);
+});
+
+// Copiar el plan de una semana a otra, sin usar la IA (no cuesta créditos).
+// Reemplaza lo que hubiera en la semana de destino.
+router.post("/planes-comida/copiar", requireAuth, requireRol("coach"), async (req, res) => {
+  const me = (req as any).usuario;
+  const clienteId = parseInt(String(req.body?.clienteId));
+  const { desde, hasta } = req.body ?? {};
+  const publicar = req.body?.publicar !== false;
+  if (isNaN(clienteId) || !esLunes(desde) || !esLunes(hasta)) {
+    res.status(400).json({ error: "Elige una semana válida (empieza en lunes)" });
+    return;
+  }
+  if (desde === hasta) {
+    res.status(400).json({ error: "Elige una semana distinta a la del plan" });
+    return;
+  }
+  const origen = await db.select().from(planesComidaTable)
+    .where(and(eq(planesComidaTable.clienteId, clienteId), eq(planesComidaTable.semanaInicio, desde)));
+  if (!origen.length) {
+    res.status(404).json({ error: "Esa semana no tiene plan para copiar" });
+    return;
+  }
+  await db.transaction(async (tx) => {
+    await tx.delete(planesComidaTable).where(and(eq(planesComidaTable.clienteId, clienteId), eq(planesComidaTable.semanaInicio, hasta)));
+    await tx.insert(planesComidaTable).values(origen.map((d) => ({
+      clienteId, coachId: me.id, semanaInicio: hasta, diaSemana: d.diaSemana,
+      comidas: sinMarcas(d.comidas), caloriasTotal: d.caloriasTotal, aprobada: publicar, notas: d.notas,
+    })));
+  });
+  res.status(201).json({ copiados: origen.length, semanaInicio: hasta, publicado: publicar });
 });
 
 // Attempt to recover a truncated JSON by trimming to the last valid complete object

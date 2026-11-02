@@ -9,8 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import {
   Sparkles, Save, Utensils, Calendar, Info, Edit2, Check, X,
   Loader2, ChevronDown, ChevronUp, Plus, Trash2, RefreshCw,
-  History, CheckCircle2, PenLine, Download
+  History, CheckCircle2, PenLine, Download, Copy
 } from "lucide-react";
+import { AvisoSemanaTerminada, CopiarSemanaDialog } from "@/components/SemanasPlan";
+import { getSemanaParaPlanear, lunesDe } from "@/lib/date-mt";
 import { usePdfExport } from "@/hooks/use-pdf-export";
 import { PrintablePlan } from "@/components/PrintablePlan";
 import { PdfModeModal } from "@/components/PdfModeModal";
@@ -18,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { format, startOfWeek, addWeeks } from "date-fns";
+import { format, addWeeks } from "date-fns";
 import { es } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -97,9 +99,9 @@ export default function CoachNutricion() {
   const [nutricionPrintMode, setNutricionPrintMode] = useState<"print" | "digital">("digital");
 
   const [selectedCliente, setSelectedCliente] = useState<string>(clienteIdFromUrl);
-  const [semanaInicio, setSemanaInicio] = useState(
-    format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd")
-  );
+  // Los domingos se propone la semana siguiente (la actual termina ese día).
+  const [semanaInicio, setSemanaInicio] = useState(getSemanaParaPlanear);
+  const [showCopiar, setShowCopiar] = useState(false);
 
   // Modal
   const [showModal, setShowModal] = useState(false);
@@ -155,7 +157,7 @@ export default function CoachNutricion() {
     customFetch<any>(`/api/planes-comida/semanas/${clienteId}`)
       .then(data => setHistorialSemanas(Array.isArray(data) ? data : []))
       .catch(() => setHistorialSemanas([]));
-  }, [clienteId, pageMode]);
+  }, [clienteId, pageMode, semanaInicio]);
 
   const handleOpenModal = () => {
     if (!clienteId) { toast({ variant: "destructive", title: "Selecciona un cliente primero" }); return; }
@@ -391,7 +393,7 @@ export default function CoachNutricion() {
               <div className="relative">
                 <Calendar className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
                 <Input type="date" className="bg-background/50 h-12 pl-10" value={semanaInicio}
-                  onChange={e => { setSemanaInicio(e.target.value); setPageMode("view"); }} />
+                  onChange={e => { if (!e.target.value) return; setSemanaInicio(lunesDe(e.target.value)); setPageMode("view"); }} />
               </div>
             </div>
             {pageMode === "view" ? (
@@ -408,6 +410,10 @@ export default function CoachNutricion() {
           </div>
         </CardContent>
       </Card>
+
+      {clienteId > 0 && (
+        <AvisoSemanaTerminada semana={semanaInicio} onCambiar={(l) => { setSemanaInicio(l); setPageMode("view"); }} />
+      )}
 
       {/* History */}
       {showHistory && historialSemanas.length > 0 && (
@@ -681,10 +687,26 @@ export default function CoachNutricion() {
                   });
                 }}
               />
-              <div className="flex items-center justify-between">
+              <CopiarSemanaDialog
+                tipo="planes-comida"
+                clienteId={clienteId}
+                desde={semanaInicio}
+                open={showCopiar}
+                onClose={() => setShowCopiar(false)}
+                onCopiado={(hasta) => {
+                  queryClient.invalidateQueries({ queryKey: [`/api/planes-comida/${clienteId}/${hasta}`] });
+                  setSemanaInicio(hasta);
+                  setPageMode("view");
+                }}
+              />
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-xl font-syne font-bold text-white">Nutrición de {clienteSeleccionado?.nombre}</h2>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <p className="text-sm text-muted-foreground">Semana del {format(new Date(semanaInicio + "T12:00:00"), "dd MMM yyyy", { locale: es })}</p>
+                  <Button size="sm" variant="outline" className="border-border/50 text-muted-foreground hover:text-primary hover:border-primary/50 h-8 text-xs"
+                    onClick={() => setShowCopiar(true)}>
+                    <Copy className="w-3.5 h-3.5 mr-1.5" /> Copiar a otra semana
+                  </Button>
                   <Button size="sm" variant="outline" className="border-border/50 text-muted-foreground hover:text-primary hover:border-primary/50 h-8 text-xs"
                     onClick={() => setShowPdfModal(true)}
                     disabled={isExporting}>

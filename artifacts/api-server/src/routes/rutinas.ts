@@ -6,6 +6,7 @@ import { requireAuth, requireRol } from "../middlewares/auth";
 import { coachDelCliente } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 import { textoDeRespuesta } from "../lib/texto-ia";
+import { esLunes, sinMarcas } from "../lib/semanas";
 
 const router = Router();
 
@@ -65,6 +66,37 @@ router.post("/rutinas", requireAuth, requireRol("coach"), async (req, res) => {
     clienteId, coachId: me.id, semanaInicio, diaSemana, ejercicios, aprobada: aprobada ?? false, notas,
   }).returning();
   res.status(201).json(created);
+});
+
+// Copiar la rutina de una semana a otra, sin usar la IA (no cuesta créditos).
+// Reemplaza lo que hubiera en la semana de destino.
+router.post("/rutinas/copiar", requireAuth, requireRol("coach"), async (req, res) => {
+  const me = (req as any).usuario;
+  const clienteId = parseInt(String(req.body?.clienteId));
+  const { desde, hasta } = req.body ?? {};
+  const publicar = req.body?.publicar !== false;
+  if (isNaN(clienteId) || !esLunes(desde) || !esLunes(hasta)) {
+    res.status(400).json({ error: "Elige una semana válida (empieza en lunes)" });
+    return;
+  }
+  if (desde === hasta) {
+    res.status(400).json({ error: "Elige una semana distinta a la de la rutina" });
+    return;
+  }
+  const origen = await db.select().from(rutinasTable)
+    .where(and(eq(rutinasTable.clienteId, clienteId), eq(rutinasTable.semanaInicio, desde)));
+  if (!origen.length) {
+    res.status(404).json({ error: "Esa semana no tiene rutina para copiar" });
+    return;
+  }
+  await db.transaction(async (tx) => {
+    await tx.delete(rutinasTable).where(and(eq(rutinasTable.clienteId, clienteId), eq(rutinasTable.semanaInicio, hasta)));
+    await tx.insert(rutinasTable).values(origen.map((d) => ({
+      clienteId, coachId: me.id, semanaInicio: hasta, diaSemana: d.diaSemana,
+      ejercicios: sinMarcas(d.ejercicios), aprobada: publicar, notas: d.notas,
+    })));
+  });
+  res.status(201).json({ copiados: origen.length, semanaInicio: hasta, publicado: publicar });
 });
 
 // Generate rutina with AI — returns DRAFT (does not save to DB)

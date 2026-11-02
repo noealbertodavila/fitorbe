@@ -15,7 +15,9 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Progress } from "@/components/ui/progress";
-import { getFechaHoy, getLunesMT, getHoyMT } from "@/lib/date-mt";
+import { getFechaHoy, getHoyMT } from "@/lib/date-mt";
+import { useSemanaPublicada } from "@/hooks/use-semana-publicada";
+import { AvisoSemanaAnterior } from "@/components/AvisoSemanaAnterior";
 
 function getYouTubeSearchUrl(nombreEjercicio: string): string {
   const query = encodeURIComponent(`${nombreEjercicio} ejercicio técnica correcta español`);
@@ -29,15 +31,18 @@ export default function ClienteRutina() {
   const hoyMT = getHoyMT();
   const hoy = new Date();
   const hoyStr = getFechaHoy();
-  const semanaInicio = getLunesMT();
+  // La semana actual o, si aún no hay rutina publicada, la última publicada.
+  const { semana: semanaInicio, anterior, cargando: cargandoSemana } = useSemanaPublicada("rutinas", user?.id || 0);
+  const avisoSemana = anterior ? <AvisoSemanaAnterior semana={semanaInicio} que="rutina" /> : null;
   const diaJs = hoyMT.getUTCDay();
   const diaSemana = diaJs === 0 ? 6 : diaJs - 1;
 
-  const { data: rutinas, isLoading, error } = useGetRutina(
+  const { data: rutinas, isLoading: cargandoRutina, error } = useGetRutina(
     user?.id || 0,
     semanaInicio,
-    { query: { queryKey: getGetRutinaQueryKey(user?.id || 0, semanaInicio), enabled: !!user?.id } }
+    { query: { queryKey: getGetRutinaQueryKey(user?.id || 0, semanaInicio), enabled: !!user?.id && !cargandoSemana } }
   );
+  const isLoading = cargandoSemana || cargandoRutina;
 
   // Load today's existing check-in to restore saved exercise state
   const { data: checkinHoy } = useGetCheckin(
@@ -200,6 +205,7 @@ export default function ClienteRutina() {
             {format(hoy, "EEEE, d 'de' MMMM", { locale: es })}
           </p>
         </div>
+        {avisoSemana}
         <div className="text-center py-20 bg-card border border-border/50 rounded-lg">
           <Moon className="w-14 h-14 text-primary mx-auto mb-4 opacity-40" />
           <h3 className="text-xl font-syne font-bold text-white mb-2">Día de Descanso</h3>
@@ -224,6 +230,7 @@ export default function ClienteRutina() {
           {format(hoy, "EEEE, d 'de' MMMM", { locale: es })}
         </p>
       </div>
+      {avisoSemana}
 
       {/* Progress bar */}
       <Card className="bg-card border-border/50">
