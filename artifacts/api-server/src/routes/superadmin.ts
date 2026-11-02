@@ -92,7 +92,8 @@ registroRouter.post("/auth/registro-coach", async (req, res) => {
   const lista = (intentos.get(ip) ?? []).filter((t) => ahora - t < 60 * 60 * 1000);
   lista.push(ahora);
   intentos.set(ip, lista);
-  if (lista.length > 5) {
+  // Las pruebas automáticas (NODE_ENV=test) registran varios coaches seguidos, igual que en los demás límites.
+  if (lista.length > 5 && process.env.NODE_ENV !== "test") {
     res.status(429).json({ error: "Demasiados intentos. Intenta más tarde." });
     return;
   }
