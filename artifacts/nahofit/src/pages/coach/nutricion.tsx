@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Sparkles, Save, Utensils, Calendar, Info, Edit2, Check, X,
   Loader2, ChevronDown, ChevronUp, Plus, Trash2, RefreshCw,
-  History, CheckCircle2, PenLine, Download, Copy
+  History, CheckCircle2, PenLine, Download, Copy, ShoppingCart
 } from "lucide-react";
+import { ListaComprasDialog } from "@/components/ListaComprasDialog";
 import { AvisoSemanaTerminada, CopiarSemanaDialog } from "@/components/SemanasPlan";
 import { getSemanaParaPlanear, lunesDe } from "@/lib/date-mt";
 import { usePdfExport } from "@/hooks/use-pdf-export";
@@ -102,6 +103,7 @@ export default function CoachNutricion() {
   // Los domingos se propone la semana siguiente (la actual termina ese día).
   const [semanaInicio, setSemanaInicio] = useState(getSemanaParaPlanear);
   const [showCopiar, setShowCopiar] = useState(false);
+  const [showLista, setShowLista] = useState(false);
 
   // Modal
   const [showModal, setShowModal] = useState(false);
@@ -687,6 +689,13 @@ export default function CoachNutricion() {
                   });
                 }}
               />
+              <ListaComprasDialog
+                open={showLista}
+                onClose={() => setShowLista(false)}
+                clienteNombre={clienteSeleccionado?.nombre || "Cliente"}
+                semanaInicio={semanaInicio}
+                dias={planes as any[]}
+              />
               <CopiarSemanaDialog
                 tipo="planes-comida"
                 clienteId={clienteId}
@@ -706,6 +715,10 @@ export default function CoachNutricion() {
                   <Button size="sm" variant="outline" className="border-border/50 text-muted-foreground hover:text-primary hover:border-primary/50 h-8 text-xs"
                     onClick={() => setShowCopiar(true)}>
                     <Copy className="w-3.5 h-3.5 mr-1.5" /> Copiar a otra semana
+                  </Button>
+                  <Button size="sm" variant="outline" className="border-border/50 text-muted-foreground hover:text-primary hover:border-primary/50 h-8 text-xs"
+                    onClick={() => setShowLista(true)}>
+                    <ShoppingCart className="w-3.5 h-3.5 mr-1.5" /> Lista de compras
                   </Button>
                   <Button size="sm" variant="outline" className="border-border/50 text-muted-foreground hover:text-primary hover:border-primary/50 h-8 text-xs"
                     onClick={() => setShowPdfModal(true)}

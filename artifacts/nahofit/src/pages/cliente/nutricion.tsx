@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Utensils, CheckCircle2, Loader2, Info, MessageCircle } from "lucide-react";
+import { Utensils, CheckCircle2, Loader2, Info, MessageCircle, ShoppingCart } from "lucide-react";
+import { ListaComprasDialog } from "@/components/ListaComprasDialog";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -39,6 +40,7 @@ export default function ClienteNutricion() {
   const plan = Array.isArray(planes) ? planes.find((p: any) => p.diaSemana === diaSemana) : null;
 
   const [completedMeals, setCompletedMeals] = useState<string[]>([]);
+  const [showLista, setShowLista] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createCheckin = useCreateCheckin({
@@ -97,6 +99,21 @@ export default function ClienteNutricion() {
   }
 
   const comidasHoy: any[] = (plan as any)?.comidas || [];
+  // Lista de compras de toda la semana del plan.
+  const listaCompras = Array.isArray(planes) && (planes as any[]).length > 0 ? (
+    <>
+      <Button variant="outline" className="gap-2 border-border/50" onClick={() => setShowLista(true)}>
+        <ShoppingCart className="w-4 h-4" /> Lista de compras de la semana
+      </Button>
+      <ListaComprasDialog
+        open={showLista}
+        onClose={() => setShowLista(false)}
+        clienteNombre={user?.nombre || ""}
+        semanaInicio={semanaInicio}
+        dias={planes as any[]}
+      />
+    </>
+  ) : null;
   const noPlanSemana = Array.isArray(planes) && (planes as any[]).length === 0;
 
   if (noPlanSemana) {
@@ -128,6 +145,7 @@ export default function ClienteNutricion() {
           <p className="text-muted-foreground">{format(hoy, "EEEE, d 'de' MMMM", { locale: es })}</p>
         </div>
         {avisoSemana}
+        {listaCompras}
         <div className="text-center py-16 bg-card border border-border/50 rounded-lg">
           <Utensils className="w-12 h-12 text-primary mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-medium text-white mb-2">Día Libre</h3>
@@ -147,6 +165,7 @@ export default function ClienteNutricion() {
         <p className="text-muted-foreground capitalize">{format(hoy, "EEEE, d 'de' MMMM", { locale: es })}</p>
       </div>
       {avisoSemana}
+      {listaCompras}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-card border-border/50 md:col-span-2">
