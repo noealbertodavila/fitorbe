@@ -78,10 +78,20 @@ export async function crearCoach(datos: {
     .insert(usuariosTable)
     .values({ nombre, email, passwordHash: await bcrypt.hash(datos.password, 10), rol: "coach", telefono: datos.telefono || null, activo: true })
     .returning();
-  const [ficha] = await db
-    .insert(coachesTable)
-    .values({ usuarioId: usuario.id, negocio, slug: await slugLibre(negocio), estado, pruebaHasta: estado === "prueba" ? enDias(DIAS_PRUEBA) : null })
-    .returning();
+  // Dos registros con el mismo nombre al mismo tiempo pueden elegir la misma página: se reintenta con otra.
+  let ficha: typeof coachesTable.$inferSelect | undefined;
+  for (let intento = 0; !ficha; intento++) {
+    const slug = intento === 0 ? await slugLibre(negocio) : `${slugDe(negocio)}-${Date.now().toString(36)}${intento}`;
+    try {
+      [ficha] = await db
+        .insert(coachesTable)
+        .values({ usuarioId: usuario.id, negocio, slug, estado, pruebaHasta: estado === "prueba" ? enDias(DIAS_PRUEBA) : null })
+        .returning();
+    } catch (e: any) {
+      const unico = e?.code === "23505" || e?.cause?.code === "23505";
+      if (!unico || intento >= 3) throw e;
+    }
+  }
   await crearPlanesIniciales(usuario.id);
   return { usuario, ficha };
 }
