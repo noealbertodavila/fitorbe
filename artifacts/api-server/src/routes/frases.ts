@@ -5,6 +5,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { coachDelCliente } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
+import { textoDeRespuesta } from "../lib/texto-ia";
 
 const router = Router();
 
@@ -87,7 +88,7 @@ Responde ÚNICAMENTE con la frase, sin explicaciones.`,
       }],
     });
 
-    const frase = (message.content[0] as any).text?.trim() || FRASES_FALLBACK[Math.floor(Math.random() * FRASES_FALLBACK.length)];
+    const frase = textoDeRespuesta(message)?.trim() || FRASES_FALLBACK[Math.floor(Math.random() * FRASES_FALLBACK.length)];
 
     // Save to DB
     await db.insert(fraseDiaTable).values({ clienteId, fecha: hoy, frase }).onConflictDoNothing();

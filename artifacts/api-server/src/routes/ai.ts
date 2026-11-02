@@ -5,6 +5,7 @@ import { eq, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { detectarRiesgo, reglasSeguridadIA, coachDelCliente } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
+import { textoDeRespuesta } from "../lib/texto-ia";
 import { errorIA } from "../lib/error-ia";
 
 const router = Router();
@@ -44,8 +45,8 @@ Responde SOLO con la frase, sin comillas ni explicaciones.`;
       messages: [{ role: "user", content: prompt }],
     });
 
-    const content = message.content[0];
-    const frase = content.type === "text" ? content.text.trim() : "¡Tú puedes lograrlo! Cada día es una nueva oportunidad para acercarte a tu meta.";
+    const texto = textoDeRespuesta(message);
+    const frase = texto ? texto.trim() : "¡Tú puedes lograrlo! Cada día es una nueva oportunidad para acercarte a tu meta.";
     res.json({ frase });
   } catch {
     res.json({ frase: "¡Tú puedes lograrlo! Cada día es una nueva oportunidad para acercarte a tu meta." });

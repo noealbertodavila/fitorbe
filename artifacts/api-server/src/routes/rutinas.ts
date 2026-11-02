@@ -5,6 +5,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { requireAuth, requireRol } from "../middlewares/auth";
 import { coachDelCliente } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
+import { textoDeRespuesta } from "../lib/texto-ia";
 
 const router = Router();
 
@@ -177,10 +178,10 @@ REGLAS ESTRICTAS:
       messages: [{ role: "user", content: prompt }],
     });
 
-    const content = message.content[0];
-    if (content.type !== "text") { res.status(500).json({ error: "Respuesta inesperada del AI" }); return; }
+    const texto = textoDeRespuesta(message);
+    if (!texto) { res.status(502).json({ error: "La IA no devolvió texto. Intenta de nuevo." }); return; }
 
-    let raw = content.text.trim()
+    let raw = texto.trim()
       .replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) { res.status(500).json({ error: "El AI no devolvió JSON válido" }); return; }
