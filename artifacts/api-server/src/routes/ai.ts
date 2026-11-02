@@ -5,6 +5,7 @@ import { eq, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { detectarRiesgo, reglasSeguridadIA, coachDelCliente } from "../lib/apoyo";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
+import { errorIA } from "../lib/error-ia";
 
 const router = Router();
 
@@ -135,7 +136,14 @@ ${reglasSeguridadIA(coach)}`;
     res.end();
   } catch (error) {
     console.error("Error in AI chat:", error);
-    res.write(`data: ${JSON.stringify({ error: "Error al procesar tu mensaje" })}\n\n`);
+    // Mensaje claro: si la IA no está activada (falta la llave o no tiene saldo) se dice tal cual.
+    const { error: motivo } = errorIA(error, "la respuesta");
+    const aviso = /no está activa/.test(motivo)
+      ? "El asistente de IA todavía no está activado. Mientras tanto, escríbele a tu coach en Mensajes."
+      : /ocupada/.test(motivo)
+        ? "El asistente está muy ocupado en este momento. Intenta de nuevo en un minuto."
+        : "No se pudo procesar tu mensaje. Intenta de nuevo.";
+    res.write(`data: ${JSON.stringify({ error: aviso })}\n\n`);
     res.end();
   }
 });

@@ -14,7 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { getFechaHoy } from "@/lib/date-mt";
 import {
@@ -58,10 +58,13 @@ export default function ClienteEmocional() {
   const hoy = getFechaHoy();
   const [selectedFactores, setSelectedFactores] = useState<string[]>([]);
 
-  const { data: diarioEntradas, isLoading: isLoadingDiario } = useGetDiario(
+  // Historial del diario: de 20 en 20 con "Ver entradas anteriores".
+  const [limiteDiario, setLimiteDiario] = useState(20);
+  const [abierta, setAbierta] = useState<number | null>(null);
+  const { data: diarioEntradas, isLoading: isLoadingDiario, isFetching: cargandoMasDiario } = useGetDiario(
     user?.id || 0,
-    {},
-    { query: { queryKey: getGetDiarioQueryKey(user?.id || 0, {}), enabled: !!user?.id } }
+    { limite: limiteDiario },
+    { query: { queryKey: getGetDiarioQueryKey(user?.id || 0, { limite: limiteDiario }), enabled: !!user?.id, placeholderData: (prev: any) => prev } }
   );
 
   const [apoyo, setApoyo] = useState(false);
@@ -85,7 +88,7 @@ export default function ClienteEmocional() {
         if ((data as { apoyo?: boolean })?.apoyo) setApoyo(true);
         toast({ title: "Diario Actualizado", description: "Tu entrada ha sido guardada." });
         formDiario.reset();
-        queryClient.invalidateQueries({ queryKey: getGetDiarioQueryKey(user?.id || 0, {}) });
+        queryClient.invalidateQueries({ queryKey: [`/api/diario/${user?.id || 0}`] });
       },
       onError: (err) => {
         toast({ variant: "destructive", title: "Error", description: err.message });
@@ -324,7 +327,10 @@ export default function ClienteEmocional() {
               <Book className="w-5 h-5 text-primary mr-2" />
               Mi Diario Personal
             </CardTitle>
-            <p className="text-xs text-muted-foreground">Solo tú puedes ver este diario.</p>
+            <p className="text-xs text-muted-foreground">
+              Solo tú puedes ver este diario; ni tu coach puede leerlo. Si escribes algo que indique que estás en peligro,
+              tu coach recibe un aviso para apoyarte, sin ver lo que escribiste.
+            </p>
           </CardHeader>
           <CardContent className="pt-6">
             <Form {...formDiario}>
@@ -375,7 +381,7 @@ export default function ClienteEmocional() {
             </Form>
 
             <div className="mt-8 space-y-4">
-              <h3 className="font-syne font-medium text-white mb-2">Entradas Recientes</h3>
+              <h3 className="font-syne font-medium text-white mb-2">Mis entradas</h3>
               {isLoadingDiario ? (
                 <div className="space-y-3">
                   <Skeleton className="h-20 w-full bg-border/50" />
@@ -387,19 +393,41 @@ export default function ClienteEmocional() {
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {diarioEntradas?.slice(0, 3).map(entrada => (
-                    <div key={entrada.id} className="p-3 bg-background/50 rounded-lg border border-border/50">
-                      <div className="text-xs text-muted-foreground mb-2">
-                        {format(new Date(entrada.fecha), "d 'de' MMMM, yyyy", { locale: es })}
-                      </div>
-                      {entrada.gratitud && (
-                        <p className="text-sm text-primary mb-1">
-                          <span className="font-medium">Gratitud:</span> {entrada.gratitud}
-                        </p>
-                      )}
-                      <p className="text-sm text-white/80 line-clamp-2">{entrada.contenido}</p>
-                    </div>
-                  ))}
+                  {diarioEntradas?.map(entrada => {
+                    const completa = abierta === entrada.id;
+                    return (
+                      <button
+                        type="button"
+                        key={entrada.id}
+                        onClick={() => setAbierta(completa ? null : entrada.id)}
+                        aria-expanded={completa}
+                        className="w-full text-left p-3 bg-background/50 rounded-lg border border-border/50 hover:border-primary/40 transition-colors"
+                      >
+                        <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                          {/* parseISO: "2026-11-01" es ese día aquí, no la medianoche de Londres (antes salía un día antes). */}
+                          <span className="capitalize">{format(parseISO(String(entrada.fecha)), "EEEE d 'de' MMMM, yyyy", { locale: es })}</span>
+                          <span>{completa ? "Cerrar" : "Ver completa"}</span>
+                        </div>
+                        {entrada.gratitud && (
+                          <p className={`text-sm text-primary mb-1 ${completa ? "" : "line-clamp-1"}`}>
+                            <span className="font-medium">Gratitud:</span> {entrada.gratitud}
+                          </p>
+                        )}
+                        <p className={`text-sm text-white/80 whitespace-pre-wrap ${completa ? "" : "line-clamp-2"}`}>{entrada.contenido}</p>
+                      </button>
+                    );
+                  })}
+                  {(diarioEntradas?.length ?? 0) >= limiteDiario && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full min-h-[44px]"
+                      disabled={cargandoMasDiario}
+                      onClick={() => setLimiteDiario((n) => n + 20)}
+                    >
+                      {cargandoMasDiario ? "Cargando..." : "Ver entradas anteriores"}
+                    </Button>
+                  )}
                 </div>
               )}
             </div>

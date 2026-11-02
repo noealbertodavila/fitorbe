@@ -88,6 +88,16 @@ export default function AiCoachChat() {
               if (data.done) {
                 setIsTyping(false);
               }
+              // El servidor explica por qué no respondió (por ejemplo, la IA aún no está activada).
+              if (data.error) {
+                const aviso = String(data.error);
+                setHistory(prev => {
+                  const updated = [...prev];
+                  updated[updated.length - 1].content = aviso;
+                  return updated;
+                });
+                setIsTyping(false);
+              }
             } catch (e) {
               // ignore parse errors for partial chunks
             }

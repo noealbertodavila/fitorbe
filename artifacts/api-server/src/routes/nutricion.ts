@@ -150,7 +150,7 @@ REGLAS:
 
   try {
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-5",
+      model: "claude-sonnet-5-5", // Sonnet 4.5 se retira el 30 de noviembre de 2026
       max_tokens: 8000,
       messages: [{ role: "user", content: prompt }],
     });
