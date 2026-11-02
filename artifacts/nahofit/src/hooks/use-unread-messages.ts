@@ -4,7 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export function useUnreadMessages() {
   const { user } = useAuth();
-  const enabled = !!user && user.rol === "cliente";
+  // Cliente y coach: número en "Mensajes" y en la pestaña del navegador.
+  const enabled = !!user && (user.rol === "cliente" || user.rol === "coach");
 
   const { data } = useQuery({
     queryKey: ["/api/mensajes/no-leidos"],

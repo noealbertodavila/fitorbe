@@ -2,6 +2,8 @@ import { Router } from "express";
 import { db, mensajesTable, usuariosTable } from "@workspace/db";
 import { eq, and, or, desc, sql, inArray } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
+import { enviarCorreo, esc } from "../lib/correo";
+import { logger } from "../lib/logger";
 
 const router = Router();
 
@@ -167,6 +169,46 @@ router.get("/mensajes/:userId", requireAuth, async (req, res) => {
   res.json(enriched);
 });
 
+/**
+ * Correo al coach cuando su cliente le escribe, por si no tiene Fitorbe abierto.
+ * Solo uno por conversación cada 30 minutos: si el cliente ya tenía otro mensaje
+ * sin leer de los últimos 30 minutos, el coach ya fue avisado.
+ * El correo no lleva el texto del mensaje (puede ser privado): solo invita a abrirlo.
+ */
+const MINUTOS_ENTRE_AVISOS = 30;
+async function avisarAlCoach(cliente: { id: number; nombre: string }, coachId: number, mensajeId: number) {
+  const [previo] = await db
+    .select({ id: mensajesTable.id })
+    .from(mensajesTable)
+    .where(and(
+      eq(mensajesTable.remitenteId, cliente.id),
+      eq(mensajesTable.receptorId, coachId),
+      eq(mensajesTable.leido, false),
+      sql`${mensajesTable.id} <> ${mensajeId}`,
+      sql`${mensajesTable.creadoEn} > now() - interval '30 minutes'`,
+    ))
+    .limit(1);
+  if (previo) return;
+  const [coach] = await db
+    .select({ email: usuariosTable.email, nombre: usuariosTable.nombre, activo: usuariosTable.activo })
+    .from(usuariosTable)
+    .where(eq(usuariosTable.id, coachId))
+    .limit(1);
+  if (!coach?.activo) return;
+  const url = `${(process.env.APP_URL || "https://fitorbe.com").replace(/\/+$/, "")}/coach/mensajes?userId=${cliente.id}`;
+  await enviarCorreo({
+    to: coach.email,
+    subject: `${cliente.nombre} te escribió en Fitorbe`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:520px;color:#1F2A26">
+      <h2 style="color:#059669;margin:0 0 12px">Mensaje nuevo</h2>
+      <p>Hola ${esc(coach.nombre)}:</p>
+      <p><strong>${esc(cliente.nombre)}</strong> te mandó un mensaje en Fitorbe.</p>
+      <p style="margin:24px 0"><a href="${esc(url)}" style="background:#10B981;color:#000;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold">Ver mensaje</a></p>
+      <p style="font-size:13px;color:#4A5753">Si te sigue escribiendo, te avisamos de nuevo después de ${MINUTOS_ENTRE_AVISOS} minutos.</p>
+    </div>`,
+  });
+}
+
 router.post("/mensajes", requireAuth, async (req, res) => {
   const me = (req as any).usuario;
   const { receptorId, contenido } = req.body;
@@ -187,6 +229,10 @@ router.post("/mensajes", requireAuth, async (req, res) => {
     .insert(mensajesTable)
     .values({ remitenteId: me.id, receptorId: receptor.id, contenido: String(contenido).slice(0, 5000), leido: false })
     .returning();
+
+  if (me.rol === "cliente" && receptor.rol === "coach") {
+    void avisarAlCoach(me, receptor.id, created.id).catch((err) => logger.error({ err }, "No se pudo avisar al coach del mensaje"));
+  }
 
   const userMap = await nombres([created.remitenteId, created.receptorId]);
 

@@ -55,8 +55,11 @@ export default function CoachMensajes() {
     if (selectedUserId && mensajes) {
       const unreadIds = mensajes.filter(m => !m.leido && m.remitenteId === selectedUserId).map(m => m.id);
       if (unreadIds.length > 0) {
-        unreadIds.forEach(id => marcarLeidoMutation.mutate({ id }));
-        queryClient.invalidateQueries({ queryKey: ["/api/mensajes/conversaciones"] });
+        // Al terminar de marcarlos, se actualizan la lista y el número del menú.
+        void Promise.allSettled(unreadIds.map(id => marcarLeidoMutation.mutateAsync({ id }))).then(() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/mensajes/conversaciones"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/mensajes/no-leidos"] });
+        });
       }
     }
   }, [selectedUserId, mensajes]);
