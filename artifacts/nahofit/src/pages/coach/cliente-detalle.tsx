@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, UserCircle, Target, Activity, Heart, Utensils, Edit2, Save, X, Check, Link as LinkIcon, Dumbbell, Apple, TrendingUp, CreditCard, ExternalLink, AlertCircle, Download } from "lucide-react";
+import { ArrowLeft, UserCircle, Target, Activity, Heart, Utensils, Edit2, Save, X, Check, Link as LinkIcon, Dumbbell, Apple, TrendingUp, CreditCard, ExternalLink, AlertCircle, Download, KeyRound } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,6 +21,7 @@ import { usePdfExport } from "@/hooks/use-pdf-export";
 import { PrintableProgreso } from "@/components/PrintableProgreso";
 import { PdfModeModal } from "@/components/PdfModeModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { NuevaClaveDialog } from "@/components/NuevaClaveDialog";
 
 interface PlanPrecio {
   id: number;
@@ -458,6 +459,7 @@ export default function CoachClienteDetalle({ id }: { id: number }) {
   const { user } = useAuth();
   const { data: cliente, isLoading } = useGetCliente(id, { query: { queryKey: ["/api/clientes/", id] as any, enabled: !!id } });
   const [editOpen, setEditOpen] = useState(false);
+  const [claveOpen, setClaveOpen] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [progresoPrintMode, setProgresoPrintMode] = useState<"print" | "digital">("digital");
   const { exportToPdf, isExporting } = usePdfExport();
@@ -539,12 +541,15 @@ export default function CoachClienteDetalle({ id }: { id: number }) {
             </div>
           </div>
         </div>
-        <div className="flex gap-3 w-full md:w-auto">
+        <div className="flex flex-wrap gap-3 w-full md:w-auto">
           <Link href={`/coach/mensajes?userId=${c.id}`}>
             <Button variant="outline" className="border-border/50 text-white hover:bg-white/5">Enviar Mensaje</Button>
           </Link>
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setEditOpen(true)}>
             <Edit2 className="w-4 h-4 mr-2" /> Editar Perfil
+          </Button>
+          <Button variant="outline" className="border-border/50 text-white hover:bg-white/5" onClick={() => setClaveOpen(true)}>
+            <KeyRound className="w-4 h-4 mr-2" /> Nueva contraseña
           </Button>
         </div>
       </div>
@@ -998,6 +1003,7 @@ export default function CoachClienteDetalle({ id }: { id: number }) {
       </div>
 
       {c && <EditarClienteDialog cliente={c} open={editOpen} onClose={() => setEditOpen(false)} />}
+      {c && <NuevaClaveDialog cliente={c} open={claveOpen} onClose={() => setClaveOpen(false)} />}
     </div>
   );
 }

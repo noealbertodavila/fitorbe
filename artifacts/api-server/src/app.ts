@@ -61,6 +61,9 @@ app.use(express.json({ limit: "10mb" }));
 
 // Límite de intentos de inicio de sesión por IP.
 app.use("/api/auth/login", rateLimit("login", 20, 15 * 60 * 1000, "Demasiados intentos. Espera 15 minutos e inténtalo de nuevo."));
+// Recuperar contraseña: pocos correos por IP para que nadie use el formulario para mandar spam.
+app.use("/api/auth/recuperar", rateLimit("recuperar", 5, 60 * 60 * 1000, "Ya pediste varios enlaces. Espera una hora e inténtalo de nuevo."));
+app.use("/api/auth/restablecer", rateLimit("restablecer", 10, 15 * 60 * 1000, "Demasiados intentos. Espera 15 minutos e inténtalo de nuevo."));
 app.use("/api/respaldo", rateLimitGet("respaldo", 6, 60 * 60 * 1000));
 app.use(express.urlencoded({ extended: true }));
 

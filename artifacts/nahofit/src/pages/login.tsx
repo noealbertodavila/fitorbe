@@ -184,6 +184,9 @@ export default function Login() {
             {passError && (
               <p style={{ fontSize: "12px", color: "#FCA5A5", marginTop: "4px" }}>{passError}</p>
             )}
+            <div style={{ textAlign: "right", marginTop: "8px" }}>
+              <a href="/recuperar" style={{ fontSize: "12px", color: "#10B981", fontWeight: 600 }}>¿Olvidaste tu contraseña?</a>
+            </div>
           </div>
 
           {/* Submit */}

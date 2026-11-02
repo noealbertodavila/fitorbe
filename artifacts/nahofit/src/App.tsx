@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Login = lazy(() => import("@/pages/login"));
+const Recuperar = lazy(() => import("@/pages/recuperar"));
 const Privacidad = lazy(() => import("@/pages/Legal").then((m) => ({ default: m.Privacidad })));
 const Terminos = lazy(() => import("@/pages/Legal").then((m) => ({ default: m.Terminos })));
 
@@ -63,6 +64,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/recuperar" component={Recuperar} />
       <Route path="/registro" component={Registro} />
       <Route path="/privacidad" component={Privacidad} />
       <Route path="/privacy" component={Privacidad} />

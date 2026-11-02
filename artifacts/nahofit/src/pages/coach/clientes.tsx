@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, UserCircle, Activity, ChevronRight, UserPlus, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { claveAleatoria } from "@/lib/clave";
 
 export default function CoachClientes() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -92,13 +93,6 @@ export default function CoachClientes() {
       </div>
     </div>
   );
-}
-
-function claveAleatoria() {
-  const letras = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const arr = new Uint32Array(10);
-  crypto.getRandomValues(arr);
-  return Array.from(arr, (n) => letras[n % letras.length]).join("");
 }
 
 /** El coach agrega un cliente: le crea su cuenta para que entre a la app. */

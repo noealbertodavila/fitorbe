@@ -20,6 +20,31 @@ export function verifyToken(token: string): { userId: number; rol: string } {
   return jwt.verify(token, JWT_SECRET) as { userId: number; rol: string };
 }
 
+// ── Enlace de "¿Olvidaste tu contraseña?" ────────────────────────────────────
+// Se firma con la clave de sesiones MÁS la contraseña cifrada actual del usuario:
+// en cuanto cambia la contraseña, el enlace deja de servir (un solo uso) y no
+// hace falta guardarlo en la base de datos. Tampoco sirve como sesión.
+const TIPO_RESTABLECER = "restablecer";
+
+export function tokenRestablecer(userId: number, passwordHash: string): string {
+  return jwt.sign({ userId, tipo: TIPO_RESTABLECER }, JWT_SECRET + passwordHash, { expiresIn: "1h" });
+}
+
+/** El usuario al que dice pertenecer el enlace (todavía sin comprobar la firma). */
+export function usuarioDelTokenRestablecer(token: string): number | null {
+  const d = jwt.decode(token) as { userId?: unknown; tipo?: unknown } | null;
+  return d && d.tipo === TIPO_RESTABLECER && Number.isInteger(d.userId) ? (d.userId as number) : null;
+}
+
+export function tokenRestablecerValido(token: string, passwordHash: string): boolean {
+  try {
+    const p = jwt.verify(token, JWT_SECRET + passwordHash) as { tipo?: unknown };
+    return p.tipo === TIPO_RESTABLECER;
+  } catch {
+    return false;
+  }
+}
+
 export async function requireAuth(
   req: Request,
   res: Response,
