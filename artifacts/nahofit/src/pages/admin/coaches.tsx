@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, History, StickyNote } from "lucide-react";
+import { usePlanesFitorbe, dinero, type PlanFitorbe } from "./planes";
 
 type Coach = {
   usuarioId: number;
@@ -22,21 +23,26 @@ type Coach = {
   plan: string;
   pruebaHasta: string | null;
   notasAdmin: string | null;
+  periodo: "mes" | "anio";
+  ultimoAcceso: string | null;
   clientes: number;
   clientesActivos: number;
+  iaMes: number;
 };
+type Historial = { id: number; texto: string; autor: string | null; creadoEn: string };
 
 const ESTADO: Record<string, { t: string; c: string }> = {
   prueba: { t: "Prueba", c: "border-amber-500/50 text-amber-400" },
   activo: { t: "Activo", c: "border-primary/50 text-primary" },
   suspendido: { t: "Suspendido", c: "border-red-500/50 text-red-400" },
 };
-/** Planes y cuánta IA incluye cada uno (debe coincidir con LIMITE_GENERACIONES del servidor). */
-const PLANES: Record<string, string> = {
-  inicial: "Inicial · sin IA",
-  pro: "Pro · 150 generaciones IA/mes",
-  estudio: "Estudio · 400 generaciones IA/mes",
-};
+const etiquetaPlan = (p: PlanFitorbe) => `${p.nombre} · ${dinero(p.precioMes)}/mes · ${p.limiteIa ? `IA ${p.limiteIa}/mes` : "sin IA"} · ${p.maxClientes ?? "∞"} clientes`;
+/** "hoy", "hace 3 días"… */
+function haceCuanto(f: string | null) {
+  if (!f) return "nunca";
+  const d = Math.floor((Date.now() - new Date(f).getTime()) / 86400000);
+  return d <= 0 ? "hoy" : d === 1 ? "ayer" : `hace ${d} días`;
+}
 const hoy = () => new Date().toISOString().slice(0, 10);
 const masDias = (n: number, desde?: string | null) => {
   const base = desde && desde > hoy() ? new Date(desde + "T12:00:00") : new Date();
@@ -51,6 +57,7 @@ export default function AdminCoaches() {
   const { data, isLoading } = useQuery<Coach[]>({ queryKey: ["/api/superadmin/coaches"], queryFn: () => customFetch<Coach[]>("/api/superadmin/coaches") });
   const [buscar, setBuscar] = useState("");
   const [nuevo, setNuevo] = useState(false);
+  const { data: planes = [] } = usePlanesFitorbe();
 
   async function cambiar(c: Coach, cambios: Record<string, unknown>, aviso: string) {
     try {
@@ -97,19 +104,53 @@ export default function AdminCoaches() {
                         </div>
                         <Badge variant="outline" className={ESTADO[c.estado]?.c}>{vencida ? "Prueba vencida" : ESTADO[c.estado]?.t ?? c.estado}</Badge>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                        <div className="rounded-lg bg-background p-2"><div className="text-xs text-muted-foreground">Clientes</div><div className="font-bold text-white">{c.clientes}</div></div>
-                        <div className="rounded-lg bg-background p-2"><div className="text-xs text-muted-foreground">Activos</div><div className="font-bold text-white">{c.clientesActivos}</div></div>
-                        <div className="rounded-lg bg-background p-2"><div className="text-xs text-muted-foreground">{c.estado === "prueba" ? "Prueba hasta" : "Desde"}</div><div className="font-bold text-white text-xs mt-1">{c.estado === "prueba" ? c.pruebaHasta ?? "—" : String(c.creadoEn).slice(0, 10)}</div></div>
+                      {(() => {
+                        const plan = planes.find((p) => p.clave === (c.plan || "inicial").toLowerCase());
+                        const limIa = c.estado === "prueba" ? 20 : plan?.limiteIa ?? 0;
+                        const lleno = plan?.maxClientes != null && c.clientesActivos >= plan.maxClientes;
+                        return (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-sm">
+                            <div className="rounded-lg bg-background p-2">
+                              <div className="text-xs text-muted-foreground">Clientes activos</div>
+                              <div className={`font-bold ${lleno ? "text-amber-400" : "text-white"}`}>{c.clientesActivos}{plan?.maxClientes != null ? ` / ${plan.maxClientes}` : ""}</div>
+                            </div>
+                            <div className="rounded-lg bg-background p-2">
+                              <div className="text-xs text-muted-foreground">IA este mes</div>
+                              <div className={`font-bold ${limIa && c.iaMes >= limIa * 0.8 ? "text-amber-400" : "text-white"}`}>{limIa ? `${c.iaMes} / ${limIa}` : "Sin IA"}</div>
+                            </div>
+                            <div className="rounded-lg bg-background p-2">
+                              <div className="text-xs text-muted-foreground">Último acceso</div>
+                              <div className="font-bold text-white text-xs mt-1">{haceCuanto(c.ultimoAcceso)}</div>
+                            </div>
+                            <div className="rounded-lg bg-background p-2">
+                              <div className="text-xs text-muted-foreground">{c.estado === "prueba" ? "Prueba hasta" : "Paga"}</div>
+                              <div className="font-bold text-white text-xs mt-1">
+                                {c.estado === "prueba" ? c.pruebaHasta ?? "—" : plan ? (c.periodo === "anio" ? `${dinero(plan.precioAnio)}/año` : `${dinero(plan.precioMes)}/mes`) : "—"}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                      <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                        <div className="flex items-center gap-2">
+                          <label htmlFor={`plan-${c.usuarioId}`} className="text-xs font-semibold text-muted-foreground">Plan</label>
+                          <select id={`plan-${c.usuarioId}`} className="flex-1 min-w-0 min-h-[40px] rounded-md border border-border bg-background px-2 text-sm text-white"
+                            value={(c.plan || "inicial").toLowerCase()}
+                            onChange={(e) => cambiar(c, { plan: e.target.value }, `Plan cambiado a ${planes.find((p) => p.clave === e.target.value)?.nombre ?? e.target.value}`)}>
+                            {planes.map((p) => <option key={p.clave} value={p.clave}>{etiquetaPlan(p)}</option>)}
+                          </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label htmlFor={`periodo-${c.usuarioId}`} className="text-xs font-semibold text-muted-foreground">Pago</label>
+                          <select id={`periodo-${c.usuarioId}`} className="min-h-[40px] rounded-md border border-border bg-background px-2 text-sm text-white"
+                            value={c.periodo ?? "mes"}
+                            onChange={(e) => cambiar(c, { periodo: e.target.value }, e.target.value === "anio" ? "Pago anual" : "Pago mensual")}>
+                            <option value="mes">Mensual</option>
+                            <option value="anio">Anual</option>
+                          </select>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <label htmlFor={`plan-${c.usuarioId}`} className="text-xs font-semibold text-muted-foreground">Plan</label>
-                        <select id={`plan-${c.usuarioId}`} className="flex-1 min-h-[40px] rounded-md border border-border bg-background px-2 text-sm text-white"
-                          value={(c.plan || "inicial").toLowerCase()}
-                          onChange={(e) => cambiar(c, { plan: e.target.value }, `Plan cambiado a ${PLANES[e.target.value]}`)}>
-                          {Object.entries(PLANES).map(([v, t]) => <option key={v} value={v}>{t}</option>)}
-                        </select>
-                      </div>
+                      <NotasEHistorial coach={c} onGuardar={(t) => cambiar(c, { notasAdmin: t }, "Notas guardadas")} />
                       <div className="flex flex-wrap gap-2">
                         {c.estado !== "activo" && <Button size="sm" className="min-h-[40px]" onClick={() => cambiar(c, { estado: "activo" }, "Coach activado")}>Activar</Button>}
                         {c.estado === "prueba" && <Button size="sm" variant="outline" className="min-h-[40px]" onClick={() => cambiar(c, { pruebaHasta: masDias(14, c.pruebaHasta) }, "Prueba extendida 14 días")}>+14 días de prueba</Button>}
@@ -133,7 +174,8 @@ export default function AdminCoaches() {
 function NuevoCoach({ abierto, onClose }: { abierto: boolean; onClose: () => void }) {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const vacio = { nombre: "", email: "", negocio: "", telefono: "", password: "", estado: "activo" };
+  const vacio = { nombre: "", email: "", negocio: "", telefono: "", password: "", estado: "activo", plan: "pro", periodo: "mes" };
+  const { data: planes = [] } = usePlanesFitorbe();
   const [f, setF] = useState(vacio);
   const [error, setError] = useState("");
   const [guardando, setGuardando] = useState(false);
@@ -181,10 +223,77 @@ function NuevoCoach({ abierto, onClose }: { abierto: boolean; onClose: () => voi
               <option value="prueba">Prueba gratis de 14 días</option>
             </select>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="co-plan" className="block text-xs font-semibold text-muted-foreground mb-1">Plan</label>
+              <select id="co-plan" className={campo} value={f.plan} onChange={(e) => setF({ ...f, plan: e.target.value })}>
+                {planes.map((p) => <option key={p.clave} value={p.clave}>{p.nombre} · {dinero(p.precioMes)}/mes</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="co-periodo" className="block text-xs font-semibold text-muted-foreground mb-1">Pago</label>
+              <select id="co-periodo" className={campo} value={f.periodo} onChange={(e) => setF({ ...f, periodo: e.target.value })}>
+                <option value="mes">Mensual</option>
+                <option value="anio">Anual</option>
+              </select>
+            </div>
+          </div>
           {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
           <Button type="submit" disabled={guardando} className="w-full min-h-[44px] font-bold">{guardando ? "Creando…" : "Crear coach"}</Button>
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Notas privadas del superadmin sobre el coach y su historial de cambios. */
+function NotasEHistorial({ coach, onGuardar }: { coach: Coach; onGuardar: (t: string) => Promise<void> }) {
+  const [abierto, setAbierto] = useState<"" | "notas" | "historial">("");
+  const [texto, setTexto] = useState(coach.notasAdmin ?? "");
+  const [guardando, setGuardando] = useState(false);
+  const { data: historial = [], isLoading } = useQuery<Historial[]>({
+    queryKey: ["/api/superadmin/coaches", coach.usuarioId, "historial"],
+    queryFn: () => customFetch<Historial[]>(`/api/superadmin/coaches/${coach.usuarioId}/historial`),
+    enabled: abierto === "historial",
+  });
+  const boton = (k: "notas" | "historial", Icono: typeof History, t: string) => (
+    <button type="button" onClick={() => setAbierto(abierto === k ? "" : k)} aria-expanded={abierto === k}
+      className={`inline-flex items-center gap-1.5 text-sm px-3 min-h-[40px] rounded-md border ${abierto === k ? "border-primary/60 text-primary" : "border-border/60 text-muted-foreground hover:text-white"}`}>
+      <Icono className="w-4 h-4" />{t}
+    </button>
+  );
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
+        {boton("notas", StickyNote, coach.notasAdmin ? "Notas ●" : "Notas")}
+        {boton("historial", History, "Historial")}
+      </div>
+      {abierto === "notas" && (
+        <div className="space-y-2">
+          <label htmlFor={`notas-${coach.usuarioId}`} className="sr-only">Notas sobre {coach.negocio}</label>
+          <textarea id={`notas-${coach.usuarioId}`} rows={3} maxLength={2000} value={texto} onChange={(e) => setTexto(e.target.value)}
+            placeholder="Solo las ves tú. Ej.: pagó por Zelle el 1 de cada mes, quiere pasar a Estudio en enero…"
+            className="w-full rounded-md border border-border bg-background p-3 text-sm text-white" />
+          <Button size="sm" className="min-h-[40px]" disabled={guardando || texto === (coach.notasAdmin ?? "")}
+            onClick={async () => { setGuardando(true); await onGuardar(texto); setGuardando(false); }}>
+            {guardando ? "Guardando…" : "Guardar notas"}
+          </Button>
+        </div>
+      )}
+      {abierto === "historial" && (
+        isLoading ? <Skeleton className="h-16 bg-border/50" /> : historial.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Sin cambios registrados todavía. Desde hoy se anotan los cambios de plan, estado, pago y prueba.</p>
+        ) : (
+          <ul className="text-sm divide-y divide-border/40 max-h-60 overflow-y-auto">
+            {historial.map((h) => (
+              <li key={h.id} className="py-2 flex gap-3">
+                <span className="text-xs text-muted-foreground w-24 shrink-0">{new Date(h.creadoEn).toLocaleDateString("es-US", { day: "numeric", month: "short", year: "2-digit" })}</span>
+                <span className="text-white flex-1">{h.texto}{h.autor ? <span className="text-muted-foreground"> · {h.autor}</span> : null}</span>
+              </li>
+            ))}
+          </ul>
+        )
+      )}
+    </div>
   );
 }

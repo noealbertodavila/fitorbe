@@ -1,6 +1,7 @@
 import { db, coachesTable, usoIaTable, usuariosTable } from "@workspace/db";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { localDateStr } from "./date-mt";
+import { planDe } from "./planes-fitorbe";
 
 /**
  * Modelo para todo lo de IA en Fitorbe. Haiku 5.5 es el más económico y alcanza
@@ -8,8 +9,7 @@ import { localDateStr } from "./date-mt";
  */
 export const MODELO_IA = process.env.IA_MODELO || "claude-haiku-5-5";
 
-/** Generaciones con IA (planes, rutinas o un día regenerado) por mes, según el plan del coach. */
-export const LIMITE_GENERACIONES: Record<string, number> = { inicial: 0, pro: 150, estudio: 400 };
+/** Generaciones con IA (planes, rutinas o un día regenerado) por mes: las fija el superadmin en cada plan (Planes y precios). */
 /** Durante los 14 días de prueba el coach puede probar la IA con este tope. */
 export const LIMITE_PRUEBA = 20;
 /** Mensajes al asistente por cliente al día. */
@@ -32,7 +32,7 @@ export async function limiteDelCoach(coachUsuarioId: number): Promise<{ plan: st
   const plan = (c?.plan ?? "inicial").toLowerCase();
   const estado = c?.estado ?? "activo";
   // En los días de prueba todos pueden conocer la IA, con un tope pequeño.
-  const limite = estado === "prueba" ? LIMITE_PRUEBA : (LIMITE_GENERACIONES[plan] ?? 0);
+  const limite = estado === "prueba" ? LIMITE_PRUEBA : (await planDe(plan)).limiteIa;
   return { plan, estado, limite };
 }
 

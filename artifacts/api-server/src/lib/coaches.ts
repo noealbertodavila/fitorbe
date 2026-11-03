@@ -64,6 +64,8 @@ export async function crearCoach(datos: {
   negocio?: string;
   telefono?: string | null;
   estado?: "prueba" | "activo";
+  plan?: string;
+  periodo?: string;
 }): Promise<{ usuario: typeof usuariosTable.$inferSelect; ficha: typeof coachesTable.$inferSelect } | { error: string; status: number }> {
   const nombre = datos.nombre.trim().slice(0, 120);
   const email = datos.email.trim().toLowerCase();
@@ -85,7 +87,12 @@ export async function crearCoach(datos: {
     try {
       [ficha] = await db
         .insert(coachesTable)
-        .values({ usuarioId: usuario.id, negocio, slug, estado, pruebaHasta: estado === "prueba" ? enDias(DIAS_PRUEBA) : null })
+        .values({
+          usuarioId: usuario.id, negocio, slug, estado,
+          plan: ["inicial", "pro", "estudio"].includes(datos.plan ?? "") ? datos.plan! : "inicial",
+          periodo: datos.periodo === "anio" ? "anio" : "mes",
+          pruebaHasta: estado === "prueba" ? enDias(DIAS_PRUEBA) : null,
+        })
         .returning();
     } catch (e: any) {
       const unico = e?.code === "23505" || e?.cause?.code === "23505";

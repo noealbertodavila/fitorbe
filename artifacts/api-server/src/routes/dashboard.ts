@@ -4,6 +4,8 @@ import { db, coachesTable, usuariosTable, checkinsDiariosTable, mensajesTable, c
 import { eq, and, gte, lte, sql, ne } from "drizzle-orm";
 import { requireAuth, requireRol, puedeVerCliente, idsClientesDe, enLista } from "../middlewares/auth";
 import { alertasEmocionales } from "../lib/alertas";
+import { listaPlanes, ingresoMensual } from "../lib/planes-fitorbe";
+import { usoIaTable } from "@workspace/db";
 
 const router = Router();
 
@@ -90,11 +92,63 @@ router.get("/dashboard/admin", requireAuth, requireRol("admin"), async (_req, re
     .from(coachesTable)
     .groupBy(coachesTable.estado);
   const coaches = porEstado.reduce((s, r) => s + r.n, 0);
+
+  // Negocio: lo que pagan los coaches activos, cuántos hay en cada plan, pruebas por vencer e inactivos.
+  const planes = await listaPlanes();
+  const todos = await db
+    .select({
+      usuarioId: coachesTable.usuarioId,
+      negocio: coachesTable.negocio,
+      estado: coachesTable.estado,
+      plan: coachesTable.plan,
+      periodo: coachesTable.periodo,
+      pruebaHasta: coachesTable.pruebaHasta,
+      ultimoAcceso: coachesTable.ultimoAcceso,
+      creadoEn: coachesTable.creadoEn,
+      nombre: usuariosTable.nombre,
+    })
+    .from(coachesTable)
+    .innerJoin(usuariosTable, eq(usuariosTable.id, coachesTable.usuarioId));
+  const planDe = (c: string) => planes.find((p) => p.clave === c) ?? planes.find((p) => p.clave === "inicial");
+  let ingreso = 0;
+  const porPlan: Record<string, { activos: number; prueba: number; ingreso: number }> = {};
+  for (const p of planes) porPlan[p.clave] = { activos: 0, prueba: 0, ingreso: 0 };
+  for (const c of todos) {
+    const p = planDe(c.plan);
+    if (!p) continue;
+    const fila = (porPlan[p.clave] ??= { activos: 0, prueba: 0, ingreso: 0 });
+    if (c.estado === "activo") {
+      const m = ingresoMensual(p, c.periodo);
+      ingreso += m;
+      fila.activos++;
+      fila.ingreso += m;
+    } else if (c.estado === "prueba") fila.prueba++;
+  }
+  const hoy = localDateStr();
+  const en7 = localDateStr(new Date(Date.now() + 7 * 86400000));
+  const pruebasPorVencer = todos
+    .filter((c) => c.estado === "prueba" && c.pruebaHasta && String(c.pruebaHasta) <= en7)
+    .map((c) => ({ usuarioId: c.usuarioId, negocio: c.negocio, nombre: c.nombre, pruebaHasta: c.pruebaHasta, vencida: String(c.pruebaHasta) < hoy }))
+    .sort((a, b) => String(a.pruebaHasta).localeCompare(String(b.pruebaHasta)));
+  const hace14 = Date.now() - 14 * 86400000;
+  const inactivos = todos
+    .filter((c) => c.estado !== "suspendido" && new Date(c.ultimoAcceso ?? c.creadoEn).getTime() < hace14)
+    .map((c) => ({ usuarioId: c.usuarioId, negocio: c.negocio, nombre: c.nombre, ultimoAcceso: c.ultimoAcceso }));
+  const [{ ia }] = await db
+    .select({ ia: sql<number>`coalesce(sum(${usoIaTable.cantidad}), 0)::int` })
+    .from(usoIaTable)
+    .where(and(eq(usoIaTable.tipo, "generacion"), gte(usoIaTable.fecha, hoy.slice(0, 8) + "01")));
+
   res.json({
     totalCoaches: coaches,
     coachesPorEstado: Object.fromEntries(porEstado.map((r) => [r.estado, r.n])),
     totalClientes: clientes,
     clientesActivos,
+    ingresoMensual: Math.round(ingreso * 100) / 100,
+    porPlan: planes.map((p) => ({ clave: p.clave, nombre: p.nombre, ...porPlan[p.clave] })),
+    pruebasPorVencer,
+    inactivos,
+    generacionesIaMes: Number(ia),
   });
 });
 

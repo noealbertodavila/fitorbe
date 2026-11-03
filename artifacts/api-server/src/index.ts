@@ -2,6 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { ensureDefaultPlans } from "./lib/ensure-default-plans";
 import { ensureCoach } from "./lib/ensure-coach";
+import { asegurarPlanesFitorbe } from "./lib/planes-fitorbe";
 
 const rawPort = process.env["PORT"];
 
@@ -17,7 +18,7 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-Promise.all([ensureDefaultPlans(), ensureCoach()]).then(() => {
+Promise.all([ensureDefaultPlans(), ensureCoach(), asegurarPlanesFitorbe()]).then(() => {
   app.listen(port, (err) => {
     if (err) {
       logger.error({ err }, "Error listening on port");

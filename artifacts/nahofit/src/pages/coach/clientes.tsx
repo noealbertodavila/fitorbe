@@ -123,6 +123,7 @@ function NuevoCliente({ abierto, onClose }: { abierto: boolean; onClose: () => v
         body: JSON.stringify({ nombre: f.nombre, email: f.email, password: f.password, telefono: f.telefono || undefined, objetivo: f.objetivo || undefined }),
       });
       await qc.invalidateQueries({ queryKey: ["/api/clientes"] });
+      void qc.invalidateQueries({ queryKey: ["/api/mi-negocio"] });
       setCreado({ email: f.email.trim().toLowerCase(), password: f.password });
     } catch (err: unknown) {
       const d = (err as { data?: { error?: string } })?.data;

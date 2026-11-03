@@ -84,6 +84,40 @@ export default function CoachNegocio() {
         </div>
       )}
 
+      {negocio?.planInfo && (() => {
+        const p = negocio.planInfo;
+        const usd = (n: number) => `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
+        const lleno = p.maxClientes != null && p.clientesActivos >= p.maxClientes;
+        return (
+          <Card className="bg-card border-border/50">
+            <CardContent className="p-6 space-y-3">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <h2 className="font-bold text-white">Tu plan: {p.nombre}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {negocio.estado === "prueba" ? "Después de la prueba: " : ""}
+                    {negocio.periodo === "anio" ? `${usd(p.precioAnio)} USD al año` : `${usd(p.precioMes)} USD al mes`}
+                  </p>
+                </div>
+              </div>
+              <ul className="text-sm space-y-1">
+                <li className={lleno ? "text-amber-300" : "text-white"}>
+                  Clientes activos: {p.clientesActivos}{p.maxClientes != null ? ` de ${p.maxClientes}` : " (sin límite)"}
+                </li>
+                <li className="text-white">
+                  IA: {negocio.estado === "prueba" ? "20 generaciones durante la prueba" : p.limiteIa ? `${p.limiteIa} generaciones al mes` : "no incluida"}
+                </li>
+              </ul>
+              {(lleno || !p.limiteIa) && (
+                <p className="text-xs text-muted-foreground">
+                  ¿Necesitas más clientes o la IA? Escríbenos desde <a className="text-primary underline" href="/#contacto">fitorbe.com</a> y te cambiamos de plan; tus clientes y datos siguen igual.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       <Card className="bg-card border-border/50">
         <CardContent className="p-6 space-y-5">
           <div>

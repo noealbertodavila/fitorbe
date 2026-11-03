@@ -15,6 +15,9 @@ export type Negocio = {
   pruebaHasta?: string | null;
   reglasNutricion?: string;
   reglasEntrenamiento?: string;
+  periodo?: "mes" | "anio";
+  /** Solo para el coach: su plan de Fitorbe y cuánto usa. */
+  planInfo?: { nombre: string; precioMes: number; precioAnio: number; limiteIa: number; maxClientes: number | null; clientesActivos: number };
 };
 
 export function useNegocio() {

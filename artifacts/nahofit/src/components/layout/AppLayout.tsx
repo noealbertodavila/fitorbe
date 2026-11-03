@@ -46,6 +46,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const adminNav: Item[] = [
     { label: "Inicio", path: "/admin", icon: LayoutDashboard },
     { label: "Coaches", path: "/admin/coaches", icon: Briefcase },
+    { label: "Planes y precios", path: "/admin/planes", icon: Tags },
   ];
 
   // Menú agrupado (como en Obrix): lo del día a día arriba, el negocio abajo.
@@ -137,7 +138,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {diasPrueba !== null ? (
             <p><span className="text-white font-semibold">Prueba gratis</span><span className="text-muted-foreground"> · {diasPrueba === 1 ? "queda 1 día" : `quedan ${diasPrueba} días`}</span></p>
           ) : (
-            <p className="text-white font-semibold">{PLAN[negocio.plan ?? ""] ?? "Tu plan"}</p>
+            <p>
+              <span className="text-white font-semibold">{negocio.planInfo ? `Plan ${negocio.planInfo.nombre}` : PLAN[negocio.plan ?? ""] ?? "Tu plan"}</span>
+              {negocio.planInfo && (
+                <span className="text-muted-foreground"> · {negocio.planInfo.clientesActivos}{negocio.planInfo.maxClientes != null ? `/${negocio.planInfo.maxClientes}` : ""} clientes</span>
+              )}
+            </p>
           )}
         </div>
       </Link>

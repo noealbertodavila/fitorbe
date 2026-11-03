@@ -15,6 +15,7 @@ const Terminos = lazy(() => import("@/pages/Legal").then((m) => ({ default: m.Te
 // Admin
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
 const AdminCoaches = lazy(() => import("@/pages/admin/coaches"));
+const AdminPlanes = lazy(() => import("@/pages/admin/planes"));
 const Registro = lazy(() => import("@/pages/registro"));
 
 // Coach
@@ -80,6 +81,11 @@ function Router() {
       <Route path="/admin/coaches">
         <ProtectedRoute allowedRoles={["admin"]}>
           <AdminCoaches />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/planes">
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <AdminPlanes />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/:resto">

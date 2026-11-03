@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { db, usuariosTable, coachesTable } from "@workspace/db";
 import { eq, and, inArray, sql, type SQL, type AnyColumn } from "drizzle-orm";
+import { marcarAcceso } from "../lib/planes-fitorbe";
 
 // La clave que firma las sesiones. En producción es obligatoria: sin ella
 // cualquiera podría fabricar una sesión (antes había un valor fijo público).
@@ -71,6 +72,7 @@ export async function requireAuth(
     }
 
     (req as any).usuario = usuario;
+    if (usuario.rol === "coach") marcarAcceso(usuario.id);
 
     // Coach suspendido o con la prueba vencida: él y sus clientes no pueden usar la app
     // (sí pueden ver su sesión y el estado de su cuenta).

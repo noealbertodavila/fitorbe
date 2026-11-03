@@ -3,7 +3,7 @@ import { customFetch } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Briefcase, Users, Clock, PauseCircle, ArrowRight, Inbox, Mail, MessageCircle, Check } from "lucide-react";
+import { Briefcase, Users, Clock, PauseCircle, ArrowRight, Inbox, Mail, MessageCircle, Check, DollarSign, Sparkles, AlarmClock, UserX } from "lucide-react";
 
 type Interesado = { id: number; nombre: string; email: string | null; telefono: string | null; negocio: string | null; clientes: string | null; plan: string | null; mensaje: string | null; atendido: boolean; creadoEn: string };
 const PLAN: Record<string, string> = { inicial: "Inicial", pro: "Pro", estudio: "Estudio", no_se: "Sin decidir" };
@@ -52,7 +52,72 @@ function Interesados() {
   );
 }
 
-type Resumen = { totalCoaches: number; coachesPorEstado: Record<string, number>; totalClientes: number; clientesActivos: number };
+type Resumen = {
+  totalCoaches: number;
+  coachesPorEstado: Record<string, number>;
+  totalClientes: number;
+  clientesActivos: number;
+  ingresoMensual: number;
+  porPlan: { clave: string; nombre: string; activos: number; prueba: number; ingreso: number }[];
+  pruebasPorVencer: { usuarioId: number; negocio: string; nombre: string; pruebaHasta: string; vencida: boolean }[];
+  inactivos: { usuarioId: number; negocio: string; nombre: string; ultimoAcceso: string | null }[];
+  generacionesIaMes: number;
+};
+const usd = (n: number) => `$${(Math.round(n * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+const fechaCorta = (f: string) => new Date(String(f).slice(0, 10) + "T12:00:00").toLocaleDateString("es-US", { day: "numeric", month: "short" });
+
+/** Ingreso, coaches por plan, pruebas por vencer e inactivos. */
+function Negocio({ data }: { data: Resumen }) {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Card className="bg-card border-border/50">
+        <CardContent className="p-5 space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-syne font-bold text-white flex items-center gap-2"><DollarSign className="w-5 h-5 text-primary" />Ingreso mensual estimado</h2>
+              <p className="text-xs text-muted-foreground">Coaches activos por el precio de su plan (el anual se reparte en 12).</p>
+            </div>
+            <div className="text-3xl font-bold text-white">{usd(data.ingresoMensual ?? 0)}</div>
+          </div>
+          <table className="w-full text-sm">
+            <thead><tr className="text-xs text-muted-foreground text-left"><th className="font-medium py-1">Plan</th><th className="font-medium text-right">Activos</th><th className="font-medium text-right">En prueba</th><th className="font-medium text-right">Al mes</th></tr></thead>
+            <tbody className="divide-y divide-border/40">
+              {(data.porPlan ?? []).map((p) => (
+                <tr key={p.clave}><td className="py-2 text-white">{p.nombre}</td><td className="text-right text-white">{p.activos}</td><td className="text-right text-muted-foreground">{p.prueba}</td><td className="text-right text-white">{usd(p.ingreso)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-primary" />{data.generacionesIaMes ?? 0} generaciones con IA este mes en toda la plataforma.</p>
+        </CardContent>
+      </Card>
+      <Card className="bg-card border-border/50">
+        <CardContent className="p-5 space-y-4">
+          <div>
+            <h2 className="text-lg font-syne font-bold text-white flex items-center gap-2"><AlarmClock className="w-5 h-5 text-amber-400" />Pruebas que vencen esta semana</h2>
+            {(data.pruebasPorVencer ?? []).length === 0 ? <p className="text-sm text-muted-foreground mt-2">Ninguna.</p> : (
+              <ul className="mt-2 space-y-1 text-sm">
+                {data.pruebasPorVencer.map((c) => (
+                  <li key={c.usuarioId} className="flex justify-between gap-3"><span className="text-white truncate">{c.negocio} <span className="text-muted-foreground">· {c.nombre}</span></span><span className={c.vencida ? "text-red-400 shrink-0" : "text-amber-400 shrink-0"}>{c.vencida ? "venció " : "vence "}{fechaCorta(c.pruebaHasta)}</span></li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div>
+            <h2 className="text-lg font-syne font-bold text-white flex items-center gap-2"><UserX className="w-5 h-5 text-muted-foreground" />Sin entrar hace más de 14 días</h2>
+            {(data.inactivos ?? []).length === 0 ? <p className="text-sm text-muted-foreground mt-2">Todos han entrado hace poco.</p> : (
+              <ul className="mt-2 space-y-1 text-sm">
+                {data.inactivos.map((c) => (
+                  <li key={c.usuarioId} className="flex justify-between gap-3"><span className="text-white truncate">{c.negocio} <span className="text-muted-foreground">· {c.nombre}</span></span><span className="text-muted-foreground shrink-0">{c.ultimoAcceso ? `última vez ${fechaCorta(c.ultimoAcceso)}` : "sin registro"}</span></li>
+                ))}
+              </ul>
+            )}
+            <p className="text-xs text-muted-foreground mt-2">Un buen momento para escribirles antes de que cancelen.</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 /** Panel del superadmin de Fitorbe: totales de la plataforma, sin datos privados de clientes. */
 export default function AdminDashboard() {
@@ -80,9 +145,15 @@ export default function AdminDashboard() {
           </Card>
         ))}
       </div>
-      <Link href="/admin/coaches" className="inline-flex items-center gap-2 text-primary font-semibold min-h-[44px]">
-        Ver y administrar coaches <ArrowRight className="w-4 h-4" />
-      </Link>
+      {data && <Negocio data={data} />}
+      <div className="flex flex-wrap gap-x-6">
+        <Link href="/admin/coaches" className="inline-flex items-center gap-2 text-primary font-semibold min-h-[44px]">
+          Ver y administrar coaches <ArrowRight className="w-4 h-4" />
+        </Link>
+        <Link href="/admin/planes" className="inline-flex items-center gap-2 text-primary font-semibold min-h-[44px]">
+          Planes y precios <ArrowRight className="w-4 h-4" />
+        </Link>
+      </div>
       <Interesados />
     </div>
   );

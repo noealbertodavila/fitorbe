@@ -551,6 +551,7 @@ export default function CoachClienteDetalle({ id }: { id: number }) {
           <Button variant="outline" className="border-border/50 text-white hover:bg-white/5" onClick={() => setClaveOpen(true)}>
             <KeyRound className="w-4 h-4 mr-2" /> Nueva contraseña
           </Button>
+          <BotonActivo id={c.id} nombre={c.nombre} activo={!!c.activo} />
         </div>
       </div>
 
@@ -1005,5 +1006,32 @@ export default function CoachClienteDetalle({ id }: { id: number }) {
       {c && <EditarClienteDialog cliente={c} open={editOpen} onClose={() => setEditOpen(false)} />}
       {c && <NuevaClaveDialog cliente={c} open={claveOpen} onClose={() => setClaveOpen(false)} />}
     </div>
+  );
+}
+
+/** Activar o desactivar al cliente: el inactivo no entra a la app ni cuenta en el límite del plan (no se borra nada). */
+function BotonActivo({ id, nombre, activo }: { id: number; nombre: string; activo: boolean }) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [cargando, setCargando] = useState(false);
+  async function cambiar() {
+    if (activo && !window.confirm(`¿Desactivar a ${nombre}? No podrá entrar a la app hasta que lo actives. No se borra nada y deja libre su lugar en tu plan.`)) return;
+    setCargando(true);
+    try {
+      await customFetch(`/api/clientes/${id}/activo`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ activo: !activo }) });
+      qc.invalidateQueries({ predicate: (q) => JSON.stringify(q.queryKey).includes("/api/clientes") });
+      qc.invalidateQueries({ queryKey: ["/api/mi-negocio"] });
+      toast({ title: activo ? "Cliente desactivado" : "Cliente activado", description: nombre });
+    } catch (err: unknown) {
+      toast({ variant: "destructive", title: "No se pudo cambiar", description: (err as { data?: { error?: string } })?.data?.error ?? "Intenta de nuevo." });
+    } finally {
+      setCargando(false);
+    }
+  }
+  return (
+    <Button variant="outline" disabled={cargando} onClick={cambiar}
+      className={activo ? "border-red-500/40 text-red-400 hover:bg-red-500/10" : "border-primary/50 text-primary hover:bg-primary/10"}>
+      {cargando ? "…" : activo ? "Desactivar" : "Activar"}
+    </Button>
   );
 }

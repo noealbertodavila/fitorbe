@@ -33,6 +33,31 @@
   $$("a", menu).forEach(function (a) { a.addEventListener("click", function () { menu.classList.remove("abierto"); marcar(); }); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && menu.classList.contains("abierto")) { menu.classList.remove("abierto"); marcar(); ham.focus(); } });
 
+  // Precios: los que el superadmin fija en el panel (Planes y precios). Si no responde, quedan los del HTML.
+  function usd(n) { n = Number(n); return "$" + (n % 1 ? n.toFixed(2) : String(n)); }
+  fetch("/api/planes-fitorbe").then(function (r) { return r.ok ? r.json() : []; }).then(function (planes) {
+    (planes || []).forEach(function (p) {
+      var art = $('.plan[data-plan="' + p.clave + '"]');
+      if (art) {
+        var monto = $(".monto", art);
+        if (monto) {
+          monto.setAttribute("data-mes", usd(p.precioMes));
+          monto.setAttribute("data-anio", usd(p.precioAnio));
+          var anual = $('.periodo button[data-periodo="anio"]');
+          monto.textContent = anual && anual.getAttribute("aria-pressed") === "true" ? usd(p.precioAnio) : usd(p.precioMes);
+        }
+        var eq = $(".equivale", art);
+        if (eq) eq.setAttribute("data-anio-texto", "Equivale a " + usd(Math.round(p.precioAnio / 12 * 100) / 100) + " al mes");
+        var h = $("h3", art);
+        if (h && p.nombre) h.textContent = p.nombre;
+        var mc = $(".max-clientes", art);
+        if (mc) mc.textContent = p.maxClientes == null ? "Clientes ilimitados" : "Hasta " + p.maxClientes + " clientes";
+      }
+      var op = $('#c-plan option[value="' + p.clave + '"]');
+      if (op) op.textContent = p.nombre + " (" + usd(p.precioMes) + ")";
+    });
+  }).catch(function () { /* quedan los precios del HTML */ });
+
   // Mensual / anual
   $$(".periodo button").forEach(function (b) {
     b.addEventListener("click", function () {

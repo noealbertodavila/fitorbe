@@ -386,9 +386,35 @@ export const coachesTable = pgTable("coaches", {
   // Reglas propias del coach que la IA respeta al armar planes y rutinas.
   reglasNutricion: text("reglas_nutricion"),
   reglasEntrenamiento: text("reglas_entrenamiento"),
+  periodo: text("periodo").notNull().default("mes"), // mes | anio (cómo paga su plan)
+  ultimoAcceso: timestamp("ultimo_acceso"),
   creadoEn: timestamp("creado_en").defaultNow().notNull(),
 });
 export type Coach = typeof coachesTable.$inferSelect;
+
+/**
+ * Planes de Fitorbe para los coaches (Inicial, Pro, Estudio). El superadmin los edita:
+ * precio, generaciones de IA al mes y máximo de clientes activos (null = sin límite).
+ */
+export const planesFitorbeTable = pgTable("planes_fitorbe", {
+  clave: text("clave").primaryKey(), // inicial | pro | estudio
+  nombre: text("nombre").notNull(),
+  precioMes: real("precio_mes").notNull(),
+  precioAnio: real("precio_anio").notNull(),
+  limiteIa: integer("limite_ia").notNull().default(0),
+  maxClientes: integer("max_clientes"),
+  orden: integer("orden").notNull().default(0),
+  actualizadoEn: timestamp("actualizado_en").defaultNow().notNull(),
+});
+
+/** Historial de cada coach: cambios de plan, estado, prueba y notas (lo ve el superadmin). */
+export const historialCoachesTable = pgTable("historial_coaches", {
+  id: serial("id").primaryKey(),
+  coachUsuarioId: integer("coach_usuario_id").notNull(),
+  texto: text("texto").notNull(),
+  autor: text("autor"),
+  creadoEn: timestamp("creado_en").defaultNow().notNull(),
+});
 
 /**
  * Uso de la IA por día: "generacion" (planes y rutinas, del coach) y "chat" (asistente, del cliente).

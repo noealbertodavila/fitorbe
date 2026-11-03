@@ -5,6 +5,7 @@ import { db, usuariosTable, registrosProgresoTable, checkinsDiariosTable } from 
 import { eq, and, like, gte, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { requireAuth, requireRol, limpiarCambios, puedeVerCliente } from "../middlewares/auth";
+import { puedeAgregarCliente } from "../lib/planes-fitorbe";
 
 const router = Router();
 
@@ -193,6 +194,12 @@ router.post("/clientes", requireAuth, requireRol("coach"), async (req, res) => {
     res.status(409).json({ error: "Ya hay una cuenta con ese correo" });
     return;
   }
+  // Límite de clientes activos del plan del coach.
+  const cupo = await puedeAgregarCliente(me.id);
+  if (!cupo.ok) {
+    res.status(403).json({ error: cupo.error, code: "LIMITE_CLIENTES" });
+    return;
+  }
   const { nombre: _n, email: _e, password: _p, ...resto } = req.body ?? {};
   const extra = limpiarCambios(me, resto);
   const [created] = await db
@@ -210,6 +217,16 @@ router.patch("/clientes/:id/activo", requireAuth, requireRol("coach"), async (re
   if (isNaN(id) || !(await puedeVerCliente(me, id))) {
     res.status(403).json({ error: "Acceso denegado" });
     return;
+  }
+  if (req.body?.activo) {
+    const [actual] = await db.select({ activo: usuariosTable.activo }).from(usuariosTable).where(eq(usuariosTable.id, id)).limit(1);
+    if (actual && !actual.activo) {
+      const cupo = await puedeAgregarCliente(me.id);
+      if (!cupo.ok) {
+        res.status(403).json({ error: cupo.error, code: "LIMITE_CLIENTES" });
+        return;
+      }
+    }
   }
   const [u] = await db
     .update(usuariosTable)

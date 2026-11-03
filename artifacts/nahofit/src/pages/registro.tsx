@@ -19,7 +19,13 @@ export default function Registro() {
     }
     setEnviando(true);
     try {
-      const r = await fetch("/api/auth/registro-coach", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(f) });
+      // El plan que eligió en fitorbe.com (?plan=pro&periodo=anio) queda guardado para después de la prueba.
+      const q = new URLSearchParams(window.location.search);
+      const r = await fetch("/api/auth/registro-coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...f, plan: q.get("plan") ?? undefined, periodo: q.get("periodo") ?? undefined }),
+      });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) {
         setError(d.error ?? "No se pudo crear la cuenta. Intenta de nuevo.");
