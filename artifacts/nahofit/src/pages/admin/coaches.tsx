@@ -31,6 +31,12 @@ const ESTADO: Record<string, { t: string; c: string }> = {
   activo: { t: "Activo", c: "border-primary/50 text-primary" },
   suspendido: { t: "Suspendido", c: "border-red-500/50 text-red-400" },
 };
+/** Planes y cuánta IA incluye cada uno (debe coincidir con LIMITE_GENERACIONES del servidor). */
+const PLANES: Record<string, string> = {
+  inicial: "Inicial · sin IA",
+  pro: "Pro · 150 generaciones IA/mes",
+  estudio: "Estudio · 400 generaciones IA/mes",
+};
 const hoy = () => new Date().toISOString().slice(0, 10);
 const masDias = (n: number, desde?: string | null) => {
   const base = desde && desde > hoy() ? new Date(desde + "T12:00:00") : new Date();
@@ -95,6 +101,14 @@ export default function AdminCoaches() {
                         <div className="rounded-lg bg-background p-2"><div className="text-xs text-muted-foreground">Clientes</div><div className="font-bold text-white">{c.clientes}</div></div>
                         <div className="rounded-lg bg-background p-2"><div className="text-xs text-muted-foreground">Activos</div><div className="font-bold text-white">{c.clientesActivos}</div></div>
                         <div className="rounded-lg bg-background p-2"><div className="text-xs text-muted-foreground">{c.estado === "prueba" ? "Prueba hasta" : "Desde"}</div><div className="font-bold text-white text-xs mt-1">{c.estado === "prueba" ? c.pruebaHasta ?? "—" : String(c.creadoEn).slice(0, 10)}</div></div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label htmlFor={`plan-${c.usuarioId}`} className="text-xs font-semibold text-muted-foreground">Plan</label>
+                        <select id={`plan-${c.usuarioId}`} className="flex-1 min-h-[40px] rounded-md border border-border bg-background px-2 text-sm text-white"
+                          value={(c.plan || "inicial").toLowerCase()}
+                          onChange={(e) => cambiar(c, { plan: e.target.value }, `Plan cambiado a ${PLANES[e.target.value]}`)}>
+                          {Object.entries(PLANES).map(([v, t]) => <option key={v} value={v}>{t}</option>)}
+                        </select>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {c.estado !== "activo" && <Button size="sm" className="min-h-[40px]" onClick={() => cambiar(c, { estado: "activo" }, "Coach activado")}>Activar</Button>}
